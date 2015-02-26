@@ -24,7 +24,7 @@ ArrayList<GameArea> gameAreas;
 long loopCounter;
 
 //Setup constants
-boolean debugMode = false;
+boolean debugMode = true;
 
 void setup()
 {
@@ -65,7 +65,8 @@ void setup()
   
   ships = new ArrayList<Ship>();
   Ship testShip = new Ship(width/8, height/2, 125, 97, shipSprite);
-  //testShip.velocity = new PVector(.1, .2);
+  //testShip.SetRotationRate(0.05);
+  testShip.velocity = new PVector(1, 0);
   ships.add(testShip);
 
 }
@@ -74,13 +75,26 @@ void draw()
 {
   loopCounter++;
   background(bg);
-  //DrawGameObjects(asteroids);         //See Visuals.pde
-  //DrawGameObjects(ships);
   if(debugMode)
   {
-    DrawGameObjects(gameAreas);       //See Visuals.pde
+    DrawGameArea(gameAreas);       //See Visuals.pde
   }
   
+  //Draw Game objects
+  DrawAsteroids(asteroids);         //See Visuals.pde
+  DrawShips(ships);
+
+  //Move game objects
   MoveGameObjects(asteroids);        //See Visuals.pde
   MoveGameObjects(ships);
+  
+  //Check collisions
+  HandleCollisions(asteroids);
+  HandleCollisions(asteroids, ships);
+  
+  pushMatrix();
+  rotate(radians(10));
+  stroke(255);
+  line(30, 30, 60, 60);
+  popMatrix();
 }

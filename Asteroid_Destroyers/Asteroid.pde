@@ -1,5 +1,3 @@
-int uniqueAsteroidIDCounter = 0;
-
 //Each sprite spaced 128 pixels apart
 PImage asteroidSpriteSheet;      //Loaded in setup()
 
@@ -8,8 +6,6 @@ PImage asteroidSpriteSheet;      //Loaded in setup()
  */
 public class Asteroid extends Drawable 
 {
-  //Unique ID
-  private int id;
 
   /*
    * Constructor
@@ -23,10 +19,6 @@ public class Asteroid extends Drawable
     //Parent constructor
     super(_xloc, _yloc, _diameter, _diameter);
 
-    //Unique ID
-    id = uniqueAsteroidIDCounter;
-    uniqueAsteroidIDCounter++;
-
     //Select my asteroid image from spritesheet
     int RandomAsteroidIndex1 = rand.nextInt(9);      //x coordinate in sprite sheet
     int RandomAsteroidIndex2 = rand.nextInt(9);      //y coordinate in sprite sheet
@@ -34,11 +26,6 @@ public class Asteroid extends Drawable
     //Set the sprite to the random subset of the spritesheet
     sprite = asteroidSpriteSheet.get(RandomAsteroidIndex1 * 128, RandomAsteroidIndex2 * 128, 128, 128);
     sprite.resize(int(size.x), int(size.y));
-  }
-
-  public int GetID()
-  {
-    return id;
   }
 
 

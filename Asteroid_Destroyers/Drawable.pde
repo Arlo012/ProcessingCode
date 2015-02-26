@@ -1,17 +1,20 @@
+int uniqueIDCounter = 0;
 /* Drawable
  * Base class for all drawable objects in the project
  * Implements a basic DrawObject() method to draw a debug
  * rectangle even if not inherited from.
-*/
+ */
 public class Drawable implements Movable, Turnable
 {
-  //Image properties
-  protected PVector center;
-  protected PVector size;
+  protected int ID;
   
+  //Image properties
+  protected PVector center;               //On absolute plane
+  protected PVector size;                  
+
   //Visuals
   protected PImage sprite;
-  
+
   //Movement
   protected PVector velocity;              //On absolute plane
   protected PVector forward;               //On absolute plane
@@ -23,20 +26,23 @@ public class Drawable implements Movable, Turnable
   protected float destinationAngle;        //TODO phase out -- why need a destination angle if have target?
   protected float rotationRate;            //Degrees/sec
   protected PVector rotationLookTarget;    //Coordinate of what we want to look at
-  
-  //Location & movement
+
+    //Location & movement
   protected PVector movementVector;
-  
+
   public Drawable(int _centerX, int _centerY, int _width, int _height)
   {
+    ID = uniqueIDCounter;
+    uniqueIDCounter++;
+    
     center = new PVector(_centerX, _centerY);
     size = new PVector(_width, _height);
-    
+
     //Movement
     movementVector = new PVector(0, 0);
     forward = new PVector(1, 0);      //Forward is by default in the positive x direction
     velocity = new PVector(0, 0);
-    
+
     //Rotation
     currentAngle = 0;
     destinationAngle = 0;
@@ -45,78 +51,88 @@ public class Drawable implements Movable, Turnable
     spinDirection = 1;      //CW
     rotationLookTarget = center;      //Default look at self
   }
-  
+  public int GetID()
+  {
+    return ID;
+  }
+
   public void DrawObject()
   {
     pushMatrix();
     translate(center.x, center.y);
     
+    if(debugMode)
+    {
+      //Debug velocity direction
+      stroke(255, 0, 0);
+      line(0, 0, 1000 * velocity.x, 1000 * velocity.y);
+    }
+    
+    
+    //Handle rotation
     float initialAngle = currentAngle;
-    rotate(initialAngle);      //Make my 'up' this frame of reference's 'up'
+    //rotate(initialAngle);      //Begin working in my 'forward' frame
+
     if (rotationMode == -1)
     {   //Not rotating
-    }
+    } 
     else if (rotationMode == 0)
     {
-      Rotate(destinationAngle);
+      //Rotate instantly
+      rotate(destinationAngle);
+      println(destinationAngle);
       currentAngle = destinationAngle;      //We instantly rotated there
     } 
-    
     else if (rotationMode == 1)
     {
-      println("Rotating to angle");
-      currentAngle = RotateInDirection(currentAngle, spinDirection * rotationRate);
-    }
+      //Rotate in direction
+      currentAngle += spinDirection * rotationRate;
+      rotate(currentAngle);
+    } 
     else if (rotationMode == 2)
     {
-      currentAngle = RotateToFacePoint(currentAngle, center, rotationLookTarget);
-    }
+      RotateToTarget();
+    } 
     else
     {
       println("WARNING: Rotation mode not supported");
     }
-    //Update forward vector //<>//
-    //forward.rotate(currentAngle - initialAngle);
-    
+
+    //End handle rotation
+
     imageMode(CENTER);
-    rotate(-initialAngle);                //Return to default frame of reference
-    
+    //rotate(-initialAngle);                //Return to default frame of reference
+
     //Display forward vector (white), velocity vector (red)
-    if(debugMode)
+    if (debugMode)
     {
       //Debug forward direction
       stroke(255);
       line(0, 0, 100 * forward.x, 100 * forward.y);    
-      
-      //Debug velocity direction
-      stroke(255, 0, 0);
-      line(0, 0, 1000 * velocity.x, 1000 * velocity.y); 
     }
-    
+
     translate(-center.x, -center.y);      //Return to standard orientation before drawing
     image(sprite, center.x, center.y);
     popMatrix();
-    
-    //TODO update velocity after direction change
   }
-  
+
   public PVector GetCenter()
   {
     return center;
   }
-  
+
   public PVector GetSize()
   {
     return size;
   }
-  
-  
-//******* MOVE *********/
+
+
+  //******* MOVE *********/
   public void SetDestinationAngle(float _destination)
   {
     destinationAngle = _destination;
   }
-  
+
   //Modify the current velocity of the object 
   public void ChangeVelocity(PVector _vector)
   {
@@ -129,7 +145,7 @@ public class Drawable implements Movable, Turnable
     center = PVector.add(center, velocity);
   }
 
-//******* ROTATE *********/
+  //******* ROTATE *********/
   //0 = instant, 1 = spin, 2 = standard
   public void SetRotationMode(int _rotateMode)
   {
@@ -140,9 +156,61 @@ public class Drawable implements Movable, Turnable
   {
     rotationRate = _degreePerSec;
   }
-  
+
   public void SetRotationTarget(PVector _target)
   {
     rotationLookTarget = _target;
+  }
+  
+  //Rotate mode 2
+  private void RotateToTarget()
+  {
+    PVector targetRelativeToLocal = new PVector(rotationLookTarget.x - center.x, 
+                rotationLookTarget.y - center.y);
+
+    float radToRotate = atan2(targetRelativeToLocal.y - forward.y, targetRelativeToLocal.x - forward.x);
+    //println(degrees(radToRotate));
+    //println(degrees(currentAngle));
+    //println("-------");
+    if(degrees(currentAngle) > 360)
+    {
+      currentAngle -= radians(360);
+    }
+    else if(degrees(currentAngle) < -360)
+    {
+      currentAngle += radians(360);
+    }
+
+    
+    //Check for wrap-around degrees
+    if(degrees(radToRotate - currentAngle) < -180)
+    {
+      radToRotate += radians(360);
+    }
+    else if(degrees(radToRotate - currentAngle) > 180)
+    {
+      radToRotate -= radians(360);
+    }
+    
+    
+    if (Math.abs(radToRotate - currentAngle) > radians(0.5))
+    {
+      if (radToRotate - currentAngle > 0)
+      {
+        //CW
+        spinDirection = 1;
+      } 
+      else
+      {
+        spinDirection = -1;
+      }
+      
+      currentAngle += spinDirection * rotationRate;
+      rotate(currentAngle);
+    }
+    else
+    {
+      rotate(currentAngle);
+    }
   }
 }

@@ -1,5 +1,3 @@
-int uniqueShipIDCounter = 0;
-
 //TODO implement all the other ship sprites....
 PImage shipSprite;      //Loaded in setup()
 
@@ -8,8 +6,6 @@ PImage shipSprite;      //Loaded in setup()
  */
 public class Ship extends Drawable 
 {
-  //Unique ID
-  private int id;
 
   /*
    * Constructor
@@ -24,18 +20,9 @@ public class Ship extends Drawable
   {
     //Parent constructor
     super(_xloc, _yloc, _xDim, _yDim);
-
-    //Unique ID
-    id = uniqueShipIDCounter;
-    uniqueShipIDCounter++;
     
     sprite = _sprite;
     sprite.resize(int(size.x), int(size.y));
-  }
-
-  public int GetID()
-  {
-    return id;
   }
 
 

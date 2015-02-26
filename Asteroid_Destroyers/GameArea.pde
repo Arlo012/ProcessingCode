@@ -33,7 +33,6 @@ public class GameArea extends Drawable
   
   @Override public void DrawObject()
   {
-    println("Override test");
     rectMode(CENTER);
     fill(debugViewColor, 50);
     rect(center.x, center.y, size.x, size.y);
