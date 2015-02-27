@@ -24,7 +24,7 @@ ArrayList<GameArea> gameAreas;
 long loopCounter;
 
 //Setup constants
-boolean debugMode = true;
+boolean debugMode = false;
 
 void setup()
 {
@@ -48,12 +48,15 @@ void setup()
   gameAreas = new ArrayList<GameArea>();
 
   //Create asteroid field filling half of the screen
-  GameArea asteroidField = new GameArea("Asteroid Field", width/2, height/2, width/2, height);
+  GameArea asteroidField = new GameArea("Asteroid Field", new PVector(width/2, height/2), 
+                      new PVector(width/2, height));
   gameAreas.add(asteroidField);
 
   //Left/right player area
-  GameArea P1Field = new GameArea("P1 Build Area", width/8, height/2, width/4, height);
-  GameArea P2Field = new GameArea("P2 Build Area", 7*width/8, height/2, width/4, height);
+  GameArea P1Field = new GameArea("P1 Build Area", new PVector(width/8, height/2), 
+                      new PVector(width/4, height));
+  GameArea P2Field = new GameArea("P2 Build Area", new PVector(7*width/8, height/2), 
+                      new PVector(width/4, height));
   P1Field.SetDebugColor(color(0, 0, 255));
   P2Field.SetDebugColor(color(255, 0, 0));
   gameAreas.add(P1Field);
@@ -64,9 +67,9 @@ void setup()
   GenerateAsteroids(asteroidField);        //See Helpers.pde
   
   ships = new ArrayList<Ship>();
-  Ship testShip = new Ship(width/8, height/2, 125, 97, shipSprite);
-  //testShip.SetRotationRate(0.05);
-  testShip.velocity = new PVector(1, 0);
+  Ship testShip = new Ship(new PVector(width/8, height/2), new PVector(125, 97), shipSprite, 1000);
+  testShip.SetRotationRate(0.05);
+  //testShip.ChangeVelocity(new PVector(1, 0));
   ships.add(testShip);
 
 }
@@ -85,12 +88,13 @@ void draw()
   DrawShips(ships);
 
   //Move game objects
-  MoveGameObjects(asteroids);        //See Visuals.pde
-  MoveGameObjects(ships);
+  MovePhysicalObject(asteroids);        //See Visuals.pde
+  MovePhysicalObject(ships);
   
   //Check collisions
-  HandleCollisions(asteroids);
+  HandleCollisions(asteroids);            //Self collisions
   HandleCollisions(asteroids, ships);
+  HandleClick(asteroids, new PVector(mouseX, mouseY));
   
   pushMatrix();
   rotate(radians(10));

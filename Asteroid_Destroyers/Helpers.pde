@@ -6,9 +6,9 @@
 * This function will generate asteroids in random locations on a given game area
 */
 int initialAsteroidCount = 100;
-PVector asteroidSizeRange = new PVector(20, 75);      //Min, max asteroid size
+PVector asteroidSizeRange = new PVector(10, 60);      //Min, max asteroid size
 int generationPersistenceFactor = 5;     //How hard should I try to generate the requested asteroids?
-float maxVelocity = .15;                 //Max velocity in given x/y direction of asteroid
+float maxVelocity = .65;                 //Max velocity in given x/y direction of asteroid
 void GenerateAsteroids(GameArea area)
 {
   println("Generating asteroids");
@@ -53,7 +53,7 @@ void GenerateAsteroids(GameArea area)
     
     if(noOverlap)
     {  
-      Asteroid toBuild = new Asteroid(xCoor, yCoor, size);
+      Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, int(10000*size/asteroidSizeRange.y));
       toBuild.SetRotationRate(rotateSpeed);
       toBuild.ChangeVelocity(new PVector(xVelocity, yVelocity));
       toBuild.SetRotationMode(1);    //Spinning
@@ -113,16 +113,7 @@ void keyPressed()
   
 }
 
-//See http://www.openprocessing.org/sketch/123457
-//Returns angle between two provided vectors 0-2pi rad
-float vAtan2cent(PVector cent, PVector _v2, PVector _v1) {
-  //Create local variables
-  PVector v1 = new PVector(_v1.x, _v1.y);
-  PVector v2 = new PVector(_v2.x, _v2.y);
-  
-  v1.sub(cent);
-  v2.sub(cent);
-  v2.mult(-1);
-  float ang = atan2(v2.y, v2.x) - atan2(v1.y, v1.x);
-  return ang;
+//Checks if an object implements an interface, returns bool
+public static boolean implementsInterface(Object object, Class interf){
+    return interf.isInstance(object);
 }

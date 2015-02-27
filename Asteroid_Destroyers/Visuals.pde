@@ -25,11 +25,10 @@ void DrawShips(ArrayList<Ship> _ships)
 }
 
 //Move an array of movable objects
-void MoveGameObjects(ArrayList<? extends Movable> _movable)
+void MovePhysicalObject(ArrayList<? extends Physical> physical)
 {
-  //WARNING be careful -- if any class uses an override for the move function this wont catch it
-  for(Movable toMove : _movable)
+  for(Physical a : physical)
   {
-    toMove.Move();
+    a.Move();
   }
 }

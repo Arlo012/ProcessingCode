@@ -1,8 +1,9 @@
-public class Structure extends Drawable
+public class Structure extends Physical
 {
-  public Structure(int _xloc, int _yloc, int _xDim, int _yDim, PImage _sprite) 
+  
+  public Structure(PVector _loc, PVector _size, PImage _sprite, int _mass) 
   {
-    super(_xloc, _yloc, _xDim, _yDim);
+    super(_loc, _size, _mass, DrawableType.STRUCTURE);
   }
   
 }

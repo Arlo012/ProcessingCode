@@ -6,15 +6,15 @@ public class GameArea extends Drawable
   /*
   * Constructor
   * @param  _areaName string name of this game area
-  * @param  _ceterX  x center coordinate of the game area
-  * @param  _cetery  y center coordinate of the game area
+  * @param  _ceterX  x location coordinate of the game area
+  * @param  _cetery  y location coordinate of the game area
   * @param  _width   width of this game area, in pixels
   * @param  _height  height of this game area, in pixels
   * @see         GameArea
   */
-  public GameArea(String _areaName, int _centerX, int _centerY, int _width, int _height)
+  public GameArea(String _areaName, PVector _loc, PVector _size)
   {
-    super(_centerX, _centerY, _width, _height);
+    super(_loc, _size, DrawableType.GAMEAREA);
     areaName = _areaName;
     debugViewColor = color(255);    //Default = white
   }
@@ -35,6 +35,6 @@ public class GameArea extends Drawable
   {
     rectMode(CENTER);
     fill(debugViewColor, 50);
-    rect(center.x, center.y, size.x, size.y);
+    rect(location.x, location.y, size.x, size.y);
   }
 }

@@ -4,9 +4,8 @@ PImage shipSprite;      //Loaded in setup()
 /**
  * An asteroid gameobject, inheriting from Drawable
  */
-public class Ship extends Drawable 
+public class Ship extends Physical 
 {
-
   /*
    * Constructor
    * @param  _xloc    x coordinate of the ship
@@ -16,10 +15,10 @@ public class Ship extends Drawable
    * @param  _sprite  sprite of this ship
    * @see         Asteroid
    */
-  public Ship(int _xloc, int _yloc, int _xDim, int _yDim, PImage _sprite) 
+  public Ship(PVector _loc, PVector _size, PImage _sprite, int _mass) 
   {
     //Parent constructor
-    super(_xloc, _yloc, _xDim, _yDim);
+    super(_loc, _size, _mass, DrawableType.SHIP);
     
     sprite = _sprite;
     sprite.resize(int(size.x), int(size.y));
