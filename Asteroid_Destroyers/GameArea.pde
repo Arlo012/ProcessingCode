@@ -1,7 +1,6 @@
 //Define an area of gameplay, e.g. an asteroid field inheriting from Drawable
 public class GameArea extends Drawable
 {
-  private String areaName;
   private color debugViewColor;
   /*
   * Constructor
@@ -12,16 +11,10 @@ public class GameArea extends Drawable
   * @param  _height  height of this game area, in pixels
   * @see         GameArea
   */
-  public GameArea(String _areaName, PVector _loc, PVector _size)
+  public GameArea(String _name, PVector _loc, PVector _size)
   {
-    super(_loc, _size, DrawableType.GAMEAREA);
-    areaName = _areaName;
+    super(_name, _loc, _size, DrawableType.GAMEAREA);
     debugViewColor = color(255);    //Default = white
-  }
-  
-  public String GetAreaName()
-  {
-    return areaName;
   }
   
   public void SetDebugColor(color _color)

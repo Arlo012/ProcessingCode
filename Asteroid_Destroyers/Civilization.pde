@@ -6,11 +6,10 @@ public class Civilization
 {
   ArrayList<Ship> fleet;
   String name;
-  PVector topCorner;
+  private PVector topCorner;            //Which corner is this civilization in (0,0) or (width,0)
   CivOrientation orientation;
   
   TextWindow CivName;
-  
   
   public Civilization(PVector _upperCorner, String _name, ArrayList<Ship> _fleet)
   {
@@ -36,12 +35,12 @@ public class Civilization
     PVector windowSize = new PVector(250,50);
     if(orientation == CivOrientation.LEFT)
     {
-      CivName = new TextWindow(topCorner, windowSize, name, 50);
+      CivName = new TextWindow("Civ name window", topCorner, windowSize, name, 50);
     }
     else
     { 
       PVector textLocation = new PVector(topCorner.x - windowSize.x, topCorner.y);
-      CivName = new TextWindow(textLocation, windowSize, name, 50);
+      CivName = new TextWindow("Civ name window", textLocation, windowSize, name, 50);
     }
     CivName.SetTextRenderMode(CENTER);
     
@@ -50,13 +49,15 @@ public class Civilization
   
   public void DrawCivilizationUI()
   {
-    //println(CivName.location);
     CivName.DrawObject();
   }
   
+  //Place an icon in the upper-left corner of the civilization info screen
   public void SetCivilizationIcon(PImage _icon, int _size)
   {
-    CivName.AddIcon(new PVector(10,10), new PVector(_size, _size), _icon);
+    //HACK: the icon is rendering center and I don't see why -- just manually adjust with text window size
+    CivName.AddIcon(new PVector(-CivName.size.x/2 + _size, CivName.size.y/2), 
+    new PVector(_size, _size), _icon);
   }
   
 }

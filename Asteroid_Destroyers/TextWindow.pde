@@ -5,11 +5,12 @@ class TextWindow extends UI
   color textColor;
   int textRenderMode;          //Render as center or corner
   
-  ArrayList<Drawable> icons;
+  ArrayList<Drawable> icons;  //Icons within the window
   
-  TextWindow(PVector _loc, String _text)
+  //TODO this constructor might be evil
+  TextWindow(String _name, PVector _loc, String _text)
   {
-    super(_loc, new PVector(200, 100));      //Default size 200 by 100
+    super(_name, _loc, new PVector(200, 100));      //Default size 200 by 100
     textData = _text;
     
     background = color(0,0,65,200);
@@ -19,9 +20,9 @@ class TextWindow extends UI
     icons = new ArrayList<Drawable>();
   }
   
-  TextWindow(PVector _loc, PVector _size, String _text)
+  TextWindow(String _name, PVector _loc, PVector _size, String _text)
   {
-    super(_loc, _size);      //Non-standard window size
+    super(_name, _loc, _size);      //Non-standard window size
     textData = _text;
     
     background = color(0,0,65,200);
@@ -31,9 +32,9 @@ class TextWindow extends UI
     icons = new ArrayList<Drawable>();
   }
   
-  TextWindow(PVector _loc, PVector _size, String _text, int _fontSize)
+  TextWindow(String _name, PVector _loc, PVector _size, String _text, int _fontSize)
   {
-    super(_loc, _size);      //Non-standard window size
+    super(_name, _loc, _size);      //Non-standard window size
     textData = _text;
     fontSize = _fontSize;    //Non-standard font size
     
@@ -58,7 +59,7 @@ class TextWindow extends UI
     fill(textColor);
     if(textRenderMode == CENTER)
     {
-      translate(size.x/2,0);    //Shift by half text box size
+      translate(size.x/2,0);    //Shift by half text box size (fake center rendering)
     }
     
     textAlign(textRenderMode,TOP);
@@ -78,7 +79,8 @@ class TextWindow extends UI
   
   public void AddIcon(PVector _loc, PVector _size, PImage _img)
   {
-    Drawable icon = new Drawable(_loc, _size, DrawableType.UI);
+    Drawable icon = new Drawable("Civ icon", _loc, _size, DrawableType.UI);
+    icon.sprite = _img;
     icons.add(icon);
   }
   

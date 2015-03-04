@@ -7,6 +7,7 @@ PImage asteroidSpriteSheet;      //Loaded in setup()
 public class Asteroid extends Physical implements Clickable
 {
   TextWindow info;
+  public boolean isOffScreen = false;      //Is this asteroid offscreen?
   
   /*
    * Constructor
@@ -15,10 +16,10 @@ public class Asteroid extends Physical implements Clickable
    * @param  _yloc  y coordinate of the asteroid
    * @see         Asteroid
    */
-  public Asteroid(PVector _loc, int _diameter, int _mass) 
+  public Asteroid(String _name, PVector _loc, int _diameter, int _mass) 
   {
     //Parent constructor
-    super(_loc, new PVector(_diameter, _diameter), _mass, DrawableType.ASTEROID);
+    super(_name, _loc, new PVector(_diameter, _diameter), _mass, DrawableType.ASTEROID);
     
     //Select my asteroid image from spritesheet     
     int RandomAsteroidIndex1 = rand.nextInt(8);      //x coordinate in sprite sheet
@@ -31,7 +32,8 @@ public class Asteroid extends Physical implements Clickable
     sprite.resize(int(size.x * 128/90), int(size.y * 128/90));
     
     String descriptor = new String();
-    descriptor += "This is an asteroid.\n Diameter: ";
+    descriptor += name;
+    descriptor += "\n Diameter: ";
     descriptor += size.x;
     descriptor += " m \n Mass: ";
     descriptor += mass;
@@ -39,12 +41,19 @@ public class Asteroid extends Physical implements Clickable
     descriptor += "Velocity: ";
     descriptor += velocity.mag();
     descriptor += " m/s ";
-    info = new TextWindow(location, descriptor);
+    info = new TextWindow("Asteroid Info", location, descriptor);
   }
 
   @Override public void DrawObject()
   {
     super.DrawObject();
+    
+    //Check if I am offscreen
+    if(location.y < -size.x - 200 || location.y > height + size.x + 200 || 
+       location.x < -size.x || location.x > width + size.x)
+    {
+      isOffScreen = true;      //Mark for removal
+    }
     
     //Check if UI is currently rendered, and if so update info
     if(info.visibleNow)
@@ -56,12 +65,13 @@ public class Asteroid extends Physical implements Clickable
   }
 
 
-/*Click & mouseover UI*/
+  /*Click & mouseover UI*/
   ClickType GetClickType()
   {
     return ClickType.INFO;
   }
   
+  //Handle click actions on this object
   void Click()
   {
     info.visibleNow = true;

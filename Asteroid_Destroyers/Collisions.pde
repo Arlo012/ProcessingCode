@@ -4,7 +4,7 @@ void HandleCollisions(ArrayList<? extends Physical> a, ArrayList<? extends Physi
 {
   for(Physical obj1 : a)
   {
-    //TODO add a check if in the same GameArea
+    //TODO add a check if in the same GameArea?
     for(Physical obj2 : b)
     {
       if(obj1.location.x + obj1.size.x/2 >= obj2.location.x - obj2.size.x/2    //X from right
@@ -33,9 +33,8 @@ void HandleCollisions(ArrayList<? extends Physical> a)
   {
     for(int j = 0; j < a.size(); j++)
     {
-      if(i != j)
+      if(i != j)        //Don't compare to myself
       {
-        //Don't compare to myself
         if(a.get(i).location.x + a.get(i).size.x/2 >= a.get(j).location.x - a.get(j).size.x/2    //X from right
           && a.get(i).location.y + a.get(i).size.y/2 >= a.get(j).location.y - a.get(j).size.y/2  //Y from top
           && a.get(i).location.x - a.get(i).size.x/2 <= a.get(j).location.x + a.get(j).size.x/2  //X from left
@@ -59,6 +58,7 @@ void HandleCollisions(ArrayList<? extends Physical> a)
   }
 }
 
+//Handle a click with any drawable object and a given point, checking of the obj is clickable
 boolean HandleClick(ArrayList<? extends Drawable> a, PVector point)
 {
   for(Drawable obj1 : a)

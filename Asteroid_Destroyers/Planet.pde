@@ -12,10 +12,10 @@ public class Planet extends Physical implements Clickable
    * @param  _yloc  y coordinate of the asteroid
    * @see         Asteroid
    */
-  public Planet(PVector _loc, int _diameter, int _mass) 
+  public Planet(String _name, PVector _loc, int _diameter, int _mass) 
   {
     //Parent constructor
-    super(_loc, new PVector(_diameter, _diameter), _mass, DrawableType.PLANET);
+    super(_name, _loc, new PVector(_diameter, _diameter), _mass, DrawableType.PLANET);
     
     //Select my planet image from spritesheet (total of 10 options)
     int RandomPlanetIndex = rand.nextInt(9) + 1;    //There is no p0, add 1
@@ -28,6 +28,7 @@ public class Planet extends Physical implements Clickable
 
     //Set the sprite to the random subset of the spritesheet
     sprite = loadImage(filePath);
+    sprite.resize((int)size.x, (int)size.y);
     
     String descriptor = new String();
     descriptor += "This is a planet.\n Diameter: ";
@@ -35,7 +36,7 @@ public class Planet extends Physical implements Clickable
     descriptor += " m \n Mass: ";
     descriptor += mass;
     descriptor += " kg\n";
-    info = new TextWindow(location, descriptor);
+    info = new TextWindow("Planet info", location, descriptor);
   }
 
   @Override public void DrawObject()

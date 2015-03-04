@@ -14,9 +14,9 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
   protected float rotationRate;            //Degrees/sec
   protected PVector rotationLookTarget;    //Coordinate of what we want to look at
   
-  public Physical(PVector _loc, PVector _size, int _mass, DrawableType _type)
+  public Physical(String _name, PVector _loc, PVector _size, int _mass, DrawableType _type)
   {
-    super(_loc, _size, _type);
+    super(_name, _loc, _size, _type);
     
     mass = _mass;
     velocity = new PVector(0, 0);
@@ -88,11 +88,6 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
   }
   
   //******* MOVE *********/
-  public void SetDestinationAngle(float _destination)
-  {
-    destinationAngle = _destination;
-  }
-
   public void SetVelocity(PVector _vector)
   {
     if(_vector.mag() < globalSpeedLimit && _vector.mag() < localSpeedLimit)
@@ -126,11 +121,12 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     localSpeedLimit = _limit;
   }
   
-  //Move location of the asteroid
+  //Move location
   public void Move()
   {
     location = PVector.add(location, velocity);
   }
+ 
 
   //******* ROTATE *********/
   //0 = instant, 1 = spin, 2 = standard
@@ -147,6 +143,11 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
   public void SetRotationTarget(PVector _target)
   {
     rotationLookTarget = _target;
+  }
+  
+  public void SetDestinationAngle(float _destination)
+  {
+    destinationAngle = _destination;
   }
   
   //Rotate mode 2

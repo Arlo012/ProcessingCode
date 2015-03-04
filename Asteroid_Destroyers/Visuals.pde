@@ -8,9 +8,9 @@ void DrawAsteroids(ArrayList<Asteroid> _asteroids)
   }
 }
 
-void DrawGameArea(ArrayList<GameArea> _gameAreas)
+void DrawGameArea(Map<String, GameArea> _gameAreas)
 {
-  for(GameArea a : _gameAreas)
+  for(GameArea a : _gameAreas.values())
   {
     a.DrawObject();
   }
@@ -41,10 +41,12 @@ void MovePhysicalObject(ArrayList<? extends Physical> physical)
   }
 }
 
+
 void BeginZoom()
 {
   pushMatrix();
-
+  translate(-wvd.orgX * wvd.viewRatio, -wvd.orgY * wvd.viewRatio);
+  scale(wvd.viewRatio);
 }
 
 void EndZoom()

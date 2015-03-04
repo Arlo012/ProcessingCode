@@ -4,17 +4,12 @@
 * @see         GenerateAsteroids
 * This function will generate asteroids in random locations on a given game area
 */
-int initialAsteroidCount = 250;
-PVector asteroidSizeRange = new PVector(10, 35);      //Min, max asteroid size
+int initialAsteroidCount = 100;
 int generationPersistenceFactor = 5;     //How hard should I try to generate the requested asteroids?
-PVector maxVelocity = new PVector(0.01,0.65);                 //Max velocity in given x/y direction of asteroid
-void GenerateAsteroids(GameArea area)
+AsteroidFactory asteroidFactory = new AsteroidFactory();
+void GenerateAsteroids(GameArea _area)
 {
   println("Generating asteroids");
-  int minX = int(area.GetLocation().x);
-  int minY = int(area.GetLocation().y);
-  int maxX = int(area.GetSize().x);
-  int maxY = int(area.GetSize().y);
   
   //Tile arraylist constructor 
   int i = 0;      //Iterator  
@@ -22,30 +17,22 @@ void GenerateAsteroids(GameArea area)
   boolean noOverlap = true;    //Is this coordinate original, or will it allow overlap?
   while(i < initialAsteroidCount)
   {
-    int size = rand.nextInt(int(asteroidSizeRange.y - asteroidSizeRange.x))+ int(asteroidSizeRange.x);
-    
-    //Generate a random X coordinate guaranteed to be within the boundary
-    //accounting for the diameter of the asteroid where asteroidSizeRange.y is max size
-    int xCoor = rand.nextInt(maxX - int(asteroidSizeRange.y)) + minX + int(asteroidSizeRange.y/2);
-    int yCoor = rand.nextInt(maxY)+minY;
-    
-    //Generate random rotation speed
-    float rotateSpeed = .02 * rand.nextFloat() - .01;    //Generate random spinning value (-0.01, .01];
-    
-    //Generate random movement vector
-    float xVelocity = 2 * maxVelocity.x * rand.nextFloat() - maxVelocity.x;    //Desensitize in x direction
-    float yVelocity = 2 * maxVelocity.y * rand.nextFloat() - maxVelocity.y;
+    //Generate new asteroid location, size, etc parameters
+    asteroidFactory.SetNextAsteroidParameters(_area);
     
     //If we are doing asteroid collisions make sure none spawn over-lapped
     if(asteroidCollisionAllowed)
     {
-        //Check that this asteroid will not spawn on top of another    
+      //Check that this asteroid will not spawn on top of another    
+      
+      PVector roidLoc = asteroidFactory.GetNextAsteroidLocation();    //Asteroid location
+      int roidSize = asteroidFactory.Size();
       noOverlap = true;    //Assume this coordinate is good to begin
       for(Asteroid roid : asteroids)
       {
         //Check if this asteroid's center + diameter overlaps with roid's center + diameter
-        if( Math.abs(roid.GetLocation().x-xCoor) < roid.GetSize().x/2 + size/2 
-              && Math.abs(roid.GetLocation().y-yCoor) < roid.GetSize().y/2 + size/2 )
+        if( Math.abs(roid.GetLocation().x-roidLoc.x) < roid.GetSize().x/2 + roidSize/2 
+              && Math.abs(roid.GetLocation().y-roidLoc.y) < roid.GetSize().y/2 + roidSize/2 )
         {
           noOverlap = false;
           //println("Asteroid location rejected!");
@@ -55,14 +42,7 @@ void GenerateAsteroids(GameArea area)
       
       if(noOverlap)
       {  
-        Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, int(10000*size/asteroidSizeRange.y));
-        toBuild.SetRotationRate(rotateSpeed);
-        toBuild.SetVelocity(new PVector(xVelocity, yVelocity));
-        toBuild.SetRotationMode(1);    //Spinning
-        toBuild.SetMaxSpeed(2.5);      //Local speed limit for asteroid
-        //TODO direction random?
-        asteroids.add(toBuild);
-        //println("Built an asteroid!");
+        asteroids.add(asteroidFactory.GenerateAsteroid());
         i++;
       }
       else
@@ -81,26 +61,11 @@ void GenerateAsteroids(GameArea area)
     
     else    //We dont care about asteroid collisions, just spawn normally
     {
-      //HACK - this code is repeated from above
-      Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, int(10000*size/asteroidSizeRange.y));
-      toBuild.SetRotationRate(rotateSpeed);
-      toBuild.SetVelocity(new PVector(xVelocity, yVelocity));
-      toBuild.SetRotationMode(1);    //Spinning
-      toBuild.SetMaxSpeed(2.5);      //Local speed limit for asteroid
-      //TODO direction random?
-      asteroids.add(toBuild);
+      asteroids.add(asteroidFactory.GenerateAsteroid());
       i++;
     }
-    
-
   }
 }
-
-void GenerateAsteroidSpin()
-{
-  //TODO implement me
-}
-
 
 /*
 * Generate Planets
@@ -110,14 +75,16 @@ void GenerateAsteroidSpin()
 * @see          GeneratePlanets
 * This function will generate planets in random locations on a given game area
 */
-PVector planetSizeRange = new PVector(20, 35);      //Min, max planet size
+PVector planetSizeRange = new PVector(50, 100);      //Min, max planet size
+int borderSpawnDistance = 1;      //How far from the gameArea border should the planet spawn?
 void GeneratePlanets(GameArea area, ArrayList<Planet> planets, int count)
 {
-  println("Generating Planets");
-  int minX = int(area.GetLocation().x + planetSizeRange.x * 2);
-  int minY = int(area.GetLocation().y + planetSizeRange.y * 2);
-  int maxX = int(area.GetSize().x - planetSizeRange.x * 2);
-  int maxY = int(area.GetSize().y - planetSizeRange.y * 2);
+  //Guarantee no planets within 3 diameters from the edge of the game area
+  println("Generating Planets");  
+  int minX = int(area.GetLocation().x + planetSizeRange.y * borderSpawnDistance);
+  int minY = int(area.GetLocation().y + planetSizeRange.y * borderSpawnDistance);
+  int maxX = int(area.GetLocation().x + area.GetSize().x - planetSizeRange.y * borderSpawnDistance);
+  int maxY = int(area.GetLocation().y + area.GetSize().y - planetSizeRange.y * borderSpawnDistance);
   
   //Tile arraylist constructor 
   int i = 0;      //Iterator  
@@ -129,19 +96,20 @@ void GeneratePlanets(GameArea area, ArrayList<Planet> planets, int count)
     
     //Generate a random X/Y coordinate guaranteed to be within the boundary
     //accounting for the diameter of the asteroid where asteroidSizeRange.y is max size
-    int xCoor = rand.nextInt(maxX - int(planetSizeRange.y)) + minX + int(planetSizeRange.y/2);
-    int yCoor = rand.nextInt(maxY)+minY;
+
+    int xCoor = rand.nextInt(maxX-minX)+minX;
+    int yCoor = rand.nextInt(maxY-minY)+minY;
     
     //Generate random rotation speed
     float rotateSpeed = .01 * rand.nextFloat() - .005;    //Generate random spinning value (-0.005, .005];
     
-    //Check that this planet will not spawn on top of another    
+    //Check that this planet will not spawn too near one another 
     noOverlap = true;    //Assume this coordinate is good to begin
     for(Planet planet : planets)
     {
       //Check if this planet's center + diameter overlaps with planet's center + 4 * diameter
-      if( Math.abs(planet.GetLocation().x-xCoor) < planet.GetSize().x/2 + 2 * size 
-            && Math.abs(planet.GetLocation().y-yCoor) < planet.GetSize().y/2 + 2 * size )
+      if( Math.abs(planet.GetLocation().x-xCoor) < planet.GetSize().x * 1.5 + size * 1.5
+            && Math.abs(planet.GetLocation().y-yCoor) < planet.GetSize().y * 1.5 + size * 1.5 )
       {
         noOverlap = false;
         println("Planet location rejected!");
@@ -152,7 +120,7 @@ void GeneratePlanets(GameArea area, ArrayList<Planet> planets, int count)
     //Guarantee planets are too close to each oher
     if(noOverlap)
     {  
-      Planet toBuild = new Planet(new PVector(xCoor, yCoor), size, int(10000*size/planetSizeRange.y));
+      Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, int(10000*size/planetSizeRange.y));
       toBuild.SetRotationRate(rotateSpeed);
       toBuild.SetRotationMode(1);    //Spinning
       toBuild.SetMaxSpeed(0);        //Local speed limit for planet (don't move)
@@ -169,7 +137,7 @@ void GeneratePlanets(GameArea area, ArrayList<Planet> planets, int count)
       {
         print("Planet generation failed for ");
         print(count - i);
-        print(" asteroid(s)\n");
+        print(" planet(s)\n");
         break;    //abort the generation loop
       }
     }
@@ -177,8 +145,66 @@ void GeneratePlanets(GameArea area, ArrayList<Planet> planets, int count)
   }
 }
 
-
 //Checks if an object implements an interface, returns bool
 public static boolean implementsInterface(Object object, Class interf){
     return interf.isInstance(object);
+}
+
+/*
+ * Checks for any offscreen asteroids, despawns them, and replaces them
+ * Note: this assumes no asteroid collisions
+*/
+ArrayList<Asteroid> toSpawn = new ArrayList<Asteroid>();
+void AsteroidOffScreenUpdate(ArrayList<Asteroid> _roids, Map<String,GameArea> _areaMap)
+{
+  if(asteroidCollisionAllowed)
+  {
+    println("WARNING: Asteroid respawn not supported for collidable asteroids");
+  }
+  else
+  {
+    //See example @ http://stackoverflow.com/questions/223918/iterating-through-a-list-avoiding-concurrentmodificationexception-when-removing
+    for (Iterator<Asteroid> iterator = _roids.iterator(); iterator.hasNext();) 
+    {
+      Asteroid roid = iterator.next();
+      if (roid.isOffScreen) 
+      {
+        // Remove the current element from the iterator and the list.
+        iterator.remove();
+        
+        //Generate new asteroid
+        
+        int spawnAreaRandom = rand.nextInt(2);
+        println(spawnAreaRandom);
+        String areaToSpawn = new String("");
+        if(spawnAreaRandom == 1)
+        {
+          areaToSpawn = "Top Asteroid Spawn";
+        }
+        else
+        {
+          areaToSpawn = "Bottom Asteroid Spawn";
+        }
+
+        asteroidFactory.SetNextAsteroidParameters(_areaMap.get(areaToSpawn));
+        asteroidFactory.OverrideYDirection(spawnAreaRandom == 1 ? 1 : -1);      //If spawned @ top go down & vice versa
+        Asteroid toAdd = asteroidFactory.GenerateAsteroid();
+        //Generate a new asteroid to replace
+        toSpawn.add(toAdd);
+      }
+    }
+    
+  }
+  
+  //Add all new asteroids
+  if(!toSpawn.isEmpty())
+  {
+    for(Asteroid roid : toSpawn)
+    {
+      _roids.add(roid);
+    }
+    toSpawn.clear();
+
+  }
+
 }
