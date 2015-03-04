@@ -29,11 +29,10 @@ public class GameArea extends Drawable
     debugViewColor = _color;
   }
   
-  //Override drawable
-  
+  //Override drawable for center draw
   @Override public void DrawObject()
   {
-    rectMode(CENTER);
+    rectMode(CORNER);
     fill(debugViewColor, 50);
     rect(location.x, location.y, size.x, size.y);
   }

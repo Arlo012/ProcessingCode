@@ -1,7 +1,8 @@
 public interface Movable
 {
   void Move();
-  void ChangeVelocity(PVector _vector);
+  void ChangeVelocity(PVector _modifier);
+  void SetVelocity(PVector _velocity);
 }
 
 public interface Turnable

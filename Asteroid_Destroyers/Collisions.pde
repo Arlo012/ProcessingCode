@@ -41,16 +41,18 @@ void HandleCollisions(ArrayList<? extends Physical> a)
           && a.get(i).location.x - a.get(i).size.x/2 <= a.get(j).location.x + a.get(j).size.x/2  //X from left
           && a.get(i).location.y - a.get(i).size.y/2 <= a.get(j).location.y + a.get(j).size.y/2)    //Y from bottom
         {
-          /*
-          print("COLLISION BETWEEN: ");
-          print(a.get(i).GetID());
-          print(" & ");
-          print(a.get(j).GetID());
-          print("\n");
-          */
+          if(debugMode)
+          {
+            print("COLLISION BETWEEN: ");
+            print(a.get(i).GetID());
+            print(" & ");
+            print(a.get(j).GetID());
+            print("\n");
+          }
+
           //Give both collision handlers info about the other
-          a.get(i).HandleCollision(a.get(j));
-          a.get(j).HandleCollision(a.get(i));
+          a.get(i).HandleCollision(a.get(j)); //<>//
+          a.get(j).HandleCollision(a.get(i)); //<>//
         }
       }
     }

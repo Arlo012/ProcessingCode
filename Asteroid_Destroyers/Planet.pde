@@ -1,10 +1,7 @@
-//Each sprite spaced 128 pixels apart
-PImage asteroidSpriteSheet;      //Loaded in setup()
-
 /*
- * An asteroid gameobject, inheriting from Drawable
+ * A planet gameobject, inheriting from Drawable
  */
-public class Asteroid extends Physical implements Clickable
+public class Planet extends Physical implements Clickable
 {
   TextWindow info;
   
@@ -15,30 +12,29 @@ public class Asteroid extends Physical implements Clickable
    * @param  _yloc  y coordinate of the asteroid
    * @see         Asteroid
    */
-  public Asteroid(PVector _loc, int _diameter, int _mass) 
+  public Planet(PVector _loc, int _diameter, int _mass) 
   {
     //Parent constructor
-    super(_loc, new PVector(_diameter, _diameter), _mass, DrawableType.ASTEROID);
+    super(_loc, new PVector(_diameter, _diameter), _mass, DrawableType.PLANET);
     
-    //Select my asteroid image from spritesheet     
-    int RandomAsteroidIndex1 = rand.nextInt(8);      //x coordinate in sprite sheet
-    int RandomAsteroidIndex2 = rand.nextInt(8);      //y coordinate in sprite sheet
+    //Select my planet image from spritesheet (total of 10 options)
+    int RandomPlanetIndex = rand.nextInt(9) + 1;    //There is no p0, add 1
+    
+    //Create filesystem path to sprite
+    String filePath = "";
+    filePath += "Assets/Planets/p";
+    filePath += RandomPlanetIndex;
+    filePath += "shaded.png";
 
     //Set the sprite to the random subset of the spritesheet
-    sprite = asteroidSpriteSheet.get(RandomAsteroidIndex1 * 128, RandomAsteroidIndex2 * 128, 128, 128);
-    
-    //Scale by 128/90 where 128 is provided size above and 90 is actual size of the asteroid sprite
-    sprite.resize(int(size.x * 128/90), int(size.y * 128/90));
+    sprite = loadImage(filePath);
     
     String descriptor = new String();
-    descriptor += "This is an asteroid.\n Diameter: ";
+    descriptor += "This is a planet.\n Diameter: ";
     descriptor += size.x;
     descriptor += " m \n Mass: ";
     descriptor += mass;
     descriptor += " kg\n";
-    descriptor += "Velocity: ";
-    descriptor += velocity.mag();
-    descriptor += " m/s ";
     info = new TextWindow(location, descriptor);
   }
 
@@ -74,14 +70,11 @@ public class Asteroid extends Physical implements Clickable
     info.UpdateLocation(location);
     
     String descriptor = new String();
-    descriptor += "This is an asteroid.\nDiameter: ";
+    descriptor += "This is a Planet.\nDiameter: ";
     descriptor += size.x;
     descriptor += " m \nMass: ";
     descriptor += mass;
     descriptor += " kg\n";
-    descriptor += "Velocity: ";
-    descriptor += velocity.mag();
-    descriptor += " m/s ";
 
     info.UpdateText(descriptor);
   }

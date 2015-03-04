@@ -1,7 +1,8 @@
 PFont standardFont =  createFont("Helvetica", 14);    // font name and size
 
+/*
 public enum UItype {
-}
+}*/
 
 public class UI extends Drawable
 {

@@ -1,7 +1,7 @@
 //Drawable types (casting helper)
 public enum DrawableType {
   ASTEROID, SHIP, GAMEAREA, 
-  STRUCTURE, UI
+  STRUCTURE, UI, PLANET
 }
 
 int uniqueIDCounter = 0;
@@ -48,7 +48,7 @@ public class Drawable
     image(sprite, location.x, location.y);
   }
 
-  public PVector GetCenter()
+  public PVector GetLocation()
   {
     return location;
   }

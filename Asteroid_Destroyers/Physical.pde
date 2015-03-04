@@ -1,7 +1,10 @@
+float globalSpeedLimit = 5;      //Universal speed limit (magnitude vector)
+
 public class Physical extends Drawable implements Movable, Turnable, Collidable
 {
   protected int mass;
   protected PVector velocity;              //On absolute plane
+  protected float localSpeedLimit;       //Max velocity magnitude for this object
   
   //Rotation
   protected int rotationMode;              //-1 = stationary, 0 = instant, 1 = spin, 2 = face point
@@ -17,6 +20,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     
     mass = _mass;
     velocity = new PVector(0, 0);
+    localSpeedLimit = globalSpeedLimit;      //Default speed limit
     
     //Rotation
     currentAngle = 0;
@@ -89,12 +93,39 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     destinationAngle = _destination;
   }
 
-  //Modify the current velocity of the object 
+  public void SetVelocity(PVector _vector)
+  {
+    if(_vector.mag() < globalSpeedLimit && _vector.mag() < localSpeedLimit)
+    {
+      velocity = _vector;
+    }
+    else if (_vector.mag() > localSpeedLimit)
+    {
+      PVector scaledV = new PVector(_vector.x, _vector.y);
+      scaledV.limit(localSpeedLimit);
+      velocity = scaledV;
+    }
+    else if (_vector.mag() > globalSpeedLimit)
+    {
+      PVector scaledV = new PVector(_vector.x, _vector.y);
+      scaledV.limit(globalSpeedLimit);
+      velocity = scaledV;
+    }
+  }
+  //Modify the current velocity of the object, respecting speed limit
   public void ChangeVelocity(PVector _vector)
   {
-    velocity = _vector;
+    PVector newVelocity = new PVector(velocity.x + _vector.x, velocity.y + _vector.x);
+    SetVelocity(newVelocity);
+    
   }
 
+  //Set local speed limit
+  public void SetMaxSpeed(float _limit)
+  {
+    localSpeedLimit = _limit;
+  }
+  
   //Move location of the asteroid
   public void Move()
   {
@@ -171,20 +202,24 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
   }
   
   //******* COLLIDE *********/
+  float frictionFactor = 1;        //How much to slow down after collision
   public void HandleCollision(Physical _other)
   {
-    PVector deltaV = new PVector(0,0);
-    deltaV.x = (_other.velocity.x - velocity.x) * _other.mass/mass/100;
-    deltaV.y = (_other.velocity.y - velocity.y) * _other.mass/mass/100;
+    //Mass scaling factor (other/mine)
+    float massRatio = 1;//_other.mass/mass;
     
-    //TODO it seems like the collison algorithm is making this happen repeatedly. Check that out first
-    //deltaV.x = -2*velocity.x;
-    //deltaV.y = -2*velocity.y;
+    PVector deltaP = new PVector(0,0);    //Delta of position, dP(12) = P2 - P1
+    deltaP.x = _other.location.x - location.x;
+    deltaP.y = _other.location.y - location.y;
     
-    //println(deltaV); //<>//
-    ChangeVelocity(deltaV);
+    deltaP.normalize();      //Create unit vector for new direction from deltaP
+    
+    //Opposite vector for this object
+    deltaP.mult(-1); //<>//
+    deltaP.setMag(velocity.mag());
+    
+    SetVelocity(deltaP);
 
-    
     //TODO testme 
     rotationRate /= 1.5;
   }

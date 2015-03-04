@@ -24,6 +24,14 @@ void DrawShips(ArrayList<Ship> _ships)
   }
 }
 
+void DrawPlanets(ArrayList<Planet> _planets)
+{
+  for(Planet a : _planets)
+  {
+    a.DrawObject();
+  }
+}
+
 //Move an array of movable objects
 void MovePhysicalObject(ArrayList<? extends Physical> physical)
 {
@@ -31,4 +39,15 @@ void MovePhysicalObject(ArrayList<? extends Physical> physical)
   {
     a.Move();
   }
+}
+
+void BeginZoom()
+{
+  pushMatrix();
+
+}
+
+void EndZoom()
+{
+  popMatrix();
 }
