@@ -1,10 +1,15 @@
-float globalSpeedLimit = 5;      //Universal speed limit (magnitude vector)
+float globalSpeedLimit = 2;      //Universal speed limit (magnitude vector)
 
 public class Physical extends Drawable implements Movable, Turnable, Collidable
 {
+  //Stats
   protected int mass;
+  protected Health health;
+  
+  //Movement
   protected PVector velocity;              //On absolute plane
-  protected float localSpeedLimit;       //Max velocity magnitude for this object
+  protected float localSpeedLimit;         //Max velocity magnitude for this object
+  protected float acceleration = 0.01;     //Multiple to max velocity out of 1. 0 = none, 1 = instant
   
   //Rotation
   protected int rotationMode;              //-1 = stationary, 0 = instant, 1 = spin, 2 = face point
@@ -14,13 +19,17 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
   protected float rotationRate;            //Degrees/sec
   protected PVector rotationLookTarget;    //Coordinate of what we want to look at
   
+  //Collisions
+  protected long lastCollisionTime = -9999;
+  
   public Physical(String _name, PVector _loc, PVector _size, int _mass, DrawableType _type)
   {
     super(_name, _loc, _size, _type);
     
+    health = new Health(100, 100);    
     mass = _mass;
     velocity = new PVector(0, 0);
-    localSpeedLimit = globalSpeedLimit;      //Default speed limit
+    localSpeedLimit = 0.75;      //Default speed limit
     
     //Rotation
     currentAngle = 0;
@@ -43,7 +52,6 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
       line(0, 0, 100 * velocity.x, 100 * velocity.y);
     }
     
-    
     //Handle rotation
     if (rotationMode == -1)
     {   //Not rotating
@@ -51,8 +59,8 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     else if (rotationMode == 0)
     {
       //Rotate instantly
-      rotate(destinationAngle);
-      println(destinationAngle);
+      //rotate(destinationAngle);
+      //println(destinationAngle);
       currentAngle = destinationAngle;      //We instantly rotated there
     } 
     else if (rotationMode == 1)
@@ -87,7 +95,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     popMatrix();
   }
   
-  //******* MOVE *********/
+//******* MOVE *********/
   public void SetVelocity(PVector _vector)
   {
     if(_vector.mag() < globalSpeedLimit && _vector.mag() < localSpeedLimit)
@@ -107,10 +115,11 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
       velocity = scaledV;
     }
   }
+  
   //Modify the current velocity of the object, respecting speed limit
   public void ChangeVelocity(PVector _vector)
   {
-    PVector newVelocity = new PVector(velocity.x + _vector.x, velocity.y + _vector.x);
+    PVector newVelocity = new PVector(velocity.x + _vector.x, velocity.y + _vector.y);
     SetVelocity(newVelocity);
     
   }
@@ -128,7 +137,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
   }
  
 
-  //******* ROTATE *********/
+//******* ROTATE *********/
   //0 = instant, 1 = spin, 2 = standard
   public void SetRotationMode(int _rotateMode)
   {
@@ -202,12 +211,14 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     }
   }
   
-  //******* COLLIDE *********/
-  float frictionFactor = 1;        //How much to slow down after collision
+//******* COLLIDE *********/
+  float frictionFactor = 2;        //How much to slow down after collision (divisor)
   public void HandleCollision(Physical _other)
   {
+    lastCollisionTime = millis();
+    
     //Mass scaling factor (other/mine)
-    float massRatio = 1;//_other.mass/mass;
+    float massRatio = _other.mass/mass;
     
     PVector deltaP = new PVector(0,0);    //Delta of position, dP(12) = P2 - P1
     deltaP.x = _other.location.x - location.x;
@@ -217,11 +228,11 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     
     //Opposite vector for this object
     deltaP.mult(-1); //<>//
-    deltaP.setMag(velocity.mag());
+    deltaP.setMag(velocity.mag()/frictionFactor);
     
     SetVelocity(deltaP);
-
+    
     //TODO testme 
-    rotationRate /= 1.5;
+    //rotationRate /= 1.5;
   }
 }

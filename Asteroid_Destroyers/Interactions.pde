@@ -57,7 +57,7 @@ void mouseClicked() {
     }
   }
   
-
+  p1Ships.get(0).SetDestination(new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldX(mouseY)));
 }
 
 //Check for keypresses

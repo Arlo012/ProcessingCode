@@ -4,7 +4,7 @@ PImage shipSprite;      //Loaded in setup()
 /**
  * An asteroid gameobject, inheriting from Drawable
  */
-public class Ship extends Pilotable implements Clickable
+public class Ship extends Pilotable implements Clickable, Updatable
 {
   TextWindow info;
   
@@ -31,6 +31,17 @@ public class Ship extends Pilotable implements Clickable
     descriptor += velocity.mag();
     descriptor += " m/s ";
     info = new TextWindow("Asteroid Info", location, descriptor);
+  }
+  
+  public void Update()
+  {
+    //Check if UI is currently rendered, and if so update info
+    if(info.visibleNow)
+    {
+      UpdateUIInfo();
+    }
+    //Assume UI will not be rendered next frame
+    info.visibleNow = false;    //Another mouseover/ click will negate this
   }
 
 /*Click & mouseover UI*/

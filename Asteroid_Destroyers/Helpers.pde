@@ -175,7 +175,6 @@ void AsteroidOffScreenUpdate(ArrayList<Asteroid> _roids, Map<String,GameArea> _a
         //Generate new asteroid
         
         int spawnAreaRandom = rand.nextInt(2);
-        println(spawnAreaRandom);
         String areaToSpawn = new String("");
         if(spawnAreaRandom == 1)
         {
@@ -206,5 +205,4 @@ void AsteroidOffScreenUpdate(ArrayList<Asteroid> _roids, Map<String,GameArea> _a
     toSpawn.clear();
 
   }
-
 }

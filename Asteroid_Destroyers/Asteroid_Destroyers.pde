@@ -32,7 +32,7 @@ HashMap<String,GameArea> gameAreas;
 long loopCounter;
 
 //Setup constants
-boolean debugMode = false;
+boolean debugMode = true;
 boolean profilingMode = false;
 boolean asteroidCollisionAllowed = false;
 
@@ -100,10 +100,10 @@ void setup()
   
   //Ship setup
   p1Ships = new ArrayList<Ship>();
-  Ship testShip = new Ship("Test Ship", new PVector(width/8, height/2), 
+  Ship testShip = new Ship("Test Ship", new PVector(width/8, height/3), 
               new PVector(50, 35), shipSprite, 1000);
   testShip.SetRotationRate(0.05);
-  testShip.ChangeVelocity(new PVector(1,0));
+  testShip.ChangeVelocity(new PVector(0,0));
   testShip.MoveToTarget(new PVector(width/2, height/2));
   p1Ships.add(testShip);
   
@@ -130,7 +130,6 @@ void draw()
 {
   loopCounter++;
   background(bg);
-  
 
   BeginZoom();
 
@@ -140,10 +139,9 @@ void draw()
   DrawPlanets(p2Planets);
   DrawShips(p1Ships);
   
-
   //Move game objects
   MovePhysicalObject(asteroids);        //See Visuals.pde
-  MovePhysicalObject(p1Ships);
+  MovePilotableObject(p1Ships);
 
   //Check collisions
   if(asteroidCollisionAllowed)
@@ -176,6 +174,13 @@ void draw()
 
   
   //TODO: Update game stats, i.e. resources?
+  //HACK update functions are hard to access generically -- need to individually update each type
+      //TODO if I am going to do this, why bother with all of the things in visual that try to be smart about it?
+  UpdateShips(p1Ships);
+  UpdateAsteroids(asteroids);
+  UpdatePlanets(p1Planets);
+  UpdatePlanets(p2Planets);
+  
   if(profilingMode)
   {
     println(frameRate);

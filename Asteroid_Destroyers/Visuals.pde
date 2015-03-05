@@ -41,6 +41,15 @@ void MovePhysicalObject(ArrayList<? extends Physical> physical)
   }
 }
 
+//Move an array of pilotable objects
+void MovePilotableObject(ArrayList<? extends Pilotable> pilotable)
+{
+  for(Pilotable a : pilotable)
+  {
+    a.Move();
+  }
+}
+
 
 void BeginZoom()
 {

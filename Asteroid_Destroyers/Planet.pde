@@ -1,7 +1,7 @@
 /*
  * A planet gameobject, inheriting from Drawable
  */
-public class Planet extends Physical implements Clickable
+public class Planet extends Physical implements Clickable, Updatable
 {
   TextWindow info;
   
@@ -39,10 +39,8 @@ public class Planet extends Physical implements Clickable
     info = new TextWindow("Planet info", location, descriptor);
   }
 
-  @Override public void DrawObject()
+  public void Update()
   {
-    super.DrawObject();
-    
     //Check if UI is currently rendered, and if so update info
     if(info.visibleNow)
     {
@@ -51,7 +49,6 @@ public class Planet extends Physical implements Clickable
     //Assume UI will not be rendered next frame
     info.visibleNow = false;    //Another mouseover/ click will negate this
   }
-
 
 /*Click & mouseover UI*/
   ClickType GetClickType()

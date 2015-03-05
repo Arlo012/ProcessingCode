@@ -12,13 +12,13 @@ void HandleCollisions(ArrayList<? extends Physical> a, ArrayList<? extends Physi
           && obj1.location.x - obj1.size.x/2 <= obj2.location.x + obj2.size.x/2  //X from left
           && obj1.location.y - obj1.size.y/2 <= obj2.location.y + obj2.size.y/2)    //Y from bottom
       {
-        /*
+        
         print("COLLISION BETWEEN: ");
-        print(obj1.GetID());
+        print(obj1.name);
         print(" & ");
-        print(obj2.GetID());
+        print(obj2.name);
         print("\n");
-        */
+        
         obj1.HandleCollision(obj2);
         obj2.HandleCollision(obj1);
       }

@@ -4,7 +4,7 @@ PImage asteroidSpriteSheet;      //Loaded in setup()
 /*
  * An asteroid gameobject, inheriting from Drawable
  */
-public class Asteroid extends Physical implements Clickable
+public class Asteroid extends Physical implements Clickable, Updatable
 {
   TextWindow info;
   public boolean isOffScreen = false;      //Is this asteroid offscreen?
@@ -43,6 +43,17 @@ public class Asteroid extends Physical implements Clickable
     descriptor += " m/s ";
     info = new TextWindow("Asteroid Info", location, descriptor);
   }
+  
+  public void Update()
+  {
+    //Check if UI is currently rendered, and if so update info
+    if(info.visibleNow)
+    {
+      UpdateUIInfo();
+    }
+    //Assume UI will not be rendered next frame
+    info.visibleNow = false;    //Another mouseover/ click will negate this
+  }
 
   @Override public void DrawObject()
   {
@@ -54,14 +65,6 @@ public class Asteroid extends Physical implements Clickable
     {
       isOffScreen = true;      //Mark for removal
     }
-    
-    //Check if UI is currently rendered, and if so update info
-    if(info.visibleNow)
-    {
-      UpdateUIInfo();
-    }
-    //Assume UI will not be rendered next frame
-    info.visibleNow = false;    //Another mouseover/ click will negate this
   }
 
 

@@ -27,3 +27,9 @@ public interface Clickable
   ClickType GetClickType();
   void Click();
 }
+
+//For all classes that have information to update each loop
+public interface Updatable
+{
+  void Update();
+}
