@@ -59,7 +59,7 @@ void HandleCollisions(ArrayList<? extends Physical> a)
 }
 
 //Handle a click with any drawable object and a given point, checking of the obj is clickable
-boolean HandleClick(ArrayList<? extends Drawable> a, PVector point)
+Clickable CheckClickableOverlap(ArrayList<? extends Drawable> a, PVector point)
 {
   for(Drawable obj1 : a)
   {
@@ -71,12 +71,10 @@ boolean HandleClick(ArrayList<? extends Drawable> a, PVector point)
       if(obj1 instanceof Clickable)
       {
         Clickable clickable = (Clickable)obj1;
-        clickable.Click();
-        return true;
+        return clickable;
       }
     }
   }
   
-  
-  return false;
+  return null;
 }

@@ -25,7 +25,8 @@ public interface Clickable
 {
   void UpdateUIInfo();          //Update the location and any text/ UI information in the given window
   ClickType GetClickType();
-  void Click();
+  void Click();                 //Click the target
+  void MouseOver();             //Mouseover the target
 }
 
 //For all classes that have information to update each loop

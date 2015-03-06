@@ -58,6 +58,8 @@ public class AsteroidFactory
     toBuild.SetVelocity(new PVector(xVelocity, yVelocity));
     toBuild.SetRotationMode(1);    //Spinning
     toBuild.SetMaxSpeed(2.5);      //Local speed limit for asteroid
+    toBuild.iconOverlay.SetIcon(color(#E8E238),ShapeType._CIRCLE_);
+    
     //TODO direction random?
     
     return toBuild;

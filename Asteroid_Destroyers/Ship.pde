@@ -33,6 +33,7 @@ public class Ship extends Pilotable implements Clickable, Updatable
     info = new TextWindow("Asteroid Info", location, descriptor);
   }
   
+  //HACK this update() function is highly repeated through child classes
   public void Update()
   {
     //Check if UI is currently rendered, and if so update info
@@ -42,6 +43,9 @@ public class Ship extends Pilotable implements Clickable, Updatable
     }
     //Assume UI will not be rendered next frame
     info.visibleNow = false;    //Another mouseover/ click will negate this
+    
+    //Update icon overlay
+    iconOverlay.UpdateLocation(location);
   }
 
 /*Click & mouseover UI*/
@@ -51,15 +55,21 @@ public class Ship extends Pilotable implements Clickable, Updatable
   }
   
   //Handle click actions on this object
-  void Click()
+  void MouseOver()
   {
     info.visibleNow = true;
     info.DrawObject();
   }
   
-  //When the object moves this must move as well
+  void Click()
+  {
+    
+  }
+  
+  //When the object moves its UI elements must as well
   void UpdateUIInfo()
   {
+    //Update textbox
     info.UpdateLocation(location);
     
     String descriptor = new String();

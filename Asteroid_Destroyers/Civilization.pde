@@ -5,17 +5,21 @@ LEFT, RIGHT
 public class Civilization
 {
   ArrayList<Ship> fleet;
+  ArrayList<Planet> planets;
   String name;
   private PVector topCorner;            //Which corner is this civilization in (0,0) or (width,0)
   CivOrientation orientation;
   
   TextWindow CivName;
   
-  public Civilization(PVector _upperCorner, String _name, ArrayList<Ship> _fleet)
+  public Civilization(PVector _upperCorner, String _name, ArrayList<Ship> _fleet, ArrayList<Planet> _planets)
   {
     topCorner = _upperCorner;
     name = _name;
     fleet = _fleet;
+    planets = _planets;
+    
+    //Determine civilization orientation (LEFT?RIGHT)
     if(PVector.dist(topCorner,new PVector(0,0)) == 0)
     {
       orientation = CivOrientation.LEFT;
@@ -29,7 +33,6 @@ public class Civilization
       orientation = CivOrientation.RIGHT;
       println("ERROR: Incorrectly assigned civilization corner. Assuming right-side");
     }
-    
     
     //Build civ name window based on side
     PVector windowSize = new PVector(250,50);

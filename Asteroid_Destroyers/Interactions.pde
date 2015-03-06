@@ -34,31 +34,41 @@ void mouseDragged() {
 }
 
 // Change zoom level
-void mouseClicked() {
-  if (mouseX < width && mouseY < height) {
-    if (mouseButton == LEFT || mouseButton == RIGHT) {
-      // Calculate current mouse position position
-      float wmX = wvd.pixel2worldX(mouseX);
-      float wmY = wvd.pixel2worldY(mouseY);
-      float sf = (mouseButton == LEFT) ? 1.1 : 0.9;
-      wvd.viewRatio *= sf;
-      wvd.viewRatio = constrain(wvd.viewRatio, 0.05, 200.0);
-      
-      //Prevent zooming out past standard zoom
-      if(wvd.viewRatio < 1)
-      {
-        wvd.viewRatio = 1.00f;
-      }
-      else    //Onlt shift translation if we aren't zoomed out all the way
-      {
-        wvd.orgX = wmX - mouseX / wvd.viewRatio;
-        wvd.orgY = wmY - mouseY / wvd.viewRatio;
-      }
-    }
+void mouseClicked() 
+{
+  if(mouseButton == LEFT)
+  {
+    Controller1.HandleLeftClick(new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldY(mouseY)));
   }
+  else if (mouseButton == RIGHT)
+  {
+    Controller1.HandleRightClick(new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldY(mouseY)));
+  }
+
   
-  p1Ships.get(0).SetDestination(new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldX(mouseY)));
+  //p1Ships.get(0).SetDestination(new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldX(mouseY)));
 }
+
+void mouseWheel(MouseEvent e)
+{
+  float wmX = wvd.pixel2worldX(mouseX);
+  float wmY = wvd.pixel2worldY(mouseY);
+  
+  wvd.viewRatio -= e.getAmount() / 20;
+  wvd.viewRatio = constrain(wvd.viewRatio, 0.05, 200.0);
+  
+  //Prevent zooming out past standard zoom
+  if(wvd.viewRatio < 1)
+  {
+    wvd.viewRatio = 1.00f;
+  }
+  else    //Onlt shift translation if we aren't zoomed out all the way
+  {
+    wvd.orgX = wmX - mouseX / wvd.viewRatio;
+    wvd.orgY = wmY - mouseY / wvd.viewRatio;
+  }
+}
+
 
 //Check for keypresses
 void keyPressed() 

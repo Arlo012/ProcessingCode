@@ -2,6 +2,9 @@ float globalSpeedLimit = 2;      //Universal speed limit (magnitude vector)
 
 public class Physical extends Drawable implements Movable, Turnable, Collidable
 {
+  //UI
+  public Shape iconOverlay;
+  
   //Stats
   protected int mass;
   protected Health health;
@@ -29,7 +32,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     health = new Health(100, 100);    
     mass = _mass;
     velocity = new PVector(0, 0);
-    localSpeedLimit = 0.75;      //Default speed limit
+    localSpeedLimit = 1.5;      //Default speed limit
     
     //Rotation
     currentAngle = 0;
@@ -38,6 +41,10 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     rotationRate = 0.01;    //Degrees/sec TODO broken not related to deg/sec right now
     spinDirection = 1;      //CW
     rotationLookTarget = new PVector(0,0);      //Default look at origin
+    
+    //UI
+    iconOverlay = new Shape("Physical Overlay", location, 
+                size, color(0,255,0), ShapeType._SQUARE_);
   }
   
   @Override public void DrawObject()
@@ -54,7 +61,8 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     
     //Handle rotation
     if (rotationMode == -1)
-    {   //Not rotating
+    {   //Not rotating (hold whatever angle is provided)
+      rotate(currentAngle);
     } 
     else if (rotationMode == 0)
     {
@@ -62,6 +70,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
       //rotate(destinationAngle);
       //println(destinationAngle);
       currentAngle = destinationAngle;      //We instantly rotated there
+      rotate(currentAngle);
     } 
     else if (rotationMode == 1)
     {
@@ -135,6 +144,22 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
   {
     location = PVector.add(location, velocity);
   }
+  
+  //Orbit around a body
+  public void Orbit(Physical _body)
+  {
+    println("WARNING: Orbit method not implemented");
+    
+    //TODO properly research good orbit mechanics within this physics framework
+    /*
+    //HACK use rotation rate to define orbital rate
+    PVector orbitMovement = new PVector(0,0);
+    orbitMovement.x = cos(rotationRate) * _body.size.x * 2;    //orbiting at 2x body x dimension
+    orbitMovement.y = sin(rotationRate) * _body.size.x * 2;    
+    orbitMovement.normalize();
+    SetVelocity(orbitMovement);
+    */
+  }
  
 
 //******* ROTATE *********/
@@ -151,7 +176,16 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
 
   public void SetRotationTarget(PVector _target)
   {
-    rotationLookTarget = _target;
+    if(_target != null)
+    {
+      rotationLookTarget = _target;
+    }
+    else
+    {
+      //TODO setting this is messing up control flow of pathing
+      rotationLookTarget = new PVector(0,0);
+    }
+    
   }
   
   public void SetDestinationAngle(float _destination)
@@ -160,6 +194,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
   }
   
   //Rotate mode 2
+  //TODO cleanup here
   private void RotateToTarget()
   {
     PVector targetRelativeToLocal = new PVector(rotationLookTarget.x - location.x, 
@@ -177,7 +212,6 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     {
       currentAngle += radians(360);
     }
-
     
     //Check for wrap-around degrees
     if(degrees(radToRotate - currentAngle) < -180)
@@ -189,7 +223,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
       radToRotate -= radians(360);
     }
     
-    
+    //Jitter prevention
     if (Math.abs(radToRotate - currentAngle) > radians(0.5))
     {
       if (radToRotate - currentAngle > 0)
@@ -235,4 +269,5 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     //TODO testme 
     //rotationRate /= 1.5;
   }
+  
 }

@@ -1,8 +1,8 @@
 import java.util.Map;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 //Random number generator
 Random rand = new Random();
@@ -12,6 +12,7 @@ String title = "Asteroid Destroyers";
 
 //Teams
 Civilization P1, P2;
+PlayerController Controller1, Controller2;
 
 //Game stage
 GameStage gameStage;
@@ -32,14 +33,18 @@ HashMap<String,GameArea> gameAreas;
 long loopCounter;
 
 //Setup constants
-boolean debugMode = true;
+boolean debugMode = false;
 boolean profilingMode = false;
 boolean asteroidCollisionAllowed = false;
 
-//TODO: Zoom setup
 //Handle zooming http://forum.processing.org/one/topic/zoom-based-on-mouse-position.html
 float minX, maxX, minY, maxY;
 WorldViewData wvd = new WorldViewData();
+
+//UI Info
+LinkedList<Clickable> toDisplay;        //List of objects to display
+
+//TEST AREA
 
 void setup()
 {
@@ -68,7 +73,7 @@ void setup()
   
   loopCounter = 0;
 
-  //Game area setup
+//Game area setup
   gameAreas = new HashMap<String, GameArea>();
 
   //Create asteroid field filling half of the screen
@@ -94,50 +99,84 @@ void setup()
   gameAreas.put(P1Field.GetName(), P1Field);
   gameAreas.put(P2Field.GetName(), P2Field);
 
-  //Game object initializers
+//Game object initializers
   asteroids = new ArrayList<Asteroid>();
   GenerateAsteroids(asteroidField);        //See Helpers.pde
   
-  //Ship setup
+//Ship setup
   p1Ships = new ArrayList<Ship>();
   Ship testShip = new Ship("Test Ship", new PVector(width/8, height/3), 
-              new PVector(50, 35), shipSprite, 1000);
+              new PVector(30, 22), shipSprite, 1000);
   testShip.SetRotationRate(0.05);
   testShip.ChangeVelocity(new PVector(0,0));
-  testShip.MoveToTarget(new PVector(width/2, height/2));
+  //testShip.MoveToTarget(new PVector(width/2, height/2));
+  testShip.iconOverlay.SetIcon(color(0,0,255),ShapeType._TRIANGLE_);
+  
   p1Ships.add(testShip);
   
   p2Ships = new ArrayList<Ship>();
   
-  //Planet setup
+//Planet setup
   p1Planets = new ArrayList<Planet>();
   GeneratePlanets(P1Field, p1Planets, 3);
   
   p2Planets = new ArrayList<Planet>();
   GeneratePlanets(P2Field, p2Planets, 3);
   
-  //Civilization setup
-  P1 = new Civilization(new PVector(0,0), "Robot Jesus Collective", p1Ships);
-  P1.SetCivilizationIcon(skull,24);      //TODO icons are broken (freeze game)
+//Civilization setup
+  P1 = new Civilization(new PVector(0,0), "Robot Jesus Collective", p1Ships, p1Planets);
+  P1.SetCivilizationIcon(skull,24);
   
-  P2 = new Civilization(new PVector(width,0), "Normal Squishy Humans", p2Ships);
+  P2 = new Civilization(new PVector(width,0), "Normal Squishy Humans", p2Ships, p2Planets);
   P2.SetCivilizationIcon(lion,24);
   
+//Controller setup
+  Controller1 = new PlayerController(P1);
+  //Controller2 = new PlayerController(P2);
+  
+//UI setup
+  toDisplay = new LinkedList<Clickable>();
+  
   frameRate(60);
+  
+//TEST AREA
+
 }
 
 void draw()
 {
   loopCounter++;
-  background(bg);
+  if(debugMode)
+  {
+    background(0);
+  }
+  else
+  {
+    background(bg);
+  }
 
+
+  
+//******* ALL ZOOMED AFTER THIS ********//
   BeginZoom();
-
-  //Draw Game objects
-  DrawAsteroids(asteroids);         //See Visuals.pde
-  DrawPlanets(p1Planets);
-  DrawPlanets(p2Planets);
-  DrawShips(p1Ships);
+  
+  //If zoomed out far enough, draw object icons with the objects
+  if(wvd.viewRatio < 1.5)
+  {
+    //Draw Game objects
+    DrawAsteroids(asteroids, true);         //See Visuals.pde
+    DrawPlanets(p1Planets);
+    DrawPlanets(p2Planets);
+    DrawShips(p1Ships, true);
+  }
+  else
+  {
+    //Draw Game objects
+    DrawAsteroids(asteroids, false);         //See Visuals.pde
+    DrawPlanets(p1Planets);
+    DrawPlanets(p2Planets);
+    DrawShips(p1Ships, false);
+  }
   
   //Move game objects
   MovePhysicalObject(asteroids);        //See Visuals.pde
@@ -151,28 +190,44 @@ void draw()
 
   HandleCollisions(asteroids, p1Ships);
   
-  //Handle clicks/mouseovers adjusting for zoom
+//******* UI ********//
+
+//Mouseover text window info
   PVector currentMouseLoc = new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldY(mouseY));
-  HandleClick(asteroids, currentMouseLoc);
-  HandleClick(p1Planets, currentMouseLoc);
-  HandleClick(p2Planets, currentMouseLoc);
-  HandleClick(p1Ships, currentMouseLoc);
   
+  //Add response from overlap checks to 'toDisplay' linkedlist
+  toDisplay.add(CheckClickableOverlap(asteroids, currentMouseLoc));
+  toDisplay.add(CheckClickableOverlap(p1Planets, currentMouseLoc));
+  toDisplay.add(CheckClickableOverlap(p2Planets, currentMouseLoc));
+  toDisplay.add(CheckClickableOverlap(p1Ships, currentMouseLoc));
+  
+  for(int i = 0; i < toDisplay.size(); i++)
+  {
+    Clickable _click = toDisplay.poll();
+    if(_click != null)
+    {
+      _click.MouseOver();
+    }
+  }
+  
+//Debug mode display
   if(debugMode)
   {
     DrawGameArea(gameAreas);       //See Visuals.pde
   }
 
+//******* ALL ZOOMED BEFORE THIS ********//
   EndZoom();
   
-  //Draw Civ UI
-  P1.DrawCivilizationUI();
+//Draw Civ UI
+  //P1.DrawCivilizationUI();
   P2.DrawCivilizationUI();
 
   //TODO: Check for off-screen asteroids, destroy, replace with new
   AsteroidOffScreenUpdate(asteroids, gameAreas);      //See helpers.pde
 
-  
+//******* UPDATES ********//
+
   //TODO: Update game stats, i.e. resources?
   //HACK update functions are hard to access generically -- need to individually update each type
       //TODO if I am going to do this, why bother with all of the things in visual that try to be smart about it?
@@ -181,6 +236,7 @@ void draw()
   UpdatePlanets(p1Planets);
   UpdatePlanets(p2Planets);
   
+//******* PROFILING ********//
   if(profilingMode)
   {
     println(frameRate);

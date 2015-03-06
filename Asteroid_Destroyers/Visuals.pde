@@ -1,10 +1,15 @@
+//******* DRAW ********//
 
 //Draw asteroid game object
-void DrawAsteroids(ArrayList<Asteroid> _asteroids)
+void DrawAsteroids(ArrayList<Asteroid> _asteroids, boolean _displayIcons)
 {
   for(Asteroid a : _asteroids)
   {
     a.DrawObject();
+    if(_displayIcons)
+    {
+      a.iconOverlay.DrawObject();
+    }
   }
 }
 
@@ -16,11 +21,30 @@ void DrawGameArea(Map<String, GameArea> _gameAreas)
   }
 }
 
-void DrawShips(ArrayList<Ship> _ships)
+void DrawShips(ArrayList<Ship> _ships, boolean _displayIcons)
 {
   for(Ship a : _ships)
   {
     a.DrawObject();
+    if(_displayIcons)
+    {
+      a.iconOverlay.DrawObject();
+    }
+    
+    //Actions if this ship is currently selected by the player
+    if(a.currentlySelected)
+    {
+      if(a.currentOrder != null)
+      {
+        a.currentOrder.DrawObject();      //Draw the current order
+      }
+
+      for(Order o : a.orders)
+      {
+        //Draw order waypoints
+        o.DrawObject();
+      }
+    }
   }
 }
 
@@ -31,6 +55,8 @@ void DrawPlanets(ArrayList<Planet> _planets)
     a.DrawObject();
   }
 }
+
+//******* MOVE ********//
 
 //Move an array of movable objects
 void MovePhysicalObject(ArrayList<? extends Physical> physical)
@@ -50,6 +76,7 @@ void MovePilotableObject(ArrayList<? extends Pilotable> pilotable)
   }
 }
 
+//******* ZOOM ********//
 
 void BeginZoom()
 {

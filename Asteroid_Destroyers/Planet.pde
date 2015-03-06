@@ -56,10 +56,15 @@ public class Planet extends Physical implements Clickable, Updatable
     return ClickType.INFO;
   }
   
-  void Click()
+  void MouseOver()
   {
     info.visibleNow = true;
     info.DrawObject();
+  }
+  
+  void Click()
+  {
+    
   }
   
   //When the object moves this must move as well

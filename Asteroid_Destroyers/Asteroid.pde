@@ -53,6 +53,9 @@ public class Asteroid extends Physical implements Clickable, Updatable
     }
     //Assume UI will not be rendered next frame
     info.visibleNow = false;    //Another mouseover/ click will negate this
+    
+    //Update icon overlay
+    iconOverlay.UpdateLocation(location);
   }
 
   @Override public void DrawObject()
@@ -75,10 +78,15 @@ public class Asteroid extends Physical implements Clickable, Updatable
   }
   
   //Handle click actions on this object
-  void Click()
+  void MouseOver()
   {
     info.visibleNow = true;
     info.DrawObject();
+  }
+  
+  void Click()
+  {
+    
   }
   
   //When the object moves this must move as well

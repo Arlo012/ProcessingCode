@@ -13,7 +13,7 @@ public class Drawable
 {
   protected int ID;
   protected String name;
-  DrawableType type;                      //ID what kind of drawable object this is
+  DrawableType drawType;                      //ID what kind of drawable object this is
   
   //Image properties
   protected PVector location;               //On absolute plane
@@ -27,7 +27,7 @@ public class Drawable
 
   public Drawable(String _name, PVector _loc, PVector _size, DrawableType _type)
   {
-    type = _type;
+    drawType = _type;
     name = _name;
     
     ID = uniqueIDCounter;
@@ -73,6 +73,23 @@ public class Drawable
   public PVector GetSize()
   {
     return size;
+  }
+  
+  //Special force-updater for location of a UI element
+  public void UpdateLocation(PVector _location)
+  {
+    if(drawType == DrawableType.UI)
+    {
+      location = _location;
+    }
+    else
+    {
+      print("WARNING: Tried to force update location of the following non-UI object:");
+      print(ID);
+      print(", ");
+      print(name);
+      print("\n");
+    }
   }
 
 }
