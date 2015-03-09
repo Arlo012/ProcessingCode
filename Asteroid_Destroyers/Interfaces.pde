@@ -19,7 +19,7 @@ public interface Collidable
 }
 
 enum ClickType{
-  INFO, TARGET
+  INFO, TARGET, BUTTON
 }
 public interface Clickable
 {

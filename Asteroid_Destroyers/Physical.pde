@@ -1,6 +1,6 @@
 float globalSpeedLimit = 2;      //Universal speed limit (magnitude vector)
 
-public class Physical extends Drawable implements Movable, Turnable, Collidable
+public class Physical extends Drawable implements Movable, Turnable, Collidable, Updatable
 {
   //UI
   public Shape iconOverlay;
@@ -52,7 +52,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     pushMatrix();
     translate(location.x, location.y);
     
-    if(debugMode)
+    if(debugMode.value)
     {
       //Debug velocity direction
       stroke(255, 0, 0);
@@ -62,13 +62,12 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     //Handle rotation
     if (rotationMode == -1)
     {   //Not rotating (hold whatever angle is provided)
+      //TODO this is the same in practice as rotationMode = 0
       rotate(currentAngle);
     } 
     else if (rotationMode == 0)
     {
       //Rotate instantly
-      //rotate(destinationAngle);
-      //println(destinationAngle);
       currentAngle = destinationAngle;      //We instantly rotated there
       rotate(currentAngle);
     } 
@@ -89,18 +88,17 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
 
     //End handle rotation
 
-    imageMode(CENTER);
+    imageMode(renderMode);
 
     //Display forward vector (white), velocity vector (red)
-    if (debugMode)
+    if (debugMode.value)
     {
       //Debug forward direction
       stroke(255);
       line(0, 0, 50 * forward.x, 50 * forward.y);    
     }
 
-    translate(-location.x, -location.y);      //Return to standard orientation before drawing
-    image(sprite, location.x, location.y);
+    image(sprite, 0, 0);
     popMatrix();
   }
   
@@ -261,13 +259,20 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable
     deltaP.normalize();      //Create unit vector for new direction from deltaP
     
     //Opposite vector for this object
-    deltaP.mult(-1); //<>//
+    deltaP.mult(-1);
     deltaP.setMag(velocity.mag()/frictionFactor);
     
     SetVelocity(deltaP);
-    
-    //TODO testme 
-    //rotationRate /= 1.5;
   }
   
+//******* COLLIDE *********/
+  public void Update()
+  {
+    if(health.current <= 0)
+    {
+      toBeKilled = true;
+      print(name);
+      print(" has died\n");
+    }
+  }
 }

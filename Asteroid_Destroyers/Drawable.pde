@@ -2,6 +2,7 @@
 public enum DrawableType {
   ASTEROID, SHIP, GAMEAREA, 
   STRUCTURE, UI, PLANET,
+  MISSILE, EFFECT
 }
 
 int uniqueIDCounter = 0;
@@ -18,6 +19,9 @@ public class Drawable
   //Image properties
   protected PVector location;               //On absolute plane
   protected PVector size;                  
+  public int renderMode = CENTER;          //Render mode for visible outline
+  boolean animation = false;               //Is this an animation?
+  boolean toBeKilled = false;              //Does this object need to be destroyed?
 
   //Visuals
   protected PImage sprite;                 //TODO should be private
@@ -55,6 +59,7 @@ public class Drawable
   {
     if(sprite != null)
     {
+      imageMode(renderMode);
       image(sprite, location.x, location.y);
     }
     else

@@ -13,6 +13,7 @@ String title = "Asteroid Destroyers";
 //Teams
 Civilization P1, P2;
 PlayerController Controller1, Controller2;
+PlayerController currentPlayer;   //Who is currently playing
 
 //Game stage
 GameStage gameStage;
@@ -25,6 +26,8 @@ PImage lion, skull;    //Icons
 ArrayList<Asteroid> asteroids;
 ArrayList<Ship> p1Ships, p2Ships;
 ArrayList<Planet> p1Planets, p2Planets;
+ArrayList<Missile> missiles;
+ArrayList<Effect> effects;
 
 //Game areas
 HashMap<String,GameArea> gameAreas;
@@ -33,7 +36,7 @@ HashMap<String,GameArea> gameAreas;
 long loopCounter;
 
 //Setup constants
-boolean debugMode = false;
+TogglableBoolean debugMode = new TogglableBoolean(false);
 boolean profilingMode = false;
 boolean asteroidCollisionAllowed = false;
 
@@ -70,6 +73,14 @@ void setup()
   shipSprite = loadImage("Assets/Ships/10(2).png");
   lion = loadImage("Assets/Icons/Lion.png");
   skull = loadImage("Assets/Icons/Skull.png");
+  missileSprite = loadImage("Assets/Weapons/Missile05.png");
+  //Load explosions (see effect.pde for variables)
+  for (int i = 1; i < explosionImgCount + 1; i++) 
+  {
+    // Use nf() to number format 'i' into four digits
+    String filename = "Assets/Effects/64x48/explosion1_" + nf(i, 4) + ".png";
+    explosionImgs[i-1] = loadImage(filename);
+  }
   
   loopCounter = 0;
 
@@ -110,7 +121,7 @@ void setup()
   testShip.SetRotationRate(0.05);
   testShip.ChangeVelocity(new PVector(0,0));
   //testShip.MoveToTarget(new PVector(width/2, height/2));
-  testShip.iconOverlay.SetIcon(color(0,0,255),ShapeType._TRIANGLE_);
+  //testShip.iconOverlay.SetIcon(color(0,0,255),ShapeType._TRIANGLE_);
   
   p1Ships.add(testShip);
   
@@ -133,20 +144,26 @@ void setup()
 //Controller setup
   Controller1 = new PlayerController(P1);
   //Controller2 = new PlayerController(P2);
+  currentPlayer = Controller1;
   
 //UI setup
   toDisplay = new LinkedList<Clickable>();
   
   frameRate(60);
   
+//Effects setup
+  effects = new ArrayList<Effect>();
+  
 //TEST AREA
-
+  Missile testMissile = new Missile(new PVector(width/4, height/3), new PVector(0.5,0));
+  missiles = new ArrayList<Missile>();
+  missiles.add(testMissile);
 }
 
 void draw()
 {
   loopCounter++;
-  if(debugMode)
+  if(debugMode.value)
   {
     background(0);
   }
@@ -154,7 +171,6 @@ void draw()
   {
     background(bg);
   }
-
 
   
 //******* ALL ZOOMED AFTER THIS ********//
@@ -168,6 +184,8 @@ void draw()
     DrawPlanets(p1Planets);
     DrawPlanets(p2Planets);
     DrawShips(p1Ships, true);
+    DrawMissiles(missiles, true);
+    DrawEffects(effects);
   }
   else
   {
@@ -176,11 +194,14 @@ void draw()
     DrawPlanets(p1Planets);
     DrawPlanets(p2Planets);
     DrawShips(p1Ships, false);
+    DrawMissiles(missiles, false);
+    DrawEffects(effects);
   }
   
   //Move game objects
   MovePhysicalObject(asteroids);        //See Visuals.pde
   MovePilotableObject(p1Ships);
+  MovePilotableObject(missiles);
 
   //Check collisions
   if(asteroidCollisionAllowed)
@@ -189,6 +210,7 @@ void draw()
   }
 
   HandleCollisions(asteroids, p1Ships);
+  HandleWeaponCollisions(missiles, asteroids);
   
 //******* UI ********//
 
@@ -196,6 +218,7 @@ void draw()
   PVector currentMouseLoc = new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldY(mouseY));
   
   //Add response from overlap checks to 'toDisplay' linkedlist
+  toDisplay.clear();
   toDisplay.add(CheckClickableOverlap(asteroids, currentMouseLoc));
   toDisplay.add(CheckClickableOverlap(p1Planets, currentMouseLoc));
   toDisplay.add(CheckClickableOverlap(p2Planets, currentMouseLoc));
@@ -206,12 +229,22 @@ void draw()
     Clickable _click = toDisplay.poll();
     if(_click != null)
     {
-      _click.MouseOver();
+      if(_click.GetClickType() == ClickType.INFO)
+      {
+        _click.MouseOver();
+      }
+      else
+      {
+        print("Moused over unsupported UI type: ");
+        print(_click.GetClickType());
+        print("\n");
+      }
     }
   }
+
   
 //Debug mode display
-  if(debugMode)
+  if(debugMode.value)
   {
     DrawGameArea(gameAreas);       //See Visuals.pde
   }
@@ -220,21 +253,27 @@ void draw()
   EndZoom();
   
 //Draw Civ UI
-  //P1.DrawCivilizationUI();
+  P1.DrawCivilizationUI();
   P2.DrawCivilizationUI();
-
-  //TODO: Check for off-screen asteroids, destroy, replace with new
-  AsteroidOffScreenUpdate(asteroids, gameAreas);      //See helpers.pde
+  
+//Draw main interface
+  currentPlayer.DrawUI();
 
 //******* UPDATES ********//
 
   //TODO: Update game stats, i.e. resources?
   //HACK update functions are hard to access generically -- need to individually update each type
       //TODO if I am going to do this, why bother with all of the things in visual that try to be smart about it?
+  AsteroidOffScreenUpdate(asteroids, gameAreas);      //See helpers.pde
+  
   UpdateShips(p1Ships);
   UpdateAsteroids(asteroids);
   UpdatePlanets(p1Planets);
   UpdatePlanets(p2Planets);
+  UpdateMissiles(missiles);
+  
+  //Update UI information for the main UI
+  currentPlayer.UpdateUI();
   
 //******* PROFILING ********//
   if(profilingMode)

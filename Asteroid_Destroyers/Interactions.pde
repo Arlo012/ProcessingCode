@@ -1,13 +1,16 @@
 
 // Panning
 void mouseDragged() {
-  if (mouseX < width && mouseY < height) {
+  if (mouseX < width && mouseY < height 
+      && wvd.pixel2worldX(width) < width 
+      && wvd.pixel2worldY(height) < height) 
+  {
     wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
     wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
   }
   
   //Make sure we haven't panned outside the screen view
-  if(!debugMode)
+  if(!debugMode.value)
   {
     if(wvd.orgX < 0)
     {
@@ -18,17 +21,14 @@ void mouseDragged() {
       wvd.orgY = 0;
     }
     
-    //TODO: fix right side panning boundary
-    /*
-    if(wvd.orgX > wvd.pixel2worldX(width))
+    if(wvd.pixel2worldX(width) > width)
     {
-      wvd.orgX = wvd.pixel2worldX(width);
+      wvd.orgX--;
     }
-    if(wvd.orgY > wvd.pixel2worldY(height))
+    if(wvd.pixel2worldY(height) > height)
     {
-      wvd.orgX =wvd.pixel2worldY(height);
+      wvd.orgY--;
     }
-    */
   }
 
 }
@@ -36,13 +36,16 @@ void mouseDragged() {
 // Change zoom level
 void mouseClicked() 
 {
+  PVector currentMouseLoc = new PVector(mouseX, mouseY);
   if(mouseButton == LEFT)
   {
-    Controller1.HandleLeftClick(new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldY(mouseY)));
+    //Response from player controller when something left clicked
+    Controller1.HandleLeftClick(currentMouseLoc);
+
   }
   else if (mouseButton == RIGHT)
   {
-    Controller1.HandleRightClick(new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldY(mouseY)));
+    Controller1.HandleRightClick(currentMouseLoc);
   }
 
   
@@ -61,6 +64,10 @@ void mouseWheel(MouseEvent e)
   if(wvd.viewRatio < 1)
   {
     wvd.viewRatio = 1.00f;
+  }
+  else if(wvd.viewRatio > 2)
+  {
+    wvd.viewRatio = 2.00f;
   }
   else    //Onlt shift translation if we aren't zoomed out all the way
   {
@@ -84,6 +91,8 @@ void keyPressed()
     }
     else if (keyCode == LEFT) 
     {
+      Effect boom2 = new Effect("Explosion", new PVector(width/4,height/3), new PVector(64,48), EffectType.EXPLOSION); 
+      effects.add(boom2);
     }
     else if (keyCode == RIGHT) 
     {

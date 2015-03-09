@@ -38,17 +38,16 @@ public class Civilization
     PVector windowSize = new PVector(250,50);
     if(orientation == CivOrientation.LEFT)
     {
-      CivName = new TextWindow("Civ name window", topCorner, windowSize, name, 50);
+      CivName = new TextWindow("Civ name window", topCorner, windowSize, name, 15, false);
     }
     else
     { 
       PVector textLocation = new PVector(topCorner.x - windowSize.x, topCorner.y);
-      CivName = new TextWindow("Civ name window", textLocation, windowSize, name, 50);
+      CivName = new TextWindow("Civ name window", textLocation, windowSize, name, 15, false);
     }
     CivName.SetTextRenderMode(CENTER);
-    
-    
   }
+  
   
   public void DrawCivilizationUI()
   {

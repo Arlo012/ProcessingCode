@@ -9,6 +9,9 @@ public class Pilotable extends Physical
   public Order currentOrder;          //HACK keep track of just current order, e.g. for drawing it
   int maxOrders;                         //How many orders are allowed in the order queue?
   
+  //Order overrides
+  TogglableBoolean allStopOrder = new TogglableBoolean(false);
+  
   //Currently selection variables
   public boolean currentlySelected;      //TODO should this be a pilotable only thing? Probably not...
    /*
@@ -72,7 +75,7 @@ public class Pilotable extends Physical
           AllStop();
         }
       }
-
+  
     }
     else
     {
@@ -80,7 +83,6 @@ public class Pilotable extends Physical
     }
     
     location = PVector.add(location, velocity);
-    
   }
   
   //Public method to provide a target and actuate rotation & acceleration
@@ -91,7 +93,6 @@ public class Pilotable extends Physical
        SetRotationTarget(_target);
        SetDestination(_target);
     }
-
   }
   
   //TODO implement an algorithm that also accounts for current velocity
@@ -106,7 +107,7 @@ public class Pilotable extends Physical
     ChangeVelocity(newVelocity);
   }
   
-  private void AllStop()
+  protected void AllStop()
   {
     //println("All stop!");
     SetVelocity(new PVector(0,0));    //TODO is this the most fun way to play?
@@ -132,7 +133,6 @@ public class Pilotable extends Physical
     {
       return true;
     }
-
   }
   
   private boolean Stunned()

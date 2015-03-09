@@ -2,21 +2,12 @@
 PImage shipSprite;      //Loaded in setup()
 
 /**
- * An asteroid gameobject, inheriting from Drawable
+ * A ship gameobject, inheriting from Pilotable
  */
 public class Ship extends Pilotable implements Clickable, Updatable
 {
   TextWindow info;
   
-  /*
-   * Constructor
-   * @param  _xloc    x coordinate of the ship
-   * @param  _yloc    y coordinate of the ship
-   * @param  _xdim    x size of this ship
-   * @param  _ydim    y size of this ship
-   * @param  _sprite  sprite of this ship
-   * @see         Asteroid
-   */
   public Ship(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass) 
   {
     //Parent constructor
@@ -25,17 +16,23 @@ public class Ship extends Pilotable implements Clickable, Updatable
     sprite = _sprite;
     sprite.resize(int(size.x), int(size.y));
     
+    //Set the overlay icon
+    iconOverlay.SetIcon(color(0,0,255),ShapeType._TRIANGLE_);
+    
+    //Set the description string
     String descriptor = new String();
     descriptor += name;
     descriptor += "\nVelocity: ";
     descriptor += velocity.mag();
     descriptor += " m/s ";
-    info = new TextWindow("Asteroid Info", location, descriptor);
+    info = new TextWindow("Ship Info", location, descriptor, true);
   }
   
   //HACK this update() function is highly repeated through child classes
   public void Update()
   {
+    super.Update();    //Call physical update
+    
     //Check if UI is currently rendered, and if so update info
     if(info.visibleNow)
     {
@@ -46,6 +43,16 @@ public class Ship extends Pilotable implements Clickable, Updatable
     
     //Update icon overlay
     iconOverlay.UpdateLocation(location);
+    
+    //If all stop override, don't move
+    if(allStopOrder.value)
+    {
+      currentOrder = null;
+      destination = location;
+      orders.clear();
+      AllStop();
+      allStopOrder.Toggle();
+    }
   }
 
 /*Click & mouseover UI*/
@@ -70,7 +77,7 @@ public class Ship extends Pilotable implements Clickable, Updatable
   void UpdateUIInfo()
   {
     //Update textbox
-    info.UpdateLocation(location);
+    info.UpdateLocation(new PVector(wvd.pixel2worldX(location.x), wvd.pixel2worldY(location.y)));
     
     String descriptor = new String();
     descriptor += name;

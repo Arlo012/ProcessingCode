@@ -36,11 +36,13 @@ public class Planet extends Physical implements Clickable, Updatable
     descriptor += " m \n Mass: ";
     descriptor += mass;
     descriptor += " kg\n";
-    info = new TextWindow("Planet info", location, descriptor);
+    info = new TextWindow("Planet info", location, descriptor, true);
   }
 
   public void Update()
-  {
+  {    
+    super.Update();    //Call physical update
+    
     //Check if UI is currently rendered, and if so update info
     if(info.visibleNow)
     {

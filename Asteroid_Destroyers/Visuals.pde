@@ -48,9 +48,52 @@ void DrawShips(ArrayList<Ship> _ships, boolean _displayIcons)
   }
 }
 
+void DrawMissiles(ArrayList<Missile> _missiles, boolean _displayIcons)
+{
+  for(Missile a : _missiles)
+  {
+    a.DrawObject();
+    if(_displayIcons)
+    {
+      a.iconOverlay.DrawObject();
+    }
+    
+    //Actions if this ship is currently selected by the player
+    if(a.currentlySelected)
+    {
+      if(a.currentOrder != null)
+      {
+        a.currentOrder.DrawObject();      //Draw the current order
+      }
+
+      for(Order o : a.orders)
+      {
+        //Draw order waypoints
+        o.DrawObject();
+      }
+    }
+  }
+}
+
 void DrawPlanets(ArrayList<Planet> _planets)
 {
   for(Planet a : _planets)
+  {
+    a.DrawObject();
+  }
+}
+
+void DrawEffects(ArrayList<Effect> _effect)
+{
+  for(Effect a : _effect)
+  {
+    a.DrawObject();
+  }
+}
+
+void DrawButtons(ArrayList<Button> _buttons)
+{
+  for(Button a : _buttons)
   {
     a.DrawObject();
   }

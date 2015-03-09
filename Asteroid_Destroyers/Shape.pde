@@ -77,13 +77,13 @@ public class Shape extends Drawable
     }
   }
   
-  void UpdateIcon(color _borderColor, ShapeType _type)
+  void SetBorderColor(color _borderColor, ShapeType _type)
   {
     shapeType = _type;
     borderColor = _borderColor;
   }
   
-  void UpdateIcon(color _borderColor)
+  void SetBorderColor(color _borderColor)
   {
     borderColor = _borderColor;
   }

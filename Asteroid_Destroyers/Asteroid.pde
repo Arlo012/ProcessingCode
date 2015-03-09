@@ -41,7 +41,7 @@ public class Asteroid extends Physical implements Clickable, Updatable
     descriptor += "Velocity: ";
     descriptor += velocity.mag();
     descriptor += " m/s ";
-    info = new TextWindow("Asteroid Info", location, descriptor);
+    info = new TextWindow("Asteroid Info", location, descriptor, true);
   }
   
   public void Update()

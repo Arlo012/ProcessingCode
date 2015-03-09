@@ -21,7 +21,7 @@ public class Order extends UI
   
   Order(String _name, PVector _loc, OrderType _orderType)
   {
-    super(_name, _loc, new PVector(20, 20));      //Default size 20x20
+    super(_name, _loc, new PVector(20, 20), true);      //Default size 20x20
     
     orderType = _orderType;
     
