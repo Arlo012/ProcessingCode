@@ -91,6 +91,7 @@ public class PlayerController
       
       //Check if we clicked on this player's fleet
       click = CheckClickableOverlap(civ.fleet, _clickLocation);
+      
       if(click == null)    //No ship - also check the missiles
       {
         click = CheckClickableOverlap(missiles, _clickLocation);
@@ -146,10 +147,10 @@ public class PlayerController
       phys.iconOverlay.RestoreDefaultColor();
     }
     
-    if(playerTarget instanceof Ship)
+    if(playerTarget instanceof Pilotable)
     {
-      Ship ship = (Ship)playerTarget;
-      ship.currentlySelected = false;
+      Pilotable pilot = (Pilotable)playerTarget;
+      pilot.currentlySelected = false;
     }
   }
   
@@ -165,17 +166,23 @@ public class PlayerController
       print("\n");
     }
     
-    if(playerTarget instanceof Physical)
+    if(playerTarget instanceof Physical)    //Catch all physical objects
     {
       Physical phys = (Physical)playerTarget;
+      
+      //Update their border color to white
       phys.iconOverlay.SetBorderColor(color(255));
     }
     
-    if(playerTarget instanceof Ship)
+    if(playerTarget instanceof Pilotable)    //Catch missiles, ships, etc
     {
-      Ship ship = (Ship)playerTarget;
-      ship.currentlySelected = true;
+      Pilotable pilot = (Pilotable)playerTarget;
+      
+      //Set their selected bit
+      pilot.currentlySelected = true;
     }
+
+    //ADD NEW CLICKABLE TYPES HERE
   }
   
   private void HandleClickedGameObject(Clickable click)

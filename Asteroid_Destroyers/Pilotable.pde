@@ -28,7 +28,7 @@ public class Pilotable extends Physical
     //Parent constructor
     super(_name, _loc, _size, _mass, _type);
     
-    rotationMode = 2;    //Face target
+    rotationMode = RotationMode.FACE;    //Face target
     collisionStunTime = 2000;      //2 second stun
     
     maxOrders = 5;      
@@ -98,8 +98,8 @@ public class Pilotable extends Physical
   //TODO implement an algorithm that also accounts for current velocity
   private void AccelerateToTarget()
   {
-    //Guarantee rotating toward target
-    SetRotationMode(2);          //Face target
+    //Guarantee we are rotating toward target
+    SetRotationMode(RotationMode.FACE);          //Face target
     
     PVector newVelocity = new PVector(localSpeedLimit, 0);    //New vector straight in front of object
     newVelocity.rotate(currentAngle);
@@ -111,7 +111,7 @@ public class Pilotable extends Physical
   {
     //println("All stop!");
     SetVelocity(new PVector(0,0));    //TODO is this the most fun way to play?
-    SetRotationMode(-1);              //Don't rotate 
+    SetRotationMode(RotationMode.NONE);              //Don't rotate 
   }
   
   //Checks if pilotable object is within one half size from the target. If null also assume at target

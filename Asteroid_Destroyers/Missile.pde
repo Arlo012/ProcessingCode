@@ -99,7 +99,28 @@ public class Missile extends Pilotable implements Clickable, Updatable
     
     _other.health.current -= damage;
     
-    //TODO implement explosion throwback    
+    //Explosion force!
+    float explosiveForce = 0.75;
+    PVector explosionDirection = new PVector(velocity.x, velocity.y);
+    explosionDirection.normalize();
+    explosionDirection.setMag(explosiveForce);
+    
+    if(debugMode.value)
+    {
+      print("Explosion from missile hit ");
+      print(_other.name);
+      print(" for ");
+      print(damage);
+      print(" damage.\n");
+    }
+    
+    _other.ChangeVelocity(explosionDirection);
+    
+    //If the object was an asteroid it is now a projectile -- update its color
+    if(_other instanceof Asteroid)
+    {
+      _other.iconOverlay.borderColor = color(255,0,0);
+    }
     
     toBeKilled = true;
   }

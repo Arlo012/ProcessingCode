@@ -116,14 +116,6 @@ void setup()
   
 //Ship setup
   p1Ships = new ArrayList<Ship>();
-  Ship testShip = new Ship("Test Ship", new PVector(width/8, height/3), 
-              new PVector(30, 22), shipSprite, 1000);
-  testShip.SetRotationRate(0.05);
-  testShip.ChangeVelocity(new PVector(0,0));
-  //testShip.MoveToTarget(new PVector(width/2, height/2));
-  //testShip.iconOverlay.SetIcon(color(0,0,255),ShapeType._TRIANGLE_);
-  
-  p1Ships.add(testShip);
   
   p2Ships = new ArrayList<Ship>();
   
@@ -155,9 +147,29 @@ void setup()
   effects = new ArrayList<Effect>();
   
 //TEST AREA
-  Missile testMissile = new Missile(new PVector(width/4, height/3), new PVector(0.5,0));
+  Missile testMissile = new Missile(new PVector(width/4, 200), new PVector(0.5,0));
+  Missile testMissile2 = new Missile(new PVector(width/4, 400), new PVector(0.5,0));
+  Missile testMissile3 = new Missile(new PVector(width/4, 600), new PVector(0.5,0));
+  Missile testMissile4 = new Missile(new PVector(width/4, 800), new PVector(0.5,0));
   missiles = new ArrayList<Missile>();
   missiles.add(testMissile);
+  missiles.add(testMissile2);
+  missiles.add(testMissile3);
+  missiles.add(testMissile4);
+  
+  Ship testShip = new Ship("Test Ship", new PVector(width - width/8, height/3), 
+              new PVector(30, 22), shipSprite, 1000);
+  testShip.SetRotationRate(0.05);
+  testShip.ChangeVelocity(new PVector(0,0));
+  testShip.SetRotationMode(RotationMode.INSTANT);
+  testShip.SetDestinationAngle(PI);
+  p2Ships.add(testShip);
+  
+  Ship testShip2 = new Ship("Test Ship2", new PVector(width/8, height/3), 
+              new PVector(30, 22), shipSprite, 1000);
+  testShip2.SetRotationMode(RotationMode.FACE);
+  testShip2.SetRotationRate(0.05);
+  p1Ships.add(testShip2);
 }
 
 void draw()
@@ -184,6 +196,7 @@ void draw()
     DrawPlanets(p1Planets);
     DrawPlanets(p2Planets);
     DrawShips(p1Ships, true);
+    DrawShips(p2Ships, true);
     DrawMissiles(missiles, true);
     DrawEffects(effects);
   }
@@ -194,6 +207,7 @@ void draw()
     DrawPlanets(p1Planets);
     DrawPlanets(p2Planets);
     DrawShips(p1Ships, false);
+    DrawShips(p2Ships, false);
     DrawMissiles(missiles, false);
     DrawEffects(effects);
   }
@@ -201,6 +215,7 @@ void draw()
   //Move game objects
   MovePhysicalObject(asteroids);        //See Visuals.pde
   MovePilotableObject(p1Ships);
+  MovePilotableObject(p2Ships);
   MovePilotableObject(missiles);
 
   //Check collisions
@@ -210,7 +225,10 @@ void draw()
   }
 
   HandleCollisions(asteroids, p1Ships);
+  HandleCollisions(asteroids, p2Ships);
   HandleWeaponCollisions(missiles, asteroids);
+  HandleWeaponCollisions(missiles, p1Ships);
+  HandleWeaponCollisions(missiles, p2Ships);
   
 //******* UI ********//
 
@@ -267,6 +285,7 @@ void draw()
   AsteroidOffScreenUpdate(asteroids, gameAreas);      //See helpers.pde
   
   UpdateShips(p1Ships);
+  UpdateShips(p2Ships);
   UpdateAsteroids(asteroids);
   UpdatePlanets(p1Planets);
   UpdatePlanets(p2Planets);

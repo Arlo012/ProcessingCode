@@ -1,5 +1,9 @@
 float globalSpeedLimit = 2;      //Universal speed limit (magnitude vector)
 
+public enum RotationMode {
+NONE, INSTANT, SPIN, FACE
+}
+
 public class Physical extends Drawable implements Movable, Turnable, Collidable, Updatable
 {
   //UI
@@ -12,11 +16,11 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   //Movement
   protected PVector velocity;              //On absolute plane
   protected float localSpeedLimit;         //Max velocity magnitude for this object
-  protected float acceleration = 0.01;     //Multiple to max velocity out of 1. 0 = none, 1 = instant
+  protected float acceleration = 0.05;     //Multiple to max velocity out of 1. 0 = none, 1 = instant
   
   //Rotation
-  protected int rotationMode;              //-1 = stationary, 0 = instant, 1 = spin, 2 = face point
-  protected float currentAngle; 
+  protected RotationMode rotationMode;     //PHASED OUT: -1 = stationary, 0 = instant, 1 = spin, 2 = face point
+  protected float currentAngle;            //In radians
   protected int spinDirection;             //-1 CCW, 1 CW
   protected float destinationAngle;        //TODO phase out -- why need a destination angle if have target?
   protected float rotationRate;            //Degrees/sec
@@ -37,7 +41,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     //Rotation
     currentAngle = 0;
     destinationAngle = 0;
-    rotationMode = -1;      //Default to no rotation
+    rotationMode = RotationMode.NONE;      //Default to no rotation
     rotationRate = 0.01;    //Degrees/sec TODO broken not related to deg/sec right now
     spinDirection = 1;      //CW
     rotationLookTarget = new PVector(0,0);      //Default look at origin
@@ -60,24 +64,24 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     }
     
     //Handle rotation
-    if (rotationMode == -1)
+    if (rotationMode == RotationMode.NONE)
     {   //Not rotating (hold whatever angle is provided)
       //TODO this is the same in practice as rotationMode = 0
       rotate(currentAngle);
     } 
-    else if (rotationMode == 0)
+    else if (rotationMode == RotationMode.INSTANT)
     {
       //Rotate instantly
       currentAngle = destinationAngle;      //We instantly rotated there
       rotate(currentAngle);
     } 
-    else if (rotationMode == 1)
+    else if (rotationMode == RotationMode.SPIN)
     {
       //Rotate in direction
       currentAngle += spinDirection * rotationRate;
       rotate(currentAngle);
     } 
-    else if (rotationMode == 2)
+    else if (rotationMode == RotationMode.FACE)
     {
       RotateToTarget();
     } 
@@ -162,7 +166,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
 
 //******* ROTATE *********/
   //0 = instant, 1 = spin, 2 = standard
-  public void SetRotationMode(int _rotateMode)
+  public void SetRotationMode(RotationMode _rotateMode)
   {
     rotationMode = _rotateMode;
   }
@@ -199,9 +203,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
                 rotationLookTarget.y - location.y);
 
     float radToRotate = atan2(targetRelativeToLocal.y - forward.y, targetRelativeToLocal.x - forward.x);
-    //println(degrees(radToRotate));
-    //println(degrees(currentAngle));
-    //println("-------");
+
     if(degrees(currentAngle) > 360)
     {
       currentAngle -= radians(360);

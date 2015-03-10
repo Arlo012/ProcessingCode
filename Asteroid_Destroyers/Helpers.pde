@@ -122,7 +122,7 @@ void GeneratePlanets(GameArea area, ArrayList<Planet> planets, int count)
     {  
       Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, int(10000*size/planetSizeRange.y));
       toBuild.SetRotationRate(rotateSpeed);
-      toBuild.SetRotationMode(1);    //Spinning
+      toBuild.SetRotationMode(RotationMode.SPIN);    //Spinning
       toBuild.SetMaxSpeed(0);        //Local speed limit for planet (don't move)
       //TODO direction random?
       planets.add(toBuild);

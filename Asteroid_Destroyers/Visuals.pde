@@ -36,7 +36,14 @@ void DrawShips(ArrayList<Ship> _ships, boolean _displayIcons)
     {
       if(a.currentOrder != null)
       {
+        //HACK this shouldn't be in here -- handle inside pilotable class somewhere
+        pushStyle();
+        stroke(color(#E5F236));      //Draw a yellow line to indicate actual course
+        
+        //Handle in absolute coordinates (w/o translate) because delta position difficult to calculate
+        line(a.location.x,a.location.y, a.currentOrder.location.x, a.currentOrder.location.y);
         a.currentOrder.DrawObject();      //Draw the current order
+        popStyle();
       }
 
       for(Order o : a.orders)
@@ -63,7 +70,14 @@ void DrawMissiles(ArrayList<Missile> _missiles, boolean _displayIcons)
     {
       if(a.currentOrder != null)
       {
+        //HACK this shouldn't be in here -- handle inside pilotable class somewhere
+        pushStyle();
+        stroke(color(#E5F236));      //Draw a yellow line to indicate actual course
+        
+        //Handle in absolute coordinates (w/o translate) because delta position difficult to calculate
+        line(a.location.x,a.location.y, a.currentOrder.location.x, a.currentOrder.location.y);
         a.currentOrder.DrawObject();      //Draw the current order
+        popStyle();
       }
 
       for(Order o : a.orders)

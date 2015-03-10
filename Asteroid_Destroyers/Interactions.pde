@@ -102,14 +102,14 @@ void keyPressed()
   if(key == ENTER)
   {
     asteroids.get(0).SetDestinationAngle(250);
-    asteroids.get(0).SetRotationMode(1);    //Spin
+    asteroids.get(0).SetRotationMode(RotationMode.SPIN);    //Spin
     println("DEBUG: Rotating asteroid");
   }
   
   //Player 2 movement
   if (key == 'w') 
   {
-    p1Ships.get(0).SetRotationMode(2);
+    p1Ships.get(0).SetRotationMode(RotationMode.FACE);
     p1Ships.get(0).SetRotationTarget(new PVector(mouseX,mouseY));
   }
   else if (key == 's') 

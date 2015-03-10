@@ -72,11 +72,15 @@ void HandleWeaponCollisions(ArrayList<? extends Missile> a, ArrayList<? extends 
           && obj1.location.y - obj1.size.y/2 <= obj2.location.y + obj2.size.y/2)    //Y from bottom
       {
         
-        print("COLLISION BETWEEN: ");
-        print(obj1.name);
-        print(" & ");
-        print(obj2.name);
-        print("\n");
+        if(debugMode.value)
+        {
+          print("COLLISION BETWEEN: ");
+          print(obj1.name);
+          print(" & ");
+          print(obj2.name);
+          print("\n");
+        }
+
         
         obj1.HandleCollision(obj2);
         obj2.HandleCollision(obj1);

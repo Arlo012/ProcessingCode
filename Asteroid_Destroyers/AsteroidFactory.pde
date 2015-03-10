@@ -56,7 +56,7 @@ public class AsteroidFactory
     Asteroid toBuild = new Asteroid("Asteroid", new PVector(xCoor, yCoor), size, int(10000*size/asteroidSizeRange.y));
     toBuild.SetRotationRate(rotateSpeed);
     toBuild.SetVelocity(new PVector(xVelocity, yVelocity));
-    toBuild.SetRotationMode(1);    //Spinning
+    toBuild.SetRotationMode(RotationMode.SPIN);    //Spinning
     toBuild.SetMaxSpeed(2.5);      //Local speed limit for asteroid
     toBuild.iconOverlay.SetIcon(color(#E8E238),ShapeType._CIRCLE_);
     
