@@ -86,7 +86,7 @@ public class Asteroid extends Physical implements Clickable, Updatable
   
   void Click()
   {
-    
+    println("INFO: No interaction defined for asteroid click");
   }
   
   //When the object moves this must move as well

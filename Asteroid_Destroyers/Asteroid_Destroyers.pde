@@ -28,6 +28,7 @@ ArrayList<Ship> p1Ships, p2Ships;
 ArrayList<Planet> p1Planets, p2Planets;
 ArrayList<Missile> missiles;
 ArrayList<Effect> effects;
+ArrayList<Station> p1Stations, p2Stations;
 
 //Game areas
 HashMap<String,GameArea> gameAreas;
@@ -65,15 +66,22 @@ void setup()
   maxY = height;
   
   //Asset setup
-  bg = loadImage("Assets/Backgrounds/image5_0.jpg");
+  //bg = loadImage("Assets/Backgrounds/image5_0.jpg");
+  bg = loadImage("Assets/Backgrounds/spacefield_a-000.png");
   bg.resize(width, height);
-
+  
   //Load sprites
   asteroidSpriteSheet = loadImage("Assets/Environment/asteroids.png");
   shipSprite = loadImage("Assets/Ships/10(2).png");
   lion = loadImage("Assets/Icons/Lion.png");
   skull = loadImage("Assets/Icons/Skull.png");
   missileSprite = loadImage("Assets/Weapons/Missile05.png");
+  redStation1 = loadImage("Assets/Stations/Spacestation1-1.png");
+  redStation2 = loadImage("Assets/Stations/Spacestation1-2.png");
+  redStation3 = loadImage("Assets/Stations/Spacestation1-3.png");
+  blueStation1 = loadImage("Assets/Stations/Spacestation2-1.png");
+  blueStation2 = loadImage("Assets/Stations/Spacestation2-2.png");
+  blueStation3 = loadImage("Assets/Stations/Spacestation2-3.png");
   //Load explosions (see effect.pde for variables)
   for (int i = 1; i < explosionImgCount + 1; i++) 
   {
@@ -133,6 +141,10 @@ void setup()
   P2 = new Civilization(new PVector(width,0), "Normal Squishy Humans", p2Ships, p2Planets);
   P2.SetCivilizationIcon(lion,24);
   
+//Station setup
+  p1Stations = new ArrayList<Station>();
+  p2Stations = new ArrayList<Station>();
+  
 //Controller setup
   Controller1 = new PlayerController(P1);
   //Controller2 = new PlayerController(P2);
@@ -163,13 +175,27 @@ void setup()
   testShip.ChangeVelocity(new PVector(0,0));
   testShip.SetRotationMode(RotationMode.INSTANT);
   testShip.SetDestinationAngle(PI);
+  testShip.owner = P2.name;
   p2Ships.add(testShip);
   
   Ship testShip2 = new Ship("Test Ship2", new PVector(width/8, height/3), 
               new PVector(30, 22), shipSprite, 1000);
   testShip2.SetRotationMode(RotationMode.FACE);
   testShip2.SetRotationRate(0.05);
+  testShip2.owner = P1.name;
   p1Ships.add(testShip2);
+  
+  PVector stationLoc = new PVector(p1Planets.get(0).location.x, p1Planets.get(0).location.y - 75);
+  PVector stationSize = new PVector(50,50);
+  Station stationTest = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation1, p1Planets.get(0));
+  stationTest.owner = P1.name;
+  p1Stations.add(stationTest);
+  
+  PVector stationLoc2 = new PVector(p2Planets.get(0).location.x, p2Planets.get(0).location.y - 75);
+  PVector stationSize2 = new PVector(50,50);
+  Station stationTest2 = new Station(StationType.MILITARY, stationLoc2, stationSize2, redStation1, p2Planets.get(0));
+  stationTest2.owner = P2.name;
+  p2Stations.add(stationTest2);
 }
 
 void draw()
@@ -197,6 +223,8 @@ void draw()
     DrawPlanets(p2Planets);
     DrawShips(p1Ships, true);
     DrawShips(p2Ships, true);
+    DrawStations(p1Stations);
+    DrawStations(p2Stations);
     DrawMissiles(missiles, true);
     DrawEffects(effects);
   }
@@ -208,12 +236,15 @@ void draw()
     DrawPlanets(p2Planets);
     DrawShips(p1Ships, false);
     DrawShips(p2Ships, false);
+    DrawStations(p1Stations);
+    DrawStations(p2Stations);  
     DrawMissiles(missiles, false);
     DrawEffects(effects);
   }
   
   //Move game objects
   MovePhysicalObject(asteroids);        //See Visuals.pde
+  //MovePhysicalObject(p1Stations);
   MovePilotableObject(p1Ships);
   MovePilotableObject(p2Ships);
   MovePilotableObject(missiles);
@@ -229,6 +260,8 @@ void draw()
   HandleWeaponCollisions(missiles, asteroids);
   HandleWeaponCollisions(missiles, p1Ships);
   HandleWeaponCollisions(missiles, p2Ships);
+  HandleWeaponCollisions(missiles, p1Stations);
+  HandleWeaponCollisions(missiles, p2Stations);
   
 //******* UI ********//
 
@@ -241,8 +274,11 @@ void draw()
   toDisplay.add(CheckClickableOverlap(p1Planets, currentMouseLoc));
   toDisplay.add(CheckClickableOverlap(p2Planets, currentMouseLoc));
   toDisplay.add(CheckClickableOverlap(p1Ships, currentMouseLoc));
+  toDisplay.add(CheckClickableOverlap(p2Ships, currentMouseLoc));
+  toDisplay.add(CheckClickableOverlap(p1Stations, currentMouseLoc));
+  toDisplay.add(CheckClickableOverlap(p2Stations, currentMouseLoc));
   
-  for(int i = 0; i < toDisplay.size(); i++)
+  while(!toDisplay.isEmpty())
   {
     Clickable _click = toDisplay.poll();
     if(_click != null)
@@ -281,7 +317,6 @@ void draw()
 
   //TODO: Update game stats, i.e. resources?
   //HACK update functions are hard to access generically -- need to individually update each type
-      //TODO if I am going to do this, why bother with all of the things in visual that try to be smart about it?
   AsteroidOffScreenUpdate(asteroids, gameAreas);      //See helpers.pde
   
   UpdateShips(p1Ships);
@@ -290,6 +325,10 @@ void draw()
   UpdatePlanets(p1Planets);
   UpdatePlanets(p2Planets);
   UpdateMissiles(missiles);
+  UpdateStations(p1Stations);
+  UpdateStations(p2Stations);
+  //Effects MUST be called as last update. Some update functions have death frame action that will not be called if this runs first
+  UpdateEffects(effects);       
   
   //Update UI information for the main UI
   currentPlayer.UpdateUI();

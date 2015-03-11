@@ -8,7 +8,7 @@ public class PlayerController
   ArrayList <Button> allToggleButtons;
   
   //Buttons
-  Button debugToggleButton, stopShipButton;
+  public Button debugToggleButton, cancelOrders;
   
   PlayerController(Civilization _civ)
   {
@@ -27,7 +27,8 @@ public class PlayerController
                              new PVector(UIWidth, UIHeight), "", false);
     statusBar.SetTextRenderMode(CORNER);      //Text render mode
     statusBar.renderMode = CORNER;            //UI render mode
-    statusBar.SetBackgroundColor(color(0, 200));
+    //statusBar.SetBackgroundColor(color(85,103,137, 200));
+    statusBar.SetGradient(color(0, 100), color(255, 100));
     
   //Buttons
     allToggleButtons = new ArrayList<Button>();
@@ -37,12 +38,12 @@ public class PlayerController
                   new PVector(100, 49), "DEBUG", "PNG/blue_button13.png", debugMode, false);          
     allToggleButtons.add(debugToggleButton);
     
-    //Ship controls
+    //Pilotable controls
     PVector iconSize = new PVector(36, 36);
-    stopShipButton = new Button("Stop Ship Icon", new PVector(UICorner.x + UIHeight/10, UICorner.y + UIHeight/10),
+    cancelOrders = new Button("Stop Ship Icon", new PVector(UICorner.x + UIHeight/10, UICorner.y + UIHeight/10),
                 iconSize, "", "PNG/red_cross.png", null, false);
-    stopShipButton.SetRenderMode(CORNER);
-    allToggleButtons.add(stopShipButton);
+    cancelOrders.SetRenderMode(CORNER);
+    allToggleButtons.add(cancelOrders);
   }
   
   //Draw all menus and buttons
@@ -59,7 +60,7 @@ public class PlayerController
     if(playerTarget instanceof Pilotable)
     {
       Pilotable pilot = (Pilotable)playerTarget;
-      stopShipButton.varToToggle = pilot.allStopOrder;
+      cancelOrders.varToToggle = pilot.allStopOrder;
     }
     
   }

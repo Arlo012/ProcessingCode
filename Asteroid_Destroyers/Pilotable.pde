@@ -47,42 +47,39 @@ public class Pilotable extends Physical
   //Move location
   @Override public void Move()
   {
-    if(!Stunned())
+
+    if(!AtTarget())
     {
-      if(!AtTarget())
+      if(!Stunned())
       {
-        AccelerateToTarget();
-        SetRotationTarget(destination);
+      AccelerateToTarget();
+      SetRotationTarget(destination);
       }
-      else
-      {
-        AllStop();
-        
-        //Reached the target -- get new order
-        PVector nextDestination = null;
-        currentOrder = GetNextOrder();
-        if(currentOrder != null)
-        {
-          nextDestination = currentOrder.location;   
-          
-          destination = nextDestination;
-        }
-        
-        //There are no new orders
-        else
-        {
-          //Do.... what?
-          AllStop();
-        }
-      }
-  
     }
     else
     {
-      //println("STUNNED");
+      AllStop();
+      
+      //Reached the target -- get new order
+      PVector nextDestination = null;
+      currentOrder = GetNextOrder();
+      if(currentOrder != null)
+      {
+        nextDestination = currentOrder.location;   
+        
+        destination = nextDestination;
+      }
+      
+      //There are no new orders
+      else
+      {
+        //Do.... what?
+        AllStop();
+      }
     }
-    
     location = PVector.add(location, velocity);
+    
+    
   }
   
   //Public method to provide a target and actuate rotation & acceleration

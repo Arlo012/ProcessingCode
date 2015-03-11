@@ -59,6 +59,7 @@ public class AsteroidFactory
     toBuild.SetRotationMode(RotationMode.SPIN);    //Spinning
     toBuild.SetMaxSpeed(2.5);      //Local speed limit for asteroid
     toBuild.iconOverlay.SetIcon(color(#E8E238),ShapeType._CIRCLE_);
+    toBuild.drawOverlay = false;      //Dont draw overlay by default
     
     //TODO direction random?
     

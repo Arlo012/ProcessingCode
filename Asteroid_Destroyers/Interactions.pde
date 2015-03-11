@@ -48,7 +48,6 @@ void mouseClicked()
     Controller1.HandleRightClick(currentMouseLoc);
   }
 
-  
   //p1Ships.get(0).SetDestination(new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldX(mouseY)));
 }
 
@@ -112,9 +111,10 @@ void keyPressed()
     p1Ships.get(0).SetRotationMode(RotationMode.FACE);
     p1Ships.get(0).SetRotationTarget(new PVector(mouseX,mouseY));
   }
-  else if (key == 's') 
+  else if (key == 'x') 
   {
-   
+    //Emulated 'click' the stop orders button
+    currentPlayer.cancelOrders.Click();
   }
   
   if(key == 'r')

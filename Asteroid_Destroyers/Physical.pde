@@ -4,10 +4,16 @@ public enum RotationMode {
 NONE, INSTANT, SPIN, FACE
 }
 
+public enum MoveMode {
+LINEAR, ORBITAL
+}
+
 public class Physical extends Drawable implements Movable, Turnable, Collidable, Updatable
 {
   //UI
   public Shape iconOverlay;
+  public boolean drawOverlay = true;
+  String owner = "Unowned!";
   
   //Stats
   protected int mass;
@@ -17,9 +23,15 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   protected PVector velocity;              //On absolute plane
   protected float localSpeedLimit;         //Max velocity magnitude for this object
   protected float acceleration = 0.05;     //Multiple to max velocity out of 1. 0 = none, 1 = instant
+  private MoveMode moveMode;               //Linear movement or orbit
+  
+  //Orbitals
+  private Physical orbitBody;              //What to orbit around
+  private PVector orbitForwardVector;      //Forward vector for rotation
+  protected int orbitDistance;             //How far from object to orbit
   
   //Rotation
-  protected RotationMode rotationMode;     //PHASED OUT: -1 = stationary, 0 = instant, 1 = spin, 2 = face point
+  protected RotationMode rotationMode;     //How to rotate (see RotationMode)
   protected float currentAngle;            //In radians
   protected int spinDirection;             //-1 CCW, 1 CW
   protected float destinationAngle;        //TODO phase out -- why need a destination angle if have target?
@@ -35,8 +47,12 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     
     health = new Health(100, 100);    
     mass = _mass;
+    
+    //Movement
     velocity = new PVector(0, 0);
-    localSpeedLimit = 1.5;      //Default speed limit
+    localSpeedLimit = 1.5;         //Default speed limit
+    moveMode = MoveMode.LINEAR;    //Default to linear movement
+    orbitForwardVector = new PVector(0,0);    //Default no orbital vector
     
     //Rotation
     currentAngle = 0;
@@ -61,6 +77,10 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
       //Debug velocity direction
       stroke(255, 0, 0);
       line(0, 0, 100 * velocity.x, 100 * velocity.y);
+      
+      //Debug orbital forward vector
+      stroke(0,255,0);
+      line(0, 0, orbitForwardVector.x, orbitForwardVector.y);
     }
     
     //Handle rotation
@@ -144,23 +164,75 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   //Move location
   public void Move()
   {
-    location = PVector.add(location, velocity);
+    if(moveMode == MoveMode.LINEAR)
+    {
+      location = PVector.add(location, velocity);      
+    }
+    else if(moveMode == MoveMode.ORBITAL)
+    {
+      Orbit(orbitBody);
+    }
+    else
+    {
+      print("WARNING: ");
+      print(name);
+      print(" has attempted to move in an unsupported mode.\n");
+    }
+
   }
   
   //Orbit around a body
   public void Orbit(Physical _body)
   {
-    println("WARNING: Orbit method not implemented");
+    //TODO: Get orbit mechanics working
     
-    //TODO properly research good orbit mechanics within this physics framework
     /*
-    //HACK use rotation rate to define orbital rate
-    PVector orbitMovement = new PVector(0,0);
-    orbitMovement.x = cos(rotationRate) * _body.size.x * 2;    //orbiting at 2x body x dimension
-    orbitMovement.y = sin(rotationRate) * _body.size.x * 2;    
-    orbitMovement.normalize();
-    SetVelocity(orbitMovement);
+    //Calculate a forward vector for orbital movement (not the 'look' direction of the spin)
+    orbitForwardVector = GetNormalOrbitalVector(); 
+    orbitForwardVector.setMag(orbitDistance);
+    
+    //Move along perpendicular vector
+    ChangeVelocity(orbitForwardVector);
+    
+    //Move along planet vector (toward the planet)
+    PVector deltaP_Planet = new PVector(orbitBody.location.x - location.x, orbitBody.location.y - location.y);
+    deltaP_Planet.normalize();
+    deltaP_Planet.setMag(orbitDistance);
+
+    ChangeVelocity(deltaP_Planet);
+    
+    //Move normally
+    location = PVector.add(location, velocity);  
     */
+  }
+  
+  //Set the movement mode to orbital (away from linear default)
+  public void SetOrbitalMode(MoveMode _mode, Physical _body)
+  {
+    moveMode = _mode;
+    orbitBody = _body;
+    
+    //Calculate a forward vector for orbital movement (not the 'look' direction of the spin)
+    orbitForwardVector = GetNormalOrbitalVector();
+  }
+  
+  //Use the orbital body and this object's position to get a normal vector for orbiting
+  private PVector GetNormalOrbitalVector()
+  {
+    //Delta of position, dP(12) = P2 - P1
+    PVector transform = orbitForwardVector.copy();
+    PVector locationOnOrbit = new PVector(0,0);      //Find a location along the desired orbit
+    
+    //TODO dont use orbitbody location, need to use a location on the orbit
+    transform.x = orbitBody.location.x - location.x;
+    transform.y = orbitBody.location.y - location.y;
+    
+    //Rotate to be perpendicular
+    transform.rotate(radians(90));
+    transform.normalize(); 
+    //println(transform);
+
+    return transform;
   }
  
 
@@ -251,8 +323,12 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   {
     lastCollisionTime = millis();
     
+    PVector deltaV = new PVector(0,0);
+    PVector.sub(_other.velocity, velocity, deltaV);
+    float velocityMagDiff = deltaV.mag();
     //Mass scaling factor (other/mine)
     float massRatio = _other.mass/mass;
+    health.current -= 10 * massRatio * velocityMagDiff;
     
     PVector deltaP = new PVector(0,0);    //Delta of position, dP(12) = P2 - P1
     deltaP.x = _other.location.x - location.x;

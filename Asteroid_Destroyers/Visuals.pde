@@ -6,12 +6,22 @@ void DrawAsteroids(ArrayList<Asteroid> _asteroids, boolean _displayIcons)
   for(Asteroid a : _asteroids)
   {
     a.DrawObject();
-    if(_displayIcons)
+    if(_displayIcons && a.drawOverlay)
     {
       a.iconOverlay.DrawObject();
     }
   }
 }
+
+//Draw structure game object
+void DrawStations(ArrayList<Station> _stations)
+{
+  for(Station a : _stations)
+  {
+    a.DrawObject();
+  }
+}
+
 
 void DrawGameArea(Map<String, GameArea> _gameAreas)
 {
@@ -145,4 +155,24 @@ void BeginZoom()
 void EndZoom()
 {
   popMatrix();
+}
+
+//******* EXPLOSIONS ********//
+
+//Generate a number of explosions, generally upon the death of some ship, station, etc
+void GenerateDeathExplosions(int _count, PVector _center, PVector _deadObjSize)
+{
+  for(int i = 0; i < _count; i++)
+  {
+    float explosionScale = rand.nextFloat() + 0.5;    //explosion scale 0.5-1.5
+    PVector explosionSize = new PVector(explosionScale * 64, explosionScale * 48);  //Scale off standard size
+    PVector spawnLoc = new PVector(_center.x + _deadObjSize.x/2 * rand.nextFloat() - 0.5, 
+                  _center.y + _deadObjSize.y/2 * rand.nextFloat() - 0.5);
+    
+    Effect explosion = new Effect("Explosion", spawnLoc, explosionSize, EffectType.EXPLOSION); 
+    int frameDelay = rand.nextInt(60);
+    explosion.SetRenderDelay(frameDelay);
+    
+    effects.add(explosion);
+  }
 }

@@ -14,9 +14,15 @@ void UpdateAsteroids(ArrayList<Asteroid> _asteroids)
 
 void UpdateShips(ArrayList<Ship> _ships)
 {
-  for(Ship a : _ships)
+  for (Iterator<Ship> iterator = _ships.iterator(); iterator.hasNext();) 
   {
-    a.Update();
+    Ship ship = iterator.next();
+    ship.Update();
+    if (ship.toBeKilled) 
+    {
+        // Remove the current element from the iterator and the list.
+        iterator.remove();
+    }
   }
 }
 
@@ -25,6 +31,33 @@ void UpdatePlanets(ArrayList<Planet> _planets)
   for(Planet a : _planets)
   {
     a.Update();
+  }
+}
+
+void UpdateStations(ArrayList<Station> _stations)
+{
+  for (Iterator<Station> iterator = _stations.iterator(); iterator.hasNext();) 
+  {
+    Station station = iterator.next();
+    station.Update();
+    if (station.toBeKilled) 
+    { 
+      // Remove the current element from the iterator and the list.
+      iterator.remove();
+    }
+  }
+}
+
+void UpdateEffects(ArrayList<Effect> _effects)
+{
+  for (Iterator<Effect> iterator = _effects.iterator(); iterator.hasNext();) 
+  {
+    Effect effect = iterator.next();
+    if (effect.toBeKilled) 
+    { 
+      // Remove the current element from the iterator and the list.
+      iterator.remove();
+    }
   }
 }
 

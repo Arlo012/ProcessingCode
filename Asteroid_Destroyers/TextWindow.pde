@@ -1,9 +1,15 @@
+public enum DrawStyle {
+  STANDARD, GRADIENT
+}
+
 class TextWindow extends UI
 {  
-  String textData = "";
-  color background;
-  color textColor;
-  int textRenderMode;          //Render as center or corner
+  private String textData = "";
+  private color backgroundColor;            //For standard background
+  private color gradientColor;         //Destination color (background -> gradientColor)
+  private color textColor;
+  private int textRenderMode;          //Render as center or corner
+  private DrawStyle fillMode;          //How to fill the text window
   
   ArrayList<Drawable> icons;  //Icons within the window
   
@@ -13,7 +19,8 @@ class TextWindow extends UI
     super(_name, _loc, new PVector(200, 125), _scalesWithZoom);      //Default size 200 by 100
     textData = _text;
     
-    background = color(0,0,65,200);
+    fillMode = DrawStyle.STANDARD;      //Solid color fill by default
+    backgroundColor = color(0,0,65,200);
     textColor = color(255);
     textRenderMode = CORNER;
     renderMode = CORNER;            //Default render mode for a textbox is corner
@@ -26,7 +33,8 @@ class TextWindow extends UI
     super(_name, _loc, _size, _scalesWithZoom);      //Non-standard window size
     textData = _text;
     
-    background = color(0,0,65,200);
+    fillMode = DrawStyle.STANDARD;      //Solid color fill by default
+    backgroundColor = color(0,0,65,200);
     textColor = color(255);
     textRenderMode = CORNER;
     renderMode = CORNER;            //Default render mode for a textbox is corner
@@ -39,7 +47,8 @@ class TextWindow extends UI
     super(_name, _loc, _size, _fontSize, _scalesWithZoom);      //Non-standard window size
     textData = _text;
     
-    background = color(0,0,65,200);
+    fillMode = DrawStyle.STANDARD;      //Solid color fill by default
+    backgroundColor = color(0,0,65,200);
     textColor = color(255);
     textRenderMode = CORNER;
     renderMode = CORNER;            //Default render mode for a textbox is corner
@@ -56,7 +65,21 @@ class TextWindow extends UI
     
     //BACKGROUND
     rectMode(renderMode);
-    fill(background);
+
+    if(fillMode == DrawStyle.STANDARD)
+    {
+      fill(backgroundColor);
+    }
+    else if(fillMode == DrawStyle.GRADIENT)
+    {
+      DrawGradient();
+    }
+    else
+    {
+      println("WARNING: tried to render textwindow background of unsupported DrawStyle");
+    }
+    
+
     if(scalesWithZoom)
     {
       rect(0, 0, size.x/wvd.viewRatio, size.y/wvd.viewRatio);
@@ -110,9 +133,11 @@ class TextWindow extends UI
     textData = _newText;
   }
   
+  //Set single color background, change fill style
   public void SetBackgroundColor(color _background)
   {
-    background = _background;
+    fillMode = DrawStyle.STANDARD;
+    backgroundColor = _background;
   }
   
   public void SetTextColor(color _textColor)
@@ -132,6 +157,31 @@ class TextWindow extends UI
       print(ID);
       print(" to an invalid value (not corner or center).\n");
     }
+  }
+  
+  public void SetGradient(color c1, color c2) 
+  {
+    fillMode = DrawStyle.GRADIENT;
+    backgroundColor = c1;
+    gradientColor = c2;
+  }
+
+  
+  private void DrawGradient()
+  {
+    noFill();
     
+    int y = 0;
+    int x = 0;
+    int w = (int)size.x;
+    int h = (int)size.y;
+    
+    for (int i = y; i <= y+h; i++) 
+    {
+      float inter = map(i, y, y+h, 0, 1);
+      color c = lerpColor(backgroundColor, gradientColor, inter);
+      stroke(c);
+      line(x, i, x+w, i);
+    }
   }
 }

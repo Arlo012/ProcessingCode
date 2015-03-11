@@ -17,14 +17,15 @@ public class Ship extends Pilotable implements Clickable, Updatable
     sprite.resize(int(size.x), int(size.y));
     
     //Set the overlay icon
-    iconOverlay.SetIcon(color(0,0,255),ShapeType._TRIANGLE_);
+    iconOverlay.SetIcon(color(0,255,0),ShapeType._TRIANGLE_);
     
     //Set the description string
     String descriptor = new String();
     descriptor += name;
-    descriptor += "\nVelocity: ";
-    descriptor += velocity.mag();
-    descriptor += " m/s ";
+    descriptor += "\n";
+    descriptor += owner;
+    descriptor += "\nHealth: ";
+    descriptor += health.current;
     info = new TextWindow("Ship Info", location, descriptor, true);
   }
   
@@ -53,6 +54,12 @@ public class Ship extends Pilotable implements Clickable, Updatable
       AllStop();
       allStopOrder.Toggle();
     }
+    
+    //If the ship will die after this frame
+    if(toBeKilled)
+    {
+      GenerateDeathExplosions(3, location, size);
+    }
   }
 
 /*Click & mouseover UI*/
@@ -70,21 +77,23 @@ public class Ship extends Pilotable implements Clickable, Updatable
   
   void Click()
   {
-    
+    println("INFO: No interaction defined for ship click");
   }
   
   //When the object moves its UI elements must as well
   void UpdateUIInfo()
   {
     //Update textbox
-    info.UpdateLocation(new PVector(wvd.pixel2worldX(location.x), wvd.pixel2worldY(location.y)));
+    info.UpdateLocation(location);
     
+    //Set the description string
     String descriptor = new String();
     descriptor += name;
-    descriptor += "\nVelocity: ";
-    descriptor += velocity.mag();
-    descriptor += " m/s ";
-
+    descriptor += "\n";
+    descriptor += owner;
+    descriptor += "\nHealth: ";
+    descriptor += health.current;
+    
     info.UpdateText(descriptor);
   }
 

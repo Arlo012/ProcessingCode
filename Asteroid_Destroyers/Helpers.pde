@@ -4,7 +4,7 @@
 * @see         GenerateAsteroids
 * This function will generate asteroids in random locations on a given game area
 */
-int initialAsteroidCount = 100;
+int initialAsteroidCount = 50;
 int generationPersistenceFactor = 5;     //How hard should I try to generate the requested asteroids?
 AsteroidFactory asteroidFactory = new AsteroidFactory();
 void GenerateAsteroids(GameArea _area)

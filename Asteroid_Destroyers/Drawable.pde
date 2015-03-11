@@ -20,7 +20,6 @@ public class Drawable
   protected PVector location;               //On absolute plane
   protected PVector size;                  
   public int renderMode = CENTER;          //Render mode for visible outline
-  boolean animation = false;               //Is this an animation?
   boolean toBeKilled = false;              //Does this object need to be destroyed?
 
   //Visuals

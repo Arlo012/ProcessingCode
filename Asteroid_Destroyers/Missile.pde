@@ -101,8 +101,15 @@ public class Missile extends Pilotable implements Clickable, Updatable
     
     //Explosion force!
     float explosiveForce = 0.75;
-    PVector explosionDirection = new PVector(velocity.x, velocity.y);
-    explosionDirection.normalize();
+    
+    PVector explosionDirection = new PVector(0,0);    //Delta of position, dP(12) = P2 - P1
+    explosionDirection.x = _other.location.x - location.x;
+    explosionDirection.y = _other.location.y - location.y;
+    
+    explosionDirection.normalize();      //Create unit vector for new direction from deltaP
+    
+    //Opposite vector for this object
+    explosionDirection.mult(-1);
     explosionDirection.setMag(explosiveForce);
     
     if(debugMode.value)
@@ -113,13 +120,13 @@ public class Missile extends Pilotable implements Clickable, Updatable
       print(damage);
       print(" damage.\n");
     }
-    
     _other.ChangeVelocity(explosionDirection);
-    
+
     //If the object was an asteroid it is now a projectile -- update its color
     if(_other instanceof Asteroid)
     {
       _other.iconOverlay.borderColor = color(255,0,0);
+      _other.drawOverlay = true;        //Draw icon overlay when missile impacts the asteroid
     }
     
     toBeKilled = true;
