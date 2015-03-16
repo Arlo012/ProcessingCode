@@ -17,7 +17,6 @@ public class Order extends UI
   private Shape orderIcon;
   
   public Physical orderTarget;        //Physical object target (kill/ orbit)
-
   
   Order(String _name, PVector _loc, OrderType _orderType)
   {
@@ -67,8 +66,7 @@ public class Order extends UI
     {
       orderColor = color(255);
     }
-  }
-  
+  } 
   
   //Set the order that is to take place AFTER this one
   public void SetNextOrder(Order _order)
@@ -76,5 +74,10 @@ public class Order extends UI
     nextOrder = _order;
   }
   
+  //Set the physical object that this order is tracking (i.e. for kill)
+  public void SetOrderTarget(Physical _phys)
+  {
+    orderTarget = _phys;
+  }
   
 }

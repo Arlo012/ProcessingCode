@@ -35,7 +35,7 @@ public class Missile extends Pilotable implements Clickable, Updatable
   //HACK this update() function is highly repeated through child classes
   public void Update()
   {
-    super.Update();    //Call physical update
+    super.Update();    //Call pilotable update
     
     //Check if UI is currently rendered, and if so update info
     if(info.visibleNow)
@@ -94,8 +94,9 @@ public class Missile extends Pilotable implements Clickable, Updatable
   
   @Override public void HandleCollision(Physical _other)
   {
-    Effect explosion = new Effect("Explosion", location, new PVector(64,48), EffectType.EXPLOSION);    //New explosion here
-    effects.add(explosion);      //Add to list of effects to render
+    super.HandleCollision(_other);
+    Explosion explosion = new Explosion(location, new PVector(64,48));    //New explosion here
+    explosions.add(explosion);      //Add to list of effects to render
     
     _other.health.current -= damage;
     
@@ -121,13 +122,6 @@ public class Missile extends Pilotable implements Clickable, Updatable
       print(" damage.\n");
     }
     _other.ChangeVelocity(explosionDirection);
-
-    //If the object was an asteroid it is now a projectile -- update its color
-    if(_other instanceof Asteroid)
-    {
-      _other.iconOverlay.borderColor = color(255,0,0);
-      _other.drawOverlay = true;        //Draw icon overlay when missile impacts the asteroid
-    }
     
     toBeKilled = true;
   }

@@ -9,7 +9,7 @@ int generationPersistenceFactor = 5;     //How hard should I try to generate the
 AsteroidFactory asteroidFactory = new AsteroidFactory();
 void GenerateAsteroids(GameArea _area)
 {
-  println("Generating asteroids");
+  println("INFO: Generating asteroids");
   
   //Tile arraylist constructor 
   int i = 0;      //Iterator  
@@ -35,7 +35,7 @@ void GenerateAsteroids(GameArea _area)
               && Math.abs(roid.GetLocation().y-roidLoc.y) < roid.GetSize().y/2 + roidSize/2 )
         {
           noOverlap = false;
-          //println("Asteroid location rejected!");
+          println("INFO: Asteroid location rejected!");
           break;
         }
       }
@@ -112,7 +112,7 @@ void GeneratePlanets(GameArea area, ArrayList<Planet> planets, int count)
             && Math.abs(planet.GetLocation().y-yCoor) < planet.GetSize().y * 1.5 + size * 1.5 )
       {
         noOverlap = false;
-        println("Planet location rejected!");
+        println("INFO: Planet location rejected!");
         break;
       }
     }
@@ -204,5 +204,74 @@ void AsteroidOffScreenUpdate(ArrayList<Asteroid> _roids, Map<String,GameArea> _a
     }
     toSpawn.clear();
 
+  }
+}
+
+//For a given civilization, generate stations around its planets
+void GenerateStations(Civilization _civ, int count)
+{
+  //Create possible station locations around each planet
+  ArrayList<PVector> stationOrbitLocationCandidates = new ArrayList<PVector>();
+  
+  for(Planet p : _civ.planets)
+  {
+    PVector locationCandidate1 = new PVector(p.location.x - 75, p.location.y);
+    PVector locationCandidate2 = new PVector(p.location.x + 75, p.location.y);
+    PVector locationCandidate3 = new PVector(p.location.x, p.location.y - 75);
+    PVector locationCandidate4 = new PVector(p.location.x, p.location.y + 75);
+    stationOrbitLocationCandidates.add(locationCandidate1);
+    stationOrbitLocationCandidates.add(locationCandidate2);
+    stationOrbitLocationCandidates.add(locationCandidate3);
+    stationOrbitLocationCandidates.add(locationCandidate4);
+  }
+  
+  for(int i = 0; i < count; i++)
+  {
+    //Random size
+    int sizeGen = rand.nextInt(40) + 20;
+    PVector stationSize = new PVector(sizeGen, sizeGen);
+    
+    //Randomly select station location from generated list above
+    int locationSelectedIndex = rand.nextInt(stationOrbitLocationCandidates.size());
+    PVector stationLoc = stationOrbitLocationCandidates.get(locationSelectedIndex);
+    stationOrbitLocationCandidates.remove(locationSelectedIndex);
+    
+    //Select station color & build station
+    Station station;
+    int stationLevel = rand.nextInt(2) + 1;
+    if(_civ.ID == 1)    //Blue
+    {
+      if(stationLevel == 1)
+      {
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation1);
+      }
+      else if(stationLevel == 2)
+      {
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2);
+      }
+      else
+      {
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation3);
+      }
+      
+    }
+    else                //Red
+    {
+      if(stationLevel == 1)
+      {
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation1);
+      }
+      else if(stationLevel == 2)
+      {
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2);
+      }
+      else
+      {
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation3);
+      }
+    }
+    
+    station.owner = _civ.name;
+    _civ.stations.add(station);
   }
 }

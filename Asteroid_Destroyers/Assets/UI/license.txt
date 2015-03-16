@@ -1,7 +1,7 @@
 
 ###############################################################################
 
-	UI pack by Kenney Vleugels (www.kenney.nl)
+	UI pack: Space extension by Kenney Vleugels (www.kenney.nl)
 
 			------------------------------
 

@@ -1,5 +1,5 @@
   
-public class Pilotable extends Physical
+public class Pilotable extends Physical implements Updatable
 {
   PVector destination;              //Where would I like to go?
   int collisionStunTime;            //If collision occurs, how long stunned before movement may occur (milliseconds)
@@ -52,8 +52,8 @@ public class Pilotable extends Physical
     {
       if(!Stunned())
       {
-      AccelerateToTarget();
-      SetRotationTarget(destination);
+        AccelerateToTarget();
+        SetRotationTarget(destination);
       }
     }
     else
@@ -65,9 +65,13 @@ public class Pilotable extends Physical
       currentOrder = GetNextOrder();
       if(currentOrder != null)
       {
-        nextDestination = currentOrder.location;   
-        
-        destination = nextDestination;
+        if(currentOrder.orderType == OrderType._MOVE_ 
+          || currentOrder.orderType == OrderType._KILL_)
+        {
+          nextDestination = currentOrder.location;   
+          destination = nextDestination;
+        }
+
       }
       
       //There are no new orders
@@ -150,7 +154,23 @@ public class Pilotable extends Physical
     //TODO implement other order types (besides move)
     if(orders.size() < maxOrders)
     {
-      Order newOrder = new Order("Move Order", _orderLoc, OrderType._MOVE_);
+      Order newOrder = null;
+      if(_orderType == OrderType._MOVE_)
+      {
+        newOrder = new Order("Move Order", _orderLoc, _orderType);
+      }
+      else if(_orderType == OrderType._KILL_)
+      {
+        newOrder = new Order("Kill Order", _orderLoc, _orderType);
+      }
+      else
+      {
+        print("Unsupported new order type for ");
+        print(name);
+        println();
+      }
+      
+      newOrder.SetOrderTarget(_target);
       orders.push(newOrder);        //Append this order to the END of the linked list
       
       //TODO fix this system to be less... broken.. and dependent on currentOrder
@@ -169,9 +189,7 @@ public class Pilotable extends Physical
           Order nextOrder = orders.get(1);
           orders.peek().SetNextOrder(nextOrder);
         }
-
       }
-      
     }
     else
     {
@@ -192,6 +210,50 @@ public class Pilotable extends Physical
     else
     {
       return null;
+    }
+  }
+  
+  /**** UPDATE ****/
+  //TODO the implement interface of this class isnt requiring this function -- why?
+  public void Update()
+  {
+    super.Update();
+    if(currentOrder != null)
+    {
+       //Update kill orders to follow target (CURRENT ORDER)
+      if(currentOrder.orderType == OrderType._KILL_)
+      {
+        //Set the kill order's location to the order's physical object tracker
+        if(currentOrder.orderTarget != null)    //Make sure the target is still alive
+        {
+          //Update the orders to match the (presumably moving) target's new location
+          currentOrder.UpdateLocation(currentOrder.orderTarget.location);
+          
+          //Update the order icon to follow the target
+          currentOrder.orderIcon.UpdateLocation(currentOrder.orderTarget.location);
+          
+          //Update this pilotable's destination to match the targets new position
+          destination = currentOrder.orderTarget.location;
+        }
+        else    //Target is dead -- get a new current order
+        {
+          //TODO test me
+          currentOrder = GetNextOrder();
+        }
+      }
+    }
+    
+    for(Order _ord : orders)
+    {
+      //Set the kill order's location to the order's physical object tracker
+      if(_ord.orderTarget != null)    //Make sure the target is still alive
+      {
+        //Update the orders to match the (presumably moving) target's new location
+        _ord.UpdateLocation(_ord.orderTarget.location);
+        
+        //Update the order icon to follow the target
+        _ord.orderIcon.UpdateLocation(_ord.orderTarget.location);
+      }
     }
   }
 }

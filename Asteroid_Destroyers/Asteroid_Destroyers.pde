@@ -14,6 +14,7 @@ String title = "Asteroid Destroyers";
 Civilization P1, P2;
 PlayerController Controller1, Controller2;
 PlayerController currentPlayer;   //Who is currently playing
+PlayerController otherPlayer;
 
 //Game stage
 GameStage gameStage;
@@ -26,8 +27,8 @@ PImage lion, skull;    //Icons
 ArrayList<Asteroid> asteroids;
 ArrayList<Ship> p1Ships, p2Ships;
 ArrayList<Planet> p1Planets, p2Planets;
-ArrayList<Missile> missiles;
-ArrayList<Effect> effects;
+ArrayList<Missile> p1Missiles, p2Missiles;
+ArrayList<Explosion> explosions;
 ArrayList<Station> p1Stations, p2Stations;
 
 //Game areas
@@ -35,6 +36,7 @@ HashMap<String,GameArea> gameAreas;
 
 //Counters
 long loopCounter;
+long loopStartTime;
 
 //Setup constants
 TogglableBoolean debugMode = new TogglableBoolean(false);
@@ -48,7 +50,7 @@ WorldViewData wvd = new WorldViewData();
 //UI Info
 LinkedList<Clickable> toDisplay;        //List of objects to display
 
-//TEST AREA
+//TEST AREA //<>//
 
 void setup()
 {
@@ -82,6 +84,7 @@ void setup()
   blueStation1 = loadImage("Assets/Stations/Spacestation2-1.png");
   blueStation2 = loadImage("Assets/Stations/Spacestation2-2.png");
   blueStation3 = loadImage("Assets/Stations/Spacestation2-3.png");
+  smokeTexture = loadImage("Assets/Effects/Smoke/0000.png");
   //Load explosions (see effect.pde for variables)
   for (int i = 1; i < explosionImgCount + 1; i++) 
   {
@@ -124,7 +127,6 @@ void setup()
   
 //Ship setup
   p1Ships = new ArrayList<Ship>();
-  
   p2Ships = new ArrayList<Ship>();
   
 //Planet setup
@@ -134,36 +136,46 @@ void setup()
   p2Planets = new ArrayList<Planet>();
   GeneratePlanets(P2Field, p2Planets, 3);
   
-//Civilization setup
-  P1 = new Civilization(new PVector(0,0), "Robot Jesus Collective", p1Ships, p1Planets);
-  P1.SetCivilizationIcon(skull,24);
-  
-  P2 = new Civilization(new PVector(width,0), "Normal Squishy Humans", p2Ships, p2Planets);
-  P2.SetCivilizationIcon(lion,24);
-  
 //Station setup
   p1Stations = new ArrayList<Station>();
   p2Stations = new ArrayList<Station>();
   
+//Missile setup
+  p1Missiles = new ArrayList<Missile>();
+  p2Missiles = new ArrayList<Missile>();
+  
+//Civilization setup
+  P1 = new Civilization(new PVector(0,0), "Robot Jesus Collective", p1Ships, p1Planets, p1Stations, p1Missiles);
+  P1.SetCivilizationIcon(skull,24);
+  
+  P2 = new Civilization(new PVector(width,0), "Normal Squishy Humans", p2Ships, p2Planets, p2Stations, p2Missiles);
+  P2.SetCivilizationIcon(lion,24);
+ 
+//Station setup
+  GenerateStations(P1, 4);
+  GenerateStations(P2, 4);
+  
 //Controller setup
   Controller1 = new PlayerController(P1);
-  //Controller2 = new PlayerController(P2);
+  Controller2 = new PlayerController(P2);
   currentPlayer = Controller1;
+  otherPlayer = Controller2;
   
 //UI setup
   toDisplay = new LinkedList<Clickable>();
   
   frameRate(60);
+  loopStartTime = millis();
   
 //Effects setup
-  effects = new ArrayList<Effect>();
+  explosions = new ArrayList<Explosion>();
   
 //TEST AREA
+ /*
   Missile testMissile = new Missile(new PVector(width/4, 200), new PVector(0.5,0));
   Missile testMissile2 = new Missile(new PVector(width/4, 400), new PVector(0.5,0));
   Missile testMissile3 = new Missile(new PVector(width/4, 600), new PVector(0.5,0));
   Missile testMissile4 = new Missile(new PVector(width/4, 800), new PVector(0.5,0));
-  missiles = new ArrayList<Missile>();
   missiles.add(testMissile);
   missiles.add(testMissile2);
   missiles.add(testMissile3);
@@ -196,6 +208,7 @@ void setup()
   Station stationTest2 = new Station(StationType.MILITARY, stationLoc2, stationSize2, redStation1, p2Planets.get(0));
   stationTest2.owner = P2.name;
   p2Stations.add(stationTest2);
+  */
 }
 
 void draw()
@@ -218,36 +231,38 @@ void draw()
   if(wvd.viewRatio < 1.5)
   {
     //Draw Game objects
-    DrawAsteroids(asteroids, true);         //See Visuals.pde
     DrawPlanets(p1Planets);
     DrawPlanets(p2Planets);
+    DrawAsteroids(asteroids, true);         //See Visuals.pde
     DrawShips(p1Ships, true);
     DrawShips(p2Ships, true);
-    DrawStations(p1Stations);
-    DrawStations(p2Stations);
-    DrawMissiles(missiles, true);
-    DrawEffects(effects);
+    DrawStations(P1.stations);
+    DrawStations(P2.stations);
+    DrawMissiles(p1Missiles, true);
+    DrawMissiles(p2Missiles, true);
+    DrawEffects(explosions);
   }
   else
   {
     //Draw Game objects
-    DrawAsteroids(asteroids, false);         //See Visuals.pde
     DrawPlanets(p1Planets);
     DrawPlanets(p2Planets);
+    DrawAsteroids(asteroids, false);         //See Visuals.pde
     DrawShips(p1Ships, false);
     DrawShips(p2Ships, false);
-    DrawStations(p1Stations);
-    DrawStations(p2Stations);  
-    DrawMissiles(missiles, false);
-    DrawEffects(effects);
+    DrawStations(P1.stations);
+    DrawStations(P2.stations);  
+    DrawMissiles(p1Missiles, false);
+    DrawMissiles(p2Missiles, false);
+    DrawEffects(explosions);
   }
   
   //Move game objects
   MovePhysicalObject(asteroids);        //See Visuals.pde
-  //MovePhysicalObject(p1Stations);
   MovePilotableObject(p1Ships);
   MovePilotableObject(p2Ships);
-  MovePilotableObject(missiles);
+  MovePilotableObject(p1Missiles);
+  MovePilotableObject(p2Missiles);
 
   //Check collisions
   if(asteroidCollisionAllowed)
@@ -257,11 +272,14 @@ void draw()
 
   HandleCollisions(asteroids, p1Ships);
   HandleCollisions(asteroids, p2Ships);
-  HandleWeaponCollisions(missiles, asteroids);
-  HandleWeaponCollisions(missiles, p1Ships);
-  HandleWeaponCollisions(missiles, p2Ships);
-  HandleWeaponCollisions(missiles, p1Stations);
-  HandleWeaponCollisions(missiles, p2Stations);
+  HandleCollisions(asteroids, p1Stations);
+  HandleCollisions(asteroids, p2Stations);
+  HandleWeaponCollisions(p1Missiles, asteroids);
+  HandleWeaponCollisions(p2Missiles, asteroids);
+  HandleWeaponCollisions(p2Missiles, p1Ships);
+  HandleWeaponCollisions(p1Missiles, p2Ships);
+  HandleWeaponCollisions(p2Missiles, p1Stations);
+  HandleWeaponCollisions(p1Missiles, p2Stations);
   
 //******* UI ********//
 
@@ -324,14 +342,20 @@ void draw()
   UpdateAsteroids(asteroids);
   UpdatePlanets(p1Planets);
   UpdatePlanets(p2Planets);
-  UpdateMissiles(missiles);
+  UpdateMissiles(p1Missiles);
+  UpdateMissiles(p2Missiles);
   UpdateStations(p1Stations);
   UpdateStations(p2Stations);
   //Effects MUST be called as last update. Some update functions have death frame action that will not be called if this runs first
-  UpdateEffects(effects);       
+  UpdateExplosions(explosions);       
   
   //Update UI information for the main UI
   currentPlayer.UpdateUI();
+  
+  //Update civilizations (TODO: move where all other updateships, etc 
+      //currently are after migrating them into these functions)
+  P1.Update();
+  P2.Update();
   
 //******* PROFILING ********//
   if(profilingMode)

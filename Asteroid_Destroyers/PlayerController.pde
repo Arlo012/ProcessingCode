@@ -1,14 +1,20 @@
 public class PlayerController
 {
   private Civilization civ;
-  private Drawable playerTarget;        //Player last clicked on
+  private Drawable clickFocus;        //Player last clicked on
   
   //Controller UI
   private TextWindow statusBar;         //Main UI
   ArrayList <Button> allToggleButtons;
   
-  //Buttons
-  public Button debugToggleButton, cancelOrders;
+  //Buttons (clickable)
+  public Button debugToggleButton, cancelOrders, buildMissileOrder, buildShipOrder;
+  
+  //UI Info
+  public TextWindow massEnergyTotal, massEnergySec;    //Resources
+  
+  //Background shapes
+  private ArrayList<Shape> UIShapes;    //TODO phase these out ?
   
   PlayerController(Civilization _civ)
   {
@@ -21,7 +27,7 @@ public class PlayerController
   {
   //Main bar
     int UIHeight = 100;
-    int UIWidth = width;
+    int UIWidth = width/2;
     PVector UICorner = new PVector(0, height - UIHeight);
     statusBar = new TextWindow("Main player UI", new PVector(0, height - UIHeight),
                              new PVector(UIWidth, UIHeight), "", false);
@@ -30,7 +36,7 @@ public class PlayerController
     //statusBar.SetBackgroundColor(color(85,103,137, 200));
     statusBar.SetGradient(color(0, 100), color(255, 100));
     
-  //Buttons
+  //Clickable Buttons
     allToggleButtons = new ArrayList<Button>();
     
     //Debug button
@@ -38,37 +44,79 @@ public class PlayerController
                   new PVector(100, 49), "DEBUG", "PNG/blue_button13.png", debugMode, false);          
     allToggleButtons.add(debugToggleButton);
     
-    //Pilotable controls
+    //UI Setup
     PVector iconSize = new PVector(36, 36);
-    cancelOrders = new Button("Stop Ship Icon", new PVector(UICorner.x + UIHeight/10, UICorner.y + UIHeight/10),
+    float row1Y = UICorner.y + UIHeight/10;
+    float row2Y = UICorner.y + 2.5 * UIHeight/10 + iconSize.y;
+    float column1X = UICorner.x + UIHeight/10;
+    float column2X = UICorner.x + 2.5 * UIHeight/10 + iconSize.x;
+    float column3X = UICorner.x + 5 * UIHeight/10 + 2 * iconSize.x;
+    
+    //Pilotable controls
+    cancelOrders = new Button("Stop Ship Button", new PVector(column1X, row1Y),
                 iconSize, "", "PNG/red_cross.png", null, false);
     cancelOrders.SetRenderMode(CORNER);
     allToggleButtons.add(cancelOrders);
+    
+    buildMissileOrder = new Button("Build Missile Button", new PVector(column1X, row2Y),
+                iconSize, "", "Missile05.png", null, false);
+    buildMissileOrder.SetRenderMode(CORNER);
+    allToggleButtons.add(buildMissileOrder);
+    
+    buildShipOrder = new Button("Build Ship Button", new PVector(column2X, row2Y),
+                iconSize, "", "ship.png", null, false);
+    buildShipOrder.SetRenderMode(CORNER);
+    allToggleButtons.add(buildShipOrder);
+    
+  //Background Shapes 
+    UIShapes = new ArrayList<Shape>();
+    /*
+    for(Button B : allToggleButtons)
+    {
+      PVector buttonCenter = new PVector(B.location.x + B.size.x/2, B.location.y + B.size.y/2);
+      PVector backgroundSize = new PVector(B.size.x * 1.2, B.size.y * 1.2);
+      Shape backgroundShape = new Shape("UI Decoration", buttonCenter, backgroundSize, 
+                color(#5B9AD1, 200), ShapeType._SQUARE_);
+      backgroundShape.renderMode = CENTER;
+      backgroundShape.SetFillColor(color(#103758));
+      UIShapes.add(backgroundShape);
+    }
+    */
+    
+  //UI Only Buttons
+    massEnergyTotal = new TextWindow("Mass Energy Total UI", new PVector(column3X, row2Y),
+                             new PVector(iconSize.x + 200, iconSize.y), "Mass-Energy", false);
+    massEnergyTotal.textRenderMode = CORNER; 
   }
   
   //Draw all menus and buttons
   public void DrawUI()
   {
     statusBar.DrawObject();
+    DrawShapes(UIShapes);
     DrawButtons(allToggleButtons);
+    massEnergyTotal.DrawObject();
   }
   
-  //Update all button actions to the current target
+  //Update all button actions to the current target (NOTE: only call this for one player, as it over-writes main UI)
   public void UpdateUI()
   {
     //Update the stop button's target
-    if(playerTarget instanceof Pilotable)
+    if(clickFocus instanceof Pilotable)
     {
-      Pilotable pilot = (Pilotable)playerTarget;
+      Pilotable pilot = (Pilotable)clickFocus;
       cancelOrders.varToToggle = pilot.allStopOrder;
     }
     
+    String massEnergyText = "Mass-Energy:  ";
+    massEnergyText += String.format("%,d",civ.massEnergy);
+    massEnergyTotal.UpdateText(massEnergyText);
   }
   
   //Set the drawable target that the player is clicked on
   public void SetTarget(Drawable _target)
   {
-    playerTarget = _target;
+    clickFocus = _target;
   }
   
   //Pass in PVector in SCREEN coordinates and determine action
@@ -95,7 +143,7 @@ public class PlayerController
       
       if(click == null)    //No ship - also check the missiles
       {
-        click = CheckClickableOverlap(missiles, _clickLocation);
+        click = CheckClickableOverlap(civ.missiles, _clickLocation);
       }
       HandleClickedGameObject(click);
     }
@@ -113,26 +161,56 @@ public class PlayerController
     _clickLocation.x = wvd.pixel2worldX(_clickLocation.x);
     _clickLocation.y = wvd.pixel2worldY(_clickLocation.y);
     
-    //Check if this is clickable
+    //Check if this is clickable. First check is lowest priority
+    //HACK: overlapping objects will be a problem here
     Clickable click = CheckClickableOverlap(civ.fleet, _clickLocation);
+    if(click == null) {
+      click = CheckClickableOverlap(civ.stations, _clickLocation);   
+    }
+    if(click == null) {
+      click = CheckClickableOverlap(asteroids, _clickLocation);
+    }
+    if(click == null) {
+      click = CheckClickableOverlap(otherPlayer.civ.fleet, _clickLocation);
+    }
+    if(click == null) {
+      click = CheckClickableOverlap(otherPlayer.civ.stations, _clickLocation);
+    }
     
     if(click != null)  //We actually clicked something
     {
-      //Attacks could go here
+      if(click instanceof Physical)    //Check if this is owned by this civ
+      {
+        Physical phys = (Physical)click;
+        if(phys.owner != civ.name)    //The clicked object is NOT owned by this civ
+        {
+          //Safe to attack
+          if(clickFocus instanceof Pilotable)      //Kill orders 
+          {
+            Pilotable pilot = (Pilotable)clickFocus;
+            if(debugMode.value)
+            {
+              print(pilot.name);
+              print(" attacking ");
+              print(phys.name);
+              println();
+            }
+            pilot.AddNewOrder(_clickLocation, phys, OrderType._KILL_);  
+          }
+        }
+        else
+        {
+          //Orbit orders could go here
+        }
+      }
     }
     
     else    //We clicked on nothing
     {
-      if(playerTarget instanceof Ship)      //Move orders 
+      if(clickFocus instanceof Pilotable)      //Move orders 
       {
-        Ship ship = (Ship)playerTarget;
-        ship.AddNewOrder(_clickLocation, null, OrderType._MOVE_);      //TODO implement other movement types here
-      }
-      if(playerTarget instanceof Missile)
-      {
-        //TODO this is temporary for demo purposes only -- orders should be given while missile inside ship
-        Missile missile = (Missile)playerTarget;
-        missile.AddNewOrder(_clickLocation, null, OrderType._MOVE_);      //TODO implement other movement types here
+        Pilotable pilot = (Pilotable)clickFocus;
+        pilot.AddNewOrder(_clickLocation, null, OrderType._MOVE_);   
       }
     }
     
@@ -142,15 +220,15 @@ public class PlayerController
   private void RestoreSelectedTarget()
   {
     //Restore icon color
-    if(playerTarget instanceof Physical)
+    if(clickFocus instanceof Physical)
     {
-      Physical phys = (Physical)playerTarget;
+      Physical phys = (Physical)clickFocus;
       phys.iconOverlay.RestoreDefaultColor();
     }
     
-    if(playerTarget instanceof Pilotable)
+    if(clickFocus instanceof Pilotable)
     {
-      Pilotable pilot = (Pilotable)playerTarget;
+      Pilotable pilot = (Pilotable)clickFocus;
       pilot.currentlySelected = false;
     }
   }
@@ -158,26 +236,26 @@ public class PlayerController
   //Select a new clicked target and make changes after it has been clicked
   private void SelectNewTarget(Clickable _clicked)
   {
-    playerTarget = (Drawable)_clicked;
+    clickFocus = (Drawable)_clicked;
     
     if(debugMode.value)
     {
       print("INFO: Selected new target ");
-      print(playerTarget.name);
+      print(clickFocus.name);
       print("\n");
     }
     
-    if(playerTarget instanceof Physical)    //Catch all physical objects
+    if(clickFocus instanceof Physical)    //Catch all physical objects
     {
-      Physical phys = (Physical)playerTarget;
+      Physical phys = (Physical)clickFocus;
       
       //Update their border color to white
       phys.iconOverlay.SetBorderColor(color(255));
     }
     
-    if(playerTarget instanceof Pilotable)    //Catch missiles, ships, etc
+    if(clickFocus instanceof Pilotable)    //Catch missiles, ships, etc
     {
-      Pilotable pilot = (Pilotable)playerTarget;
+      Pilotable pilot = (Pilotable)clickFocus;
       
       //Set their selected bit
       pilot.currentlySelected = true;
@@ -190,7 +268,7 @@ public class PlayerController
   {
     if(click != null)    //We actually clicked something
     {
-      if(playerTarget == null)  //We currently have NOTHING selected -- just get a new target
+      if(clickFocus == null)  //We currently have NOTHING selected -- just get a new target
       {     
         SelectNewTarget(click); //<>//
       }
@@ -198,15 +276,15 @@ public class PlayerController
       //We DO have something selected right now
       else
       {
-        RestoreSelectedTarget();
-        SelectNewTarget(click);
+        RestoreSelectedTarget();        //Restore info about the target clicked new
+        SelectNewTarget(click);         //Set new target of what we just clicked on
       }
       
     }
     
     else    //We clicked in empty space
     {
-      if(playerTarget == null)    //We currently have NOTHING selected
+      if(clickFocus == null)    //We currently have NOTHING selected
       {
         //DO NOTHING
       }
@@ -215,7 +293,7 @@ public class PlayerController
       {
         RestoreSelectedTarget();
         
-        playerTarget = null;
+        clickFocus = null;
       }
     }
   }

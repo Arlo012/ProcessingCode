@@ -1,14 +1,9 @@
 PImage[] explosionImgs = new PImage[90];
 int explosionImgCount = 90;
 
-public enum EffectType{
-  EXPLOSION
-}
-
-public class Effect extends Drawable
+public class Explosion extends Drawable
 {
   PImage[] images;
-  EffectType effectType;
   int imageFrames;
   
   //Delay action
@@ -17,24 +12,15 @@ public class Effect extends Drawable
   
   private int frameCounter = 0;      //Count how many frames of total we have gone thru
   
-  Effect(String _name, PVector _loc, PVector _size, EffectType _effectType)
+  Explosion(PVector _loc, PVector _size)
   {
-    super(_name, _loc, _size, DrawableType.EFFECT);
+    super("Explosion", _loc, _size, DrawableType.EFFECT);
     
-    effectType = _effectType;
     frameCountAtSpawn = frameCount;
     
-    if(effectType == EffectType.EXPLOSION)
-    {
-      imageFrames = 90;
-      images = explosionImgs;
-    }
-    else
-    {
-      print("WARNING: Generated effect: ");
-      print(name);
-      print(" without any image frame counts. It will not draw\n");
-    }
+    imageFrames = 90;
+    images = explosionImgs;
+
   }
   
   //Delay how many frames from creation to actually render?

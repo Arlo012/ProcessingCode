@@ -13,6 +13,7 @@ public class Shape extends Drawable
   private ShapeType  defaultShapeType;
   private color defaultColor;
   private boolean colorSet;          //Allow only one initial set of color after the constructor's default
+  private color fillColor;
   
   public Shape(String _name, PVector _loc, PVector _size, color _color, ShapeType _shapeType)
   {
@@ -21,6 +22,7 @@ public class Shape extends Drawable
     defaultColor = borderColor;
     shapeType = _shapeType;
     colorSet = false;
+    fillColor = color(255,255,255,0);
   }
   
   @Override public void DrawObject()
@@ -29,11 +31,11 @@ public class Shape extends Drawable
     translate(location.x, location.y);
     pushStyle();
     stroke(borderColor);
-    fill(0,0,0,0);
+    fill(fillColor);
     
     if(shapeType == ShapeType._SQUARE_)
     {
-      rectMode(CENTER);
+      rectMode(renderMode);
       rect(0, 0, size.x, size.x);    //TODO forced square here
     }
     else if(shapeType == ShapeType._TRIANGLE_)
@@ -55,6 +57,11 @@ public class Shape extends Drawable
     }
     popStyle();
     popMatrix();
+  }
+  
+  public void SetFillColor(color _fillColor)
+  {
+    fillColor = _fillColor;
   }
   
   public void SetIcon(color _color, ShapeType _type)

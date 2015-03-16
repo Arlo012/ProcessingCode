@@ -107,9 +107,9 @@ void DrawPlanets(ArrayList<Planet> _planets)
   }
 }
 
-void DrawEffects(ArrayList<Effect> _effect)
+void DrawEffects(ArrayList<Explosion> _effect)
 {
-  for(Effect a : _effect)
+  for(Explosion a : _effect)
   {
     a.DrawObject();
   }
@@ -118,6 +118,14 @@ void DrawEffects(ArrayList<Effect> _effect)
 void DrawButtons(ArrayList<Button> _buttons)
 {
   for(Button a : _buttons)
+  {
+    a.DrawObject();
+  }
+}
+
+void DrawShapes(ArrayList<Shape> _shapes)
+{
+  for(Shape a : _shapes)
   {
     a.DrawObject();
   }
@@ -169,10 +177,10 @@ void GenerateDeathExplosions(int _count, PVector _center, PVector _deadObjSize)
     PVector spawnLoc = new PVector(_center.x + _deadObjSize.x/2 * rand.nextFloat() - 0.5, 
                   _center.y + _deadObjSize.y/2 * rand.nextFloat() - 0.5);
     
-    Effect explosion = new Effect("Explosion", spawnLoc, explosionSize, EffectType.EXPLOSION); 
+    Explosion explosion = new Explosion(spawnLoc, explosionSize); 
     int frameDelay = rand.nextInt(60);
     explosion.SetRenderDelay(frameDelay);
     
-    effects.add(explosion);
+    explosions.add(explosion);
   }
 }

@@ -48,12 +48,12 @@ void UpdateStations(ArrayList<Station> _stations)
   }
 }
 
-void UpdateEffects(ArrayList<Effect> _effects)
+void UpdateExplosions(ArrayList<Explosion> _explosion)
 {
-  for (Iterator<Effect> iterator = _effects.iterator(); iterator.hasNext();) 
+  for (Iterator<Explosion> iterator = _explosion.iterator(); iterator.hasNext();) 
   {
-    Effect effect = iterator.next();
-    if (effect.toBeKilled) 
+    Explosion explosion = iterator.next();
+    if (explosion.toBeKilled) 
     { 
       // Remove the current element from the iterator and the list.
       iterator.remove();

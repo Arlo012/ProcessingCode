@@ -318,37 +318,48 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   }
   
 //******* COLLIDE *********/
-  float frictionFactor = 2;        //How much to slow down after collision (divisor)
+  float frictionFactor = 1.5;        //How much to slow down after collision (divisor)
   public void HandleCollision(Physical _other)
   {
     lastCollisionTime = millis();
     
+    //Damage this object based on delta velocity
     PVector deltaV = new PVector(0,0);
     PVector.sub(_other.velocity, velocity, deltaV);
     float velocityMagDiff = deltaV.mag();
+    
     //Mass scaling factor (other/mine)
     float massRatio = _other.mass/mass;
-    health.current -= 10 * massRatio * velocityMagDiff;
+    health.current -= 10 * massRatio * velocityMagDiff;        //Lower this health
     
+    //Create a velocity change based on this object and other object's position
     PVector deltaP = new PVector(0,0);    //Delta of position, dP(12) = P2 - P1
     deltaP.x = _other.location.x - location.x;
     deltaP.y = _other.location.y - location.y;
     
     deltaP.normalize();      //Create unit vector for new direction from deltaP
     
-    //Opposite vector for this object
+    //Opposite vector for this object (reverse direction)
     deltaP.mult(-1);
     deltaP.setMag(velocity.mag()/frictionFactor);
     
     SetVelocity(deltaP);
+    
+    //If the object was an asteroid it is now a projectile -- update its color
+    if(_other instanceof Asteroid)
+    {
+      _other.iconOverlay.borderColor = color(255,0,0);
+      _other.drawOverlay = true;        //Draw icon overlay when missile impacts the asteroid
+    }
   }
   
-//******* COLLIDE *********/
+//******* UPDATE *********/
   public void Update()
   {
     if(health.current <= 0)
     {
       toBeKilled = true;
+      print("INFO: ");
       print(name);
       print(" has died\n");
     }

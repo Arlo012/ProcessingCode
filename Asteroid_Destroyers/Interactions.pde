@@ -1,17 +1,17 @@
 
 // Panning
 void mouseDragged() {
-  if (mouseX < width && mouseY < height 
-      && wvd.pixel2worldX(width) < width 
-      && wvd.pixel2worldY(height) < height) 
-  {
-    wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
-    wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
-  }
-  
   //Make sure we haven't panned outside the screen view
   if(!debugMode.value)
   {
+    if (mouseX < width && mouseY < height 
+      && wvd.pixel2worldX(width) < width 
+      && wvd.pixel2worldY(height) < height) 
+    {
+      wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
+      wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
+    }
+    
     if(wvd.orgX < 0)
     {
       wvd.orgX = 0;
@@ -29,6 +29,11 @@ void mouseDragged() {
     {
       wvd.orgY--;
     }
+  }
+  else
+  {
+    wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
+    wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
   }
 
 }
@@ -48,7 +53,6 @@ void mouseClicked()
     Controller1.HandleRightClick(currentMouseLoc);
   }
 
-  //p1Ships.get(0).SetDestination(new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldX(mouseY)));
 }
 
 void mouseWheel(MouseEvent e)
@@ -68,7 +72,7 @@ void mouseWheel(MouseEvent e)
   {
     wvd.viewRatio = 2.00f;
   }
-  else    //Onlt shift translation if we aren't zoomed out all the way
+  else    //Only shift translation if we aren't zoomed out all the way
   {
     wvd.orgX = wmX - mouseX / wvd.viewRatio;
     wvd.orgY = wmY - mouseY / wvd.viewRatio;
@@ -90,8 +94,6 @@ void keyPressed()
     }
     else if (keyCode == LEFT) 
     {
-      Effect boom2 = new Effect("Explosion", new PVector(width/4,height/3), new PVector(64,48), EffectType.EXPLOSION); 
-      effects.add(boom2);
     }
     else if (keyCode == RIGHT) 
     {
@@ -105,17 +107,22 @@ void keyPressed()
     println("DEBUG: Rotating asteroid");
   }
   
-  //Player 2 movement
-  if (key == 'w') 
-  {
-    p1Ships.get(0).SetRotationMode(RotationMode.FACE);
-    p1Ships.get(0).SetRotationTarget(new PVector(mouseX,mouseY));
-  }
-  else if (key == 'x') 
+  if (key == 'x') 
   {
     //Emulated 'click' the stop orders button
     currentPlayer.cancelOrders.Click();
   }
+  
+  if (key == 'e') 
+  {
+    if(debugMode.value)
+    {
+      Explosion boom2 = new Explosion(new PVector(wvd.pixel2worldX(mouseX),wvd.pixel2worldY(mouseY)), new PVector(64,48)); 
+      explosions.add(boom2);
+    }
+
+  }
+
   
   if(key == 'r')
   {
