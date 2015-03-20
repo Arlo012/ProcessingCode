@@ -4,7 +4,7 @@
 * @see         GenerateAsteroids
 * This function will generate asteroids in random locations on a given game area
 */
-int initialAsteroidCount = 50;
+int initialAsteroidCount = 130;
 int generationPersistenceFactor = 5;     //How hard should I try to generate the requested asteroids?
 AsteroidFactory asteroidFactory = new AsteroidFactory();
 void GenerateAsteroids(GameArea _area)
@@ -77,7 +77,7 @@ void GenerateAsteroids(GameArea _area)
 */
 PVector planetSizeRange = new PVector(50, 100);      //Min, max planet size
 int borderSpawnDistance = 1;      //How far from the gameArea border should the planet spawn?
-void GeneratePlanets(GameArea area, ArrayList<Planet> planets, int count)
+void GeneratePlanets(GameArea area, Civilization _civ, int count)
 {
   //Guarantee no planets within 3 diameters from the edge of the game area
   println("Generating Planets");  
@@ -105,7 +105,7 @@ void GeneratePlanets(GameArea area, ArrayList<Planet> planets, int count)
     
     //Check that this planet will not spawn too near one another 
     noOverlap = true;    //Assume this coordinate is good to begin
-    for(Planet planet : planets)
+    for(Planet planet : _civ.planets)
     {
       //Check if this planet's center + diameter overlaps with planet's center + 4 * diameter
       if( Math.abs(planet.GetLocation().x-xCoor) < planet.GetSize().x * 1.5 + size * 1.5
@@ -120,12 +120,12 @@ void GeneratePlanets(GameArea area, ArrayList<Planet> planets, int count)
     //Guarantee planets are too close to each oher
     if(noOverlap)
     {  
-      Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, int(10000*size/planetSizeRange.y));
+      Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, int(10000*size/planetSizeRange.y), _civ);
       toBuild.SetRotationRate(rotateSpeed);
       toBuild.SetRotationMode(RotationMode.SPIN);    //Spinning
       toBuild.SetMaxSpeed(0);        //Local speed limit for planet (don't move)
       //TODO direction random?
-      planets.add(toBuild);
+      _civ.planets.add(toBuild);
       //println("Built a planet!");
       i++;
     }
@@ -228,7 +228,7 @@ void GenerateStations(Civilization _civ, int count)
   for(int i = 0; i < count; i++)
   {
     //Random size
-    int sizeGen = rand.nextInt(40) + 20;
+    int sizeGen = rand.nextInt(Station.maxStationSize * 2/3) + Station.maxStationSize * 1/2;       //TODO how does this work again?
     PVector stationSize = new PVector(sizeGen, sizeGen);
     
     //Randomly select station location from generated list above
@@ -243,15 +243,15 @@ void GenerateStations(Civilization _civ, int count)
     {
       if(stationLevel == 1)
       {
-        station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation1);
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation1, P1);
       }
       else if(stationLevel == 2)
       {
-        station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2);
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2, P1);
       }
       else
       {
-        station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation3);
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation3, P1);
       }
       
     }
@@ -259,19 +259,18 @@ void GenerateStations(Civilization _civ, int count)
     {
       if(stationLevel == 1)
       {
-        station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation1);
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation1, P2);
       }
       else if(stationLevel == 2)
       {
-        station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2);
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2, P2);
       }
       else
       {
-        station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation3);
+        station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation3, P2);
       }
     }
     
-    station.owner = _civ.name;
     _civ.stations.add(station);
   }
 }

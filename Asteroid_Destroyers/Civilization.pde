@@ -10,6 +10,9 @@ public class Civilization implements Updatable
   ArrayList<Planet> planets;
   ArrayList<Station> stations;
   ArrayList<Missile> missiles;
+  ArrayList<LaserBeam> lasers;
+  ArrayList<Shield> shields;              //Draw & update is handled by parent ship
+  color outlineColor;
   
   //Unique info
   String name;
@@ -24,15 +27,16 @@ public class Civilization implements Updatable
   //Resources
   int massEnergy = 900;
   
-  public Civilization(PVector _upperCorner, String _name, ArrayList<Ship> _fleet, ArrayList<Planet> _planets, 
-          ArrayList<Station> _stations, ArrayList<Missile> _missiles)
+  public Civilization(PVector _upperCorner, String _name)
   {
     topCorner = _upperCorner;
     name = _name;
-    fleet = _fleet;
-    planets = _planets;
-    stations = _stations;
-    missiles = _missiles;
+    fleet = new ArrayList<Ship>();
+    planets = new ArrayList<Planet>();
+    stations = new ArrayList<Station>();
+    missiles = new ArrayList<Missile>();
+    lasers = new ArrayList<LaserBeam>();
+    shields = new ArrayList<Shield>();
     
     ID = civIDcounter;
     civIDcounter++;
@@ -45,10 +49,12 @@ public class Civilization implements Updatable
     if(PVector.dist(topCorner,new PVector(0,0)) == 0)
     {
       orientation = CivOrientation.LEFT;
+      outlineColor = color(0,255,0);
     }
     else if(PVector.dist(topCorner,new PVector(width,0)) == 0)
     {
       orientation = CivOrientation.RIGHT;
+      outlineColor = color(255,0,0);
     }
     else
     {

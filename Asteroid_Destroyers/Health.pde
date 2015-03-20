@@ -1,3 +1,7 @@
+/*
+ * A health class for tracking health on a given object. 
+ */
+
 public class Health
 {
   int current, max;

@@ -1,3 +1,10 @@
+/*
+ *  This is a bunch of updater methods that iterate through arraylist of objects.
+ *  It is pretty clunky to do it this way, but there are problems with child objects 
+ *  having different update methods than their parents. 
+ *     TODO: Investigate a way around this
+ */
+
 void UpdateAsteroids(ArrayList<Asteroid> _asteroids)
 {
   for (Iterator<Asteroid> iterator = _asteroids.iterator(); iterator.hasNext();) 
@@ -26,6 +33,20 @@ void UpdateShips(ArrayList<Ship> _ships)
   }
 }
 
+void UpdateShields(ArrayList<Shield> _shields)
+{
+  for (Iterator<Shield> iterator = _shields.iterator(); iterator.hasNext();) 
+  {
+    Shield shield = iterator.next();
+    shield.Update();
+    if (shield.toBeKilled) 
+    {
+      // Remove the current element from the iterator and the list.
+      iterator.remove();
+    }
+  }
+}
+
 void UpdatePlanets(ArrayList<Planet> _planets)
 {
   for(Planet a : _planets)
@@ -41,6 +62,20 @@ void UpdateStations(ArrayList<Station> _stations)
     Station station = iterator.next();
     station.Update();
     if (station.toBeKilled) 
+    { 
+      // Remove the current element from the iterator and the list.
+      iterator.remove();
+    }
+  }
+}
+
+void UpdateLasers(ArrayList<LaserBeam> _lasers)
+{
+  for (Iterator<LaserBeam> iterator = _lasers.iterator(); iterator.hasNext();) 
+  {
+    LaserBeam beam = iterator.next();
+    beam.Update();
+    if (beam.toBeKilled) 
     { 
       // Remove the current element from the iterator and the list.
       iterator.remove();

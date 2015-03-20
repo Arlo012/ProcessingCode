@@ -7,7 +7,6 @@ class TextWindow extends UI
   private String textData = "";
   private color backgroundColor;            //For standard background
   private color gradientColor;         //Destination color (background -> gradientColor)
-  private color textColor;
   private int textRenderMode;          //Render as center or corner
   private DrawStyle fillMode;          //How to fill the text window
   

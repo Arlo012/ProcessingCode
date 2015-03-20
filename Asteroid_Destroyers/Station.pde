@@ -7,14 +7,19 @@ enum StationType {
 
 public class Station extends Physical implements Clickable, Updatable
 {
+  static final int maxStationSize = 60;      //Maximum station size
+  static final int maxStationHealth = 1000;  //Maximum health for a station
   TextWindow info;
   
   //Station INFO
-  int stationLevel = 1;        //For updating sprites
-  StationType stationType;
   
-  //Station mass-energy generation
+  //Station mass-energy generation per sec
   int massEnergyGen;
+  
+  //Placement parameters
+  Shape placementCircle;      //Shows the area where a spawned ship/ missile may be placed around this station
+  int placementRadius;
+  boolean displayPlacementCircle = false;    //Whether or not to draw the placement circle
   
   //Damage effects
   PVector smoke1Loc, smoke2Loc;    //In local coordinats relative to ship's location
@@ -22,35 +27,30 @@ public class Station extends Physical implements Clickable, Updatable
   Smoke smokeEffect2;
   boolean smoke1Visible, smoke2Visible;
   
-  public Station(StationType _type, PVector _loc, PVector _size, PImage _sprite) 
+  public Station(StationType _type, PVector _loc, PVector _size, PImage _sprite, Civilization _owner) 
   {
-    super("Station", _loc, _size, 10000, DrawableType.STRUCTURE);
-    
-    stationType = _type;
-    if(stationType == StationType.MILITARY)
-    {
-      name = "Military Station";
-    }
-    else if(stationType == StationType.ENERGY)
-    {
-      //TODO phase me out, abandoning concept of energy stations
-      name = "Energy Station";
-    }
-    
+    super("Military Station", _loc, _size, 1500, DrawableType.STRUCTURE, _owner);
+
     sprite = _sprite.get();      //Use get() for a copy
     sprite.resize((int)size.x, (int)size.y);
 
+    //Setup health, scaled by size
+    health.max = ((int)(size.x/maxStationSize * maxStationHealth)/100)*100;      //Health scaled to size, take advantage of integer division to round
+    health.current = health.max;
+
     //Mass-energy generation proportional to size
-    //HACK max size (60) is hard-coded here from the helper function; make a real variable
-    massEnergyGen = (int)(10 * size.x/60);
+    massEnergyGen = (int)(6 * size.x/maxStationSize);
+    placementRadius = 4 * (int)size.x;
+    placementCircle = new Shape("Placement Station Radius", location, new PVector(placementRadius, placementRadius),
+                      color(#F4F52C, 150), ShapeType._CIRCLE_);
 
     //Generate random rotation speed
     rotationMode = RotationMode.SPIN;    //Station spins in orbit
     SetRotationRate(.02 * rand.nextFloat() - .01);    //Generate random spinning value (-0.01, .01];
     
     //Prepare smoke damage effect
-    smoke1Loc = new PVector(size.x * rand.nextFloat() - size.x/2, size.y * rand.nextFloat() - size.y/2);
-    smoke2Loc = new PVector(size.x * rand.nextFloat() - size.x/2, size.y * rand.nextFloat() - size.y/2);
+    smoke1Loc = new PVector(size.x/4 * rand.nextFloat(), size.y/2 * rand.nextFloat());
+    smoke2Loc = new PVector(size.x/4 * rand.nextFloat(), size.y/2 * rand.nextFloat());
     smokeEffect1 = new Smoke(location, new PVector(10,10));      //Place at origin for time being, use smoke locations in update
     smokeEffect2 = new Smoke(location, new PVector(10,10));  
     smoke1Visible = false;
@@ -60,7 +60,7 @@ public class Station extends Physical implements Clickable, Updatable
     String descriptor = new String();
     descriptor += name;
     descriptor += "\n";
-    descriptor += owner;
+    descriptor += GetOwner().name;
     descriptor += "\nHealth: ";
     descriptor += health.current;
     descriptor += "\nGeneration/sec: ";
@@ -79,6 +79,11 @@ public class Station extends Physical implements Clickable, Updatable
     if(smoke2Visible)
     {
       smokeEffect2.DrawObject();
+    }
+    
+    if(displayPlacementCircle)
+    {
+      placementCircle.DrawObject();
     }
   }
   
@@ -108,7 +113,7 @@ public class Station extends Physical implements Clickable, Updatable
     String descriptor = new String();
     descriptor += name;
     descriptor += "\n";
-    descriptor += owner;
+    descriptor += GetOwner().name;
     descriptor += "\nHealth: ";
     descriptor += health.current;
     descriptor += "\nGeneration/sec: ";

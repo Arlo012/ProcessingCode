@@ -99,6 +99,14 @@ void DrawMissiles(ArrayList<Missile> _missiles, boolean _displayIcons)
   }
 }
 
+void DrawLasers(ArrayList<LaserBeam> _projectiles)
+{
+  for(LaserBeam lb : _projectiles)
+  {
+    lb.DrawObject();
+  }
+}
+
 void DrawPlanets(ArrayList<Planet> _planets)
 {
   for(Planet a : _planets)
@@ -115,9 +123,9 @@ void DrawEffects(ArrayList<Explosion> _effect)
   }
 }
 
-void DrawButtons(ArrayList<Button> _buttons)
+void DrawButtons(ArrayList<ToggleButton> _buttons)
 {
-  for(Button a : _buttons)
+  for(ToggleButton a : _buttons)
   {
     a.DrawObject();
   }
@@ -128,6 +136,19 @@ void DrawShapes(ArrayList<Shape> _shapes)
   for(Shape a : _shapes)
   {
     a.DrawObject();
+  }
+}
+
+void DrawShields(ArrayList<Shield> _shields)
+{
+  for(Shield shield : _shields)
+  {
+    //Draw shield
+    if(shield.collidable)
+    {
+      //TODO allow for shield rotation (need a physical object with rotation, shape wont cut it)
+      shield.overlay.DrawObject();
+    }
   }
 }
 

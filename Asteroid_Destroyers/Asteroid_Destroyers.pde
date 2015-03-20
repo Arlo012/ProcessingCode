@@ -1,8 +1,22 @@
+import java.io.ByteArrayOutputStream;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Random;
 import java.util.Iterator;
 import java.util.LinkedList;
+import processing.sound.*;
+
+enum GameState {
+  START, PLAY, PLAYERCHANGE,
+  PAUSED, GAMEOVER
+}
+
+//Turns
+int turnLength = 30000;        //How many ms for each player's turn?
+long currentTurnStartTime;  //When did THIS turn begin?
+boolean UIFlipped = false;
+int pulseDisplayDuration = 4000;    //milliseconds of screen pulse between turns
 
 //Random number generator
 Random rand = new Random();
@@ -10,35 +24,35 @@ Random rand = new Random();
 //Game Name
 String title = "Asteroid Destroyers";
 
+//Game state
+GameState gameState = GameState.START;
+
 //Teams
 Civilization P1, P2;
 PlayerController Controller1, Controller2;
-PlayerController currentPlayer;   //Who is currently playing
+PlayerController currentPlayer;   //Who is currently playing, set in AssetLoaders.pde
 PlayerController otherPlayer;
+Civilization winner;              //For game-over state
 
 //Game stage
 GameStage gameStage;
 
-//Image Assetss
-PImage bg;             //Background
-PImage lion, skull;    //Icons
-
 //Game objects
 ArrayList<Asteroid> asteroids;
-ArrayList<Ship> p1Ships, p2Ships;
-ArrayList<Planet> p1Planets, p2Planets;
-ArrayList<Missile> p1Missiles, p2Missiles;
+ArrayList<Asteroid> debrisSpawned;      //Temp holder for debris generated from dead asteroids
 ArrayList<Explosion> explosions;
-ArrayList<Station> p1Stations, p2Stations;
 
 //Game areas
 HashMap<String,GameArea> gameAreas;
 
 //Counters
-long loopCounter;
-long loopStartTime;
+long loopCounter;        //How many loop iterations have been completed
+long loopStartTime;      //Millis() time main loop started
+long pulseEffectStartTime;  //When the flash effect between turns started
+long pauseTime;          //When the game was paused
 
-//Setup constants
+//Debugging & profiling
+boolean debuggingAllowed = false;      //Display DEBUG button on GUI? Do not modify this once in play
 TogglableBoolean debugMode = new TogglableBoolean(false);
 boolean profilingMode = false;
 boolean asteroidCollisionAllowed = false;
@@ -48,9 +62,10 @@ float minX, maxX, minY, maxY;
 WorldViewData wvd = new WorldViewData();
 
 //UI Info
-LinkedList<Clickable> toDisplay;        //List of objects to display
+LinkedList<Clickable> toDisplay;        //List of clickable UI objects to display //<>//
+float pulseDrawTimeLeft;
 
-//TEST AREA //<>//
+//TEST AREA
 
 void setup()
 {
@@ -66,301 +81,97 @@ void setup()
   minY = 0;
   maxX = width;
   maxY = height;
+
+  //Load all image/sound assets
+  LoadImageAssets();      //See AssetLoader.pde
+  LoadSoundAssets();
+  startupFont = loadFont("SourceCodePro-Regular-48.vlw");
+
+  //Game area setup
+  BuildGameAreas();    //See AssetLoaders.pde
+
+  //Setup civilizations and their game objects, along with controllers
+  GameObjectSetup();    //See AssetLoaders.pde
   
-  //Asset setup
-  //bg = loadImage("Assets/Backgrounds/image5_0.jpg");
-  bg = loadImage("Assets/Backgrounds/spacefield_a-000.png");
-  bg.resize(width, height);
-  
-  //Load sprites
-  asteroidSpriteSheet = loadImage("Assets/Environment/asteroids.png");
-  shipSprite = loadImage("Assets/Ships/10(2).png");
-  lion = loadImage("Assets/Icons/Lion.png");
-  skull = loadImage("Assets/Icons/Skull.png");
-  missileSprite = loadImage("Assets/Weapons/Missile05.png");
-  redStation1 = loadImage("Assets/Stations/Spacestation1-1.png");
-  redStation2 = loadImage("Assets/Stations/Spacestation1-2.png");
-  redStation3 = loadImage("Assets/Stations/Spacestation1-3.png");
-  blueStation1 = loadImage("Assets/Stations/Spacestation2-1.png");
-  blueStation2 = loadImage("Assets/Stations/Spacestation2-2.png");
-  blueStation3 = loadImage("Assets/Stations/Spacestation2-3.png");
-  smokeTexture = loadImage("Assets/Effects/Smoke/0000.png");
-  //Load explosions (see effect.pde for variables)
-  for (int i = 1; i < explosionImgCount + 1; i++) 
-  {
-    // Use nf() to number format 'i' into four digits
-    String filename = "Assets/Effects/64x48/explosion1_" + nf(i, 4) + ".png";
-    explosionImgs[i-1] = loadImage(filename);
-  }
-  
+  //Counters & framerate
   loopCounter = 0;
-
-//Game area setup
-  gameAreas = new HashMap<String, GameArea>();
-
-  //Create asteroid field filling half of the screen
-  GameArea asteroidField = new GameArea("Asteroid Field", new PVector(width/3, 0), 
-                      new PVector(width/3, height));
-  gameAreas.put(asteroidField.GetName(), asteroidField);
-
-  //Create two asteroid spawn areas
-  GameArea topAsteroidSpawn = new GameArea("Top Asteroid Spawn", new PVector(width/3, -150), 
-                      new PVector(width/3, 100));
-  GameArea bottomAsteroidSpawn = new GameArea("Bottom Asteroid Spawn", new PVector(width/3, height + 50), 
-                      new PVector(width/3, 100));
-  gameAreas.put(topAsteroidSpawn.GetName(), topAsteroidSpawn);
-  gameAreas.put(bottomAsteroidSpawn.GetName(), bottomAsteroidSpawn);
-
-  //Left/right player area
-  GameArea P1Field = new GameArea("P1 Build Area", new PVector(0, 0), 
-                      new PVector(width/3, height));
-  GameArea P2Field = new GameArea("P2 Build Area", new PVector(2*width/3, 0), 
-                      new PVector(width/3, height));
-  P1Field.SetDebugColor(color(0, 0, 255));
-  P2Field.SetDebugColor(color(255, 0, 0));
-  gameAreas.put(P1Field.GetName(), P1Field);
-  gameAreas.put(P2Field.GetName(), P2Field);
-
-//Game object initializers
-  asteroids = new ArrayList<Asteroid>();
-  GenerateAsteroids(asteroidField);        //See Helpers.pde
-  
-//Ship setup
-  p1Ships = new ArrayList<Ship>();
-  p2Ships = new ArrayList<Ship>();
-  
-//Planet setup
-  p1Planets = new ArrayList<Planet>();
-  GeneratePlanets(P1Field, p1Planets, 3);
-  
-  p2Planets = new ArrayList<Planet>();
-  GeneratePlanets(P2Field, p2Planets, 3);
-  
-//Station setup
-  p1Stations = new ArrayList<Station>();
-  p2Stations = new ArrayList<Station>();
-  
-//Missile setup
-  p1Missiles = new ArrayList<Missile>();
-  p2Missiles = new ArrayList<Missile>();
-  
-//Civilization setup
-  P1 = new Civilization(new PVector(0,0), "Robot Jesus Collective", p1Ships, p1Planets, p1Stations, p1Missiles);
-  P1.SetCivilizationIcon(skull,24);
-  
-  P2 = new Civilization(new PVector(width,0), "Normal Squishy Humans", p2Ships, p2Planets, p2Stations, p2Missiles);
-  P2.SetCivilizationIcon(lion,24);
- 
-//Station setup
-  GenerateStations(P1, 4);
-  GenerateStations(P2, 4);
-  
-//Controller setup
-  Controller1 = new PlayerController(P1);
-  Controller2 = new PlayerController(P2);
-  currentPlayer = Controller1;
-  otherPlayer = Controller2;
-  
-//UI setup
-  toDisplay = new LinkedList<Clickable>();
-  
   frameRate(60);
   loopStartTime = millis();
+  currentTurnStartTime = millis();
   
-//Effects setup
-  explosions = new ArrayList<Explosion>();
+  //Intro music
+  introMusic.play();
+  trackStartTime = millis();
+  currentTrack = introMusic;
   
-//TEST AREA
- /*
-  Missile testMissile = new Missile(new PVector(width/4, 200), new PVector(0.5,0));
-  Missile testMissile2 = new Missile(new PVector(width/4, 400), new PVector(0.5,0));
-  Missile testMissile3 = new Missile(new PVector(width/4, 600), new PVector(0.5,0));
-  Missile testMissile4 = new Missile(new PVector(width/4, 800), new PVector(0.5,0));
-  missiles.add(testMissile);
-  missiles.add(testMissile2);
-  missiles.add(testMissile3);
-  missiles.add(testMissile4);
-  
-  Ship testShip = new Ship("Test Ship", new PVector(width - width/8, height/3), 
-              new PVector(30, 22), shipSprite, 1000);
-  testShip.SetRotationRate(0.05);
-  testShip.ChangeVelocity(new PVector(0,0));
-  testShip.SetRotationMode(RotationMode.INSTANT);
-  testShip.SetDestinationAngle(PI);
-  testShip.owner = P2.name;
-  p2Ships.add(testShip);
-  
-  Ship testShip2 = new Ship("Test Ship2", new PVector(width/8, height/3), 
-              new PVector(30, 22), shipSprite, 1000);
-  testShip2.SetRotationMode(RotationMode.FACE);
-  testShip2.SetRotationRate(0.05);
-  testShip2.owner = P1.name;
-  p1Ships.add(testShip2);
-  
-  PVector stationLoc = new PVector(p1Planets.get(0).location.x, p1Planets.get(0).location.y - 75);
-  PVector stationSize = new PVector(50,50);
-  Station stationTest = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation1, p1Planets.get(0));
-  stationTest.owner = P1.name;
-  p1Stations.add(stationTest);
-  
-  PVector stationLoc2 = new PVector(p2Planets.get(0).location.x, p2Planets.get(0).location.y - 75);
-  PVector stationSize2 = new PVector(50,50);
-  Station stationTest2 = new Station(StationType.MILITARY, stationLoc2, stationSize2, redStation1, p2Planets.get(0));
-  stationTest2.owner = P2.name;
-  p2Stations.add(stationTest2);
-  */
+  //TEST AREA
+  //Missile missileToAdd = new Missile(new PVector(width/4, height/2), new PVector(0,0), P2.outlineColor, P2);
+  //P2.missiles.add(missileToAdd);
 }
 
 void draw()
 {
-  loopCounter++;
-  if(debugMode.value)
+  MusicHandler();      //Handle background music
+  
+  if(gameState == GameState.START)
   {
-    background(0);
+    DrawStartupLoop();
   }
-  else
+  else if(gameState == GameState.PLAY)
   {
-    background(bg);
-  }
-
-  
-//******* ALL ZOOMED AFTER THIS ********//
-  BeginZoom();
-  
-  //If zoomed out far enough, draw object icons with the objects
-  if(wvd.viewRatio < 1.5)
-  {
-    //Draw Game objects
-    DrawPlanets(p1Planets);
-    DrawPlanets(p2Planets);
-    DrawAsteroids(asteroids, true);         //See Visuals.pde
-    DrawShips(p1Ships, true);
-    DrawShips(p2Ships, true);
-    DrawStations(P1.stations);
-    DrawStations(P2.stations);
-    DrawMissiles(p1Missiles, true);
-    DrawMissiles(p2Missiles, true);
-    DrawEffects(explosions);
-  }
-  else
-  {
-    //Draw Game objects
-    DrawPlanets(p1Planets);
-    DrawPlanets(p2Planets);
-    DrawAsteroids(asteroids, false);         //See Visuals.pde
-    DrawShips(p1Ships, false);
-    DrawShips(p2Ships, false);
-    DrawStations(P1.stations);
-    DrawStations(P2.stations);  
-    DrawMissiles(p1Missiles, false);
-    DrawMissiles(p2Missiles, false);
-    DrawEffects(explosions);
-  }
-  
-  //Move game objects
-  MovePhysicalObject(asteroids);        //See Visuals.pde
-  MovePilotableObject(p1Ships);
-  MovePilotableObject(p2Ships);
-  MovePilotableObject(p1Missiles);
-  MovePilotableObject(p2Missiles);
-
-  //Check collisions
-  if(asteroidCollisionAllowed)
-  {
-    HandleCollisions(asteroids);            //Self collisions    
-  }
-
-  HandleCollisions(asteroids, p1Ships);
-  HandleCollisions(asteroids, p2Ships);
-  HandleCollisions(asteroids, p1Stations);
-  HandleCollisions(asteroids, p2Stations);
-  HandleWeaponCollisions(p1Missiles, asteroids);
-  HandleWeaponCollisions(p2Missiles, asteroids);
-  HandleWeaponCollisions(p2Missiles, p1Ships);
-  HandleWeaponCollisions(p1Missiles, p2Ships);
-  HandleWeaponCollisions(p2Missiles, p1Stations);
-  HandleWeaponCollisions(p1Missiles, p2Stations);
-  
-//******* UI ********//
-
-//Mouseover text window info
-  PVector currentMouseLoc = new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldY(mouseY));
-  
-  //Add response from overlap checks to 'toDisplay' linkedlist
-  toDisplay.clear();
-  toDisplay.add(CheckClickableOverlap(asteroids, currentMouseLoc));
-  toDisplay.add(CheckClickableOverlap(p1Planets, currentMouseLoc));
-  toDisplay.add(CheckClickableOverlap(p2Planets, currentMouseLoc));
-  toDisplay.add(CheckClickableOverlap(p1Ships, currentMouseLoc));
-  toDisplay.add(CheckClickableOverlap(p2Ships, currentMouseLoc));
-  toDisplay.add(CheckClickableOverlap(p1Stations, currentMouseLoc));
-  toDisplay.add(CheckClickableOverlap(p2Stations, currentMouseLoc));
-  
-  while(!toDisplay.isEmpty())
-  {
-    Clickable _click = toDisplay.poll();
-    if(_click != null)
+    DrawPlayLoop();
+    //Handle gamestate change conditions
+    if(millis() > currentTurnStartTime + turnLength)    //Turn over
     {
-      if(_click.GetClickType() == ClickType.INFO)
-      {
-        _click.MouseOver();
-      }
-      else
-      {
-        print("Moused over unsupported UI type: ");
-        print(_click.GetClickType());
-        print("\n");
-      }
+      gameState = GameState.PLAYERCHANGE;
+      pulseEffectStartTime = millis();
     }
   }
-
-  
-//Debug mode display
-  if(debugMode.value)
+  else if(gameState == GameState.PLAYERCHANGE)    //Changing turns
   {
-    DrawGameArea(gameAreas);       //See Visuals.pde
+    if(!UIFlipped)    //Check if UI has switched sides on the screen yet
+    {
+      //Make sure opponent doesn't still hold any 'selected' objects
+      currentPlayer.CedeControlForTurnChange();
+      
+      PlayerController lastPlayer = currentPlayer;
+      currentPlayer = otherPlayer;
+      otherPlayer = lastPlayer;
+      UIFlipped = true;
+    }
+    
+    //Draw pulse for turn change & paused game
+    pulseDrawTimeLeft = pulseDisplayDuration - (millis() - pulseEffectStartTime); 
+    DrawPauseLoop();
+    DrawScreenPulse(pulseDrawTimeLeft);
+    
+    if(pulseDrawTimeLeft <= 0)
+    {
+      //Switch teams, etc.....
+      currentTurnStartTime = millis();
+      
+      gameState = GameState.PLAY;    //Wait for next player to hit space
+      UIFlipped = false;          //On next playerchange, flip UI again
+    }
   }
-
-//******* ALL ZOOMED BEFORE THIS ********//
-  EndZoom();
-  
-//Draw Civ UI
-  P1.DrawCivilizationUI();
-  P2.DrawCivilizationUI();
-  
-//Draw main interface
-  currentPlayer.DrawUI();
-
-//******* UPDATES ********//
-
-  //TODO: Update game stats, i.e. resources?
-  //HACK update functions are hard to access generically -- need to individually update each type
-  AsteroidOffScreenUpdate(asteroids, gameAreas);      //See helpers.pde
-  
-  UpdateShips(p1Ships);
-  UpdateShips(p2Ships);
-  UpdateAsteroids(asteroids);
-  UpdatePlanets(p1Planets);
-  UpdatePlanets(p2Planets);
-  UpdateMissiles(p1Missiles);
-  UpdateMissiles(p2Missiles);
-  UpdateStations(p1Stations);
-  UpdateStations(p2Stations);
-  //Effects MUST be called as last update. Some update functions have death frame action that will not be called if this runs first
-  UpdateExplosions(explosions);       
-  
-  //Update UI information for the main UI
-  currentPlayer.UpdateUI();
-  
-  //Update civilizations (TODO: move where all other updateships, etc 
-      //currently are after migrating them into these functions)
-  P1.Update();
-  P2.Update();
-  
-//******* PROFILING ********//
-  if(profilingMode)
+  else if(gameState == GameState.PAUSED)
   {
-    println(frameRate);
+    DrawPauseLoop();
   }
+  else if(gameState == GameState.GAMEOVER)
+  {
+    DrawGameOverLoop();
+  }
+  
+  //TEST AREA
+  
+  //Can't add debris during update loops (the iterators dont like that), 
+  //    so update them from here after everything is done
+  for(Asteroid a : debrisSpawned)
+  {
+    asteroids.add(a);
+  }
+  debrisSpawned.clear();
+  
 
 }

@@ -1,4 +1,4 @@
-float globalSpeedLimit = 2;      //Universal speed limit (magnitude vector)
+float globalSpeedLimit = 10;      //Universal speed limit (magnitude vector)
 
 public enum RotationMode {
 NONE, INSTANT, SPIN, FACE
@@ -13,10 +13,10 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   //UI
   public Shape iconOverlay;
   public boolean drawOverlay = true;
-  String owner = "Unowned!";
+  private Civilization owner;              //Point to owner of this object, null by default
   
   //Stats
-  protected int mass;
+  protected float mass;
   protected Health health;
   
   //Movement
@@ -26,7 +26,6 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   private MoveMode moveMode;               //Linear movement or orbit
   
   //Orbitals
-  private Physical orbitBody;              //What to orbit around
   private PVector orbitForwardVector;      //Forward vector for rotation
   protected int orbitDistance;             //How far from object to orbit
   
@@ -40,13 +39,16 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   
   //Collisions
   protected long lastCollisionTime = -9999;
+  protected int damageOnHit = 0;           //Automatic damage incurred on hit
+  boolean collidable = true;               //Can this object be collided with by ANYTHING? see shields when down
   
-  public Physical(String _name, PVector _loc, PVector _size, int _mass, DrawableType _type)
+  public Physical(String _name, PVector _loc, PVector _size, float _mass, DrawableType _type, Civilization _owner)
   {
     super(_name, _loc, _size, _type);
     
-    health = new Health(100, 100);    
+    health = new Health(100, 100);       //Default health
     mass = _mass;
+    owner = _owner;
     
     //Movement
     velocity = new PVector(0, 0);
@@ -65,6 +67,18 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     //UI
     iconOverlay = new Shape("Physical Overlay", location, 
                 size, color(0,255,0), ShapeType._SQUARE_);
+  }
+  
+  //Return civilization that owns this object
+  public Civilization GetOwner()
+  {
+    if(owner == null)
+    {
+      print("ERROR: Requested owner on ");
+      print(name);
+      print(" with no owner!");
+    }
+    return owner;
   }
   
   @Override public void DrawObject()
@@ -129,7 +143,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
 //******* MOVE *********/
   public void SetVelocity(PVector _vector)
   {
-    if(_vector.mag() < globalSpeedLimit && _vector.mag() < localSpeedLimit)
+    if(_vector.mag() <= globalSpeedLimit && _vector.mag() <= localSpeedLimit)
     {
       velocity = _vector;
     }
@@ -164,13 +178,9 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   //Move location
   public void Move()
   {
-    if(moveMode == MoveMode.LINEAR)
+    if(moveMode == MoveMode.LINEAR)    //TODO phase out (only did linear motion)
     {
       location = PVector.add(location, velocity);      
-    }
-    else if(moveMode == MoveMode.ORBITAL)
-    {
-      Orbit(orbitBody);
     }
     else
     {
@@ -179,60 +189,6 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
       print(" has attempted to move in an unsupported mode.\n");
     }
 
-  }
-  
-  //Orbit around a body
-  public void Orbit(Physical _body)
-  {
-    //TODO: Get orbit mechanics working
-    
-    /*
-    //Calculate a forward vector for orbital movement (not the 'look' direction of the spin)
-    orbitForwardVector = GetNormalOrbitalVector(); 
-    orbitForwardVector.setMag(orbitDistance);
-    
-    //Move along perpendicular vector
-    ChangeVelocity(orbitForwardVector);
-    
-    //Move along planet vector (toward the planet)
-    PVector deltaP_Planet = new PVector(orbitBody.location.x - location.x, orbitBody.location.y - location.y);
-    deltaP_Planet.normalize();
-    deltaP_Planet.setMag(orbitDistance);
-
-    ChangeVelocity(deltaP_Planet);
-    
-    //Move normally
-    location = PVector.add(location, velocity);  
-    */
-  }
-  
-  //Set the movement mode to orbital (away from linear default)
-  public void SetOrbitalMode(MoveMode _mode, Physical _body)
-  {
-    moveMode = _mode;
-    orbitBody = _body;
-    
-    //Calculate a forward vector for orbital movement (not the 'look' direction of the spin)
-    orbitForwardVector = GetNormalOrbitalVector();
-  }
-  
-  //Use the orbital body and this object's position to get a normal vector for orbiting
-  private PVector GetNormalOrbitalVector()
-  {
-    //Delta of position, dP(12) = P2 - P1
-    PVector transform = orbitForwardVector.copy();
-    PVector locationOnOrbit = new PVector(0,0);      //Find a location along the desired orbit
-    
-    //TODO dont use orbitbody location, need to use a location on the orbit
-    transform.x = orbitBody.location.x - location.x;
-    transform.y = orbitBody.location.y - location.y;
-    
-    //Rotate to be perpendicular
-    transform.rotate(radians(90));
-    transform.normalize(); 
-    //println(transform);
-
-    return transform;
   }
  
 
@@ -318,10 +274,15 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   }
   
 //******* COLLIDE *********/
+
+  //The other object's effect on this object
   float frictionFactor = 1.5;        //How much to slow down after collision (divisor)
   public void HandleCollision(Physical _other)
   {
     lastCollisionTime = millis();
+    
+    //Damage based on automatic damage 
+    health.current -= _other.damageOnHit;
     
     //Damage this object based on delta velocity
     PVector deltaV = new PVector(0,0);
@@ -330,7 +291,19 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     
     //Mass scaling factor (other/mine)
     float massRatio = _other.mass/mass;
-    health.current -= 10 * massRatio * velocityMagDiff;        //Lower this health
+    float damage = 10 * massRatio * velocityMagDiff;
+    health.current -= damage;        //Lower this health
+    
+    if(debugMode.value)
+    {
+      print("INFO: ");
+      print(_other.name);
+      print(" collision caused ");
+      print(damage);
+      print(" damage to ");
+      print(name);
+      print("\n");
+    }
     
     //Create a velocity change based on this object and other object's position
     PVector deltaP = new PVector(0,0);    //Delta of position, dP(12) = P2 - P1
@@ -346,10 +319,17 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     SetVelocity(deltaP);
     
     //If the object was an asteroid it is now a projectile -- update its color
+    //TODO _other --> this
     if(_other instanceof Asteroid)
     {
+      //Asteroid object specific
+      Asteroid roid = (Asteroid)_other;
+      roid.isRogue = true;
+      
+      //Overlay update to red if impacted
       _other.iconOverlay.borderColor = color(255,0,0);
       _other.drawOverlay = true;        //Draw icon overlay when missile impacts the asteroid
+      
     }
   }
   
@@ -359,9 +339,13 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     if(health.current <= 0)
     {
       toBeKilled = true;
-      print("INFO: ");
-      print(name);
-      print(" has died\n");
+      if(debugMode.value)
+      {
+        print("INFO: ");
+        print(name);
+        print(" has died\n");
+      }
+
     }
   }
 }

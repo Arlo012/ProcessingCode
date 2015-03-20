@@ -4,6 +4,7 @@ public class UI extends Drawable
 {
   PFont font;
   int fontSize;
+  protected color textColor;      //Used by inhereted classes only
   
   boolean visibleNow;      //Is this part of the UI being rendered right now?
   boolean scalesWithZoom;

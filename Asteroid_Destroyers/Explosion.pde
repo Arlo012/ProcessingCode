@@ -1,10 +1,17 @@
 PImage[] explosionImgs = new PImage[90];
 int explosionImgCount = 90;
 
+/*
+ * Displays a range of png images to simulate an explosion, and plays a sound
+*/
 public class Explosion extends Drawable
 {
   PImage[] images;
   int imageFrames;
+  
+  //Sound
+  SoundFile sound;
+  boolean soundPlayed = false;
   
   //Delay action
   int frameDelay = 0;                    //Delay how many frames after creation to draw?
@@ -18,9 +25,10 @@ public class Explosion extends Drawable
     
     frameCountAtSpawn = frameCount;
     
-    imageFrames = 90;
+    imageFrames = 90;        //based on image count
     images = explosionImgs;
-
+    
+    sound = explosionSound;
   }
   
   //Delay how many frames from creation to actually render?
@@ -33,6 +41,12 @@ public class Explosion extends Drawable
   {
     if(frameCount >= frameCountAtSpawn + frameDelay)
     {
+      if(!soundPlayed)
+      {
+        sound.amp(0.5);
+        sound.play();
+        soundPlayed = true;
+      }
       if(frameCounter < imageFrames)
       {
         pushStyle();

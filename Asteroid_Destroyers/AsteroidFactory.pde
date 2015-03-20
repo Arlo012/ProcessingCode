@@ -5,7 +5,7 @@
 public class AsteroidFactory
 {
   //Default values
-  private PVector asteroidSizeRange = new PVector(10, 20);      //Min, max asteroid size
+  private PVector asteroidSizeRange = new PVector(Asteroid.minDiameter, Asteroid.maxDiameter);   //Min, max asteroid size
   private PVector maxVelocity = new PVector(0.01,0.65);                 //Max velocity in given x/y direction of asteroid
 
   //Generator values (keep these stored for next asteroid to create
@@ -53,7 +53,7 @@ public class AsteroidFactory
   //Build asteroid with parameters generated in SetNextAsteroidParameters and return it
   Asteroid GenerateAsteroid()
   {
-    Asteroid toBuild = new Asteroid("Asteroid", new PVector(xCoor, yCoor), size, int(10000*size/asteroidSizeRange.y));
+    Asteroid toBuild = new Asteroid("Asteroid", new PVector(xCoor, yCoor), size, int(100000*size/asteroidSizeRange.y));
     toBuild.SetRotationRate(rotateSpeed);
     toBuild.SetVelocity(new PVector(xVelocity, yVelocity));
     toBuild.SetRotationMode(RotationMode.SPIN);    //Spinning

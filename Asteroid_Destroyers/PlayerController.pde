@@ -1,101 +1,177 @@
+public enum PlayMode {
+PLAY,   //Standard move/attack
+PLACE_SHIP,   //Place ships
+PLACE_MISSILE   //Place missiles
+}
+
 public class PlayerController
 {
   private Civilization civ;
   private Drawable clickFocus;        //Player last clicked on
+  PlayMode playMode;
+  
+  //Costs
+  static final int shipCost = 1000;
+  static final int missileCost = 200;
   
   //Controller UI
   private TextWindow statusBar;         //Main UI
-  ArrayList <Button> allToggleButtons;
+  ArrayList <ToggleButton> allToggleButtons;
   
   //Buttons (clickable)
-  public Button debugToggleButton, cancelOrders, buildMissileOrder, buildShipOrder;
+  public ToggleButton debugToggleButton, cancelOrders, playButton, buildMissileButton, buildShipButton;
+  public TogglableBoolean missileButtonClicked, shipButtonClicked, playButtonClicked;
   
   //UI Info
   public TextWindow massEnergyTotal, massEnergySec;    //Resources
-  
-  //Background shapes
-  private ArrayList<Shape> UIShapes;    //TODO phase these out ?
+  private Shape selectedButtonBackground;              //Colored background to show what mode is currently active
   
   PlayerController(Civilization _civ)
   {
     civ = _civ;
-    SetupStatusBar();
+    playMode = PlayMode.PLAY;
+    
+    //UI booleans for modes
+    missileButtonClicked = new TogglableBoolean(false);
+    shipButtonClicked = new TogglableBoolean(false);
+    playButtonClicked = new TogglableBoolean(false);
+    
+    SetupStatusBar();    //Must be called after all togglable booleans setup
   }
   
-  //Setup the main UI for the player
+  //Setup the main UI for the player (bottom  bar)
   private void SetupStatusBar()
   {
-  //Main bar
     int UIHeight = 100;
-    int UIWidth = width/2;
-    PVector UICorner = new PVector(0, height - UIHeight);
-    statusBar = new TextWindow("Main player UI", new PVector(0, height - UIHeight),
-                             new PVector(UIWidth, UIHeight), "", false);
-    statusBar.SetTextRenderMode(CORNER);      //Text render mode
-    statusBar.renderMode = CORNER;            //UI render mode
-    //statusBar.SetBackgroundColor(color(85,103,137, 200));
-    statusBar.SetGradient(color(0, 100), color(255, 100));
-    
-  //Clickable Buttons
-    allToggleButtons = new ArrayList<Button>();
-    
-    //Debug button
-    debugToggleButton = new Button("Debug mode toggle", new PVector(UICorner.x + UIWidth - 75, UICorner.y + UIHeight/2), 
-                  new PVector(100, 49), "DEBUG", "PNG/blue_button13.png", debugMode, false);          
-    allToggleButtons.add(debugToggleButton);
-    
-    //UI Setup
+    int UIWidth;
+    if(debuggingAllowed)
+    {
+      UIWidth = width/2;
+    }
+    else
+    {
+      UIWidth = width/3;
+    }
+
     PVector iconSize = new PVector(36, 36);
-    float row1Y = UICorner.y + UIHeight/10;
-    float row2Y = UICorner.y + 2.5 * UIHeight/10 + iconSize.y;
-    float column1X = UICorner.x + UIHeight/10;
-    float column2X = UICorner.x + 2.5 * UIHeight/10 + iconSize.x;
-    float column3X = UICorner.x + 5 * UIHeight/10 + 2 * iconSize.x;
+    float row1Y, row2Y, column1X, column2X, column3X;    //Icon columns/ rows
+
+    //List initializers
+    allToggleButtons = new ArrayList<ToggleButton>();
     
+    if(civ.orientation == CivOrientation.LEFT)
+    {
+      PVector UICorner = new PVector(0, height - UIHeight);      
+      
+    //Main bar
+      statusBar = new TextWindow("Main player UI", new PVector(UICorner.x, UICorner.y), //<>//
+                               new PVector(UIWidth, UIHeight), "", false);
+      statusBar.SetTextRenderMode(CORNER);      //Text render mode
+      statusBar.renderMode = CORNER;            //UI render mode
+      //statusBar.SetBackgroundColor(color(85,103,137, 200));
+      statusBar.SetGradient(color(0, 100), color(255, 100));
+      
+    //Clickable Buttons
+      if(debuggingAllowed)
+      {
+        //Debug button
+        debugToggleButton = new ToggleButton("Debug mode toggle", new PVector(UICorner.x + UIWidth - 75, UICorner.y + UIHeight/2), 
+                      new PVector(100, 49), "DEBUG", "PNG/blue_button13.png", debugMode, false);          
+        allToggleButtons.add(debugToggleButton);
+      }
+      
+      //UI Setup
+      row1Y = UICorner.y + UIHeight/10;
+      row2Y = UICorner.y + 2.5 * UIHeight/10 + iconSize.y;
+      column1X = UICorner.x + UIHeight/10;
+      column2X = UICorner.x + 2.5 * UIHeight/10 + iconSize.x;
+      column3X = UICorner.x + 5 * UIHeight/10 + 2 * iconSize.x;
+    }
+    
+    else    //Assume right side
+    {
+      PVector UICorner = new PVector(width-UIWidth, height - UIHeight); 
+      
+    //Main bar
+      statusBar = new TextWindow("Main player UI", new PVector(UICorner.x, UICorner.y),
+                               new PVector(UIWidth, UIHeight), "", false);
+      statusBar.SetTextRenderMode(CORNER);      //Text render mode
+      statusBar.renderMode = CORNER;            //UI render mode
+      //statusBar.SetBackgroundColor(color(85,103,137, 200));
+      statusBar.SetGradient(color(0, 100), color(255, 100));
+      
+    //Clickable Buttons
+      if(debuggingAllowed)
+      {
+        //Debug button
+        debugToggleButton = new ToggleButton("Debug mode toggle", new PVector(UICorner.x + 75, UICorner.y + UIHeight/2), 
+                      new PVector(100, 49), "DEBUG", "PNG/blue_button13.png", debugMode, false);          
+        allToggleButtons.add(debugToggleButton);
+      }
+      
+      //UI Setup
+      row1Y = UICorner.y + UIHeight/10;
+      row2Y = UICorner.y + 2.5 * UIHeight/10 + iconSize.y;    
+      column1X = UICorner.x + UIWidth - UIHeight/10 - iconSize.x;    //TODO why do these need an iconsize.x offset?
+      column2X = UICorner.x + UIWidth - (2.5 * UIHeight/10 + iconSize.x)- iconSize.x;
+      column3X = UICorner.x + UIWidth - (5 * UIHeight/10 + 2 * iconSize.x) - 200 - iconSize.x;    //HACK 200 is width of info bars (see massEnergyTotal below)
+      
+    }
+  
     //Pilotable controls
-    cancelOrders = new Button("Stop Ship Button", new PVector(column1X, row1Y),
+    cancelOrders = new ToggleButton("Stop Ship Button", new PVector(column1X, row1Y),
                 iconSize, "", "PNG/red_cross.png", null, false);
     cancelOrders.SetRenderMode(CORNER);
+    cancelOrders.SetClickSound(clickCancelOrderButtonSound);
     allToggleButtons.add(cancelOrders);
     
-    buildMissileOrder = new Button("Build Missile Button", new PVector(column1X, row2Y),
-                iconSize, "", "Missile05.png", null, false);
-    buildMissileOrder.SetRenderMode(CORNER);
-    allToggleButtons.add(buildMissileOrder);
+    buildMissileButton = new ToggleButton("Build Missile Button", new PVector(column1X, row2Y),
+                iconSize, " 200", "Missile05.png", missileButtonClicked, false);
+    buildMissileButton.SetTextColor(color(255, 100));
+    buildMissileButton.SetRenderMode(CORNER);
+    buildMissileButton.SetClickSound(clickMissileSpawnButtonSound);
+    allToggleButtons.add(buildMissileButton);
     
-    buildShipOrder = new Button("Build Ship Button", new PVector(column2X, row2Y),
-                iconSize, "", "ship.png", null, false);
-    buildShipOrder.SetRenderMode(CORNER);
-    allToggleButtons.add(buildShipOrder);
+    buildShipButton = new ToggleButton("Build Ship Button", new PVector(column2X, row2Y),
+                iconSize, "1000", "ship.png", shipButtonClicked, false);
+    buildShipButton.SetTextColor(color(255, 100));
+    buildShipButton.SetRenderMode(CORNER);
+    buildShipButton.SetClickSound(clickShipSpawnButtonSound);
+    allToggleButtons.add(buildShipButton);
     
-  //Background Shapes 
-    UIShapes = new ArrayList<Shape>();
-    /*
-    for(Button B : allToggleButtons)
-    {
-      PVector buttonCenter = new PVector(B.location.x + B.size.x/2, B.location.y + B.size.y/2);
-      PVector backgroundSize = new PVector(B.size.x * 1.2, B.size.y * 1.2);
-      Shape backgroundShape = new Shape("UI Decoration", buttonCenter, backgroundSize, 
-                color(#5B9AD1, 200), ShapeType._SQUARE_);
-      backgroundShape.renderMode = CENTER;
-      backgroundShape.SetFillColor(color(#103758));
-      UIShapes.add(backgroundShape);
-    }
-    */
+    playButton = new ToggleButton("Play Button", new PVector(column2X, row1Y),
+                iconSize, "", "PNG/green_sliderRight.png", playButtonClicked, false);
+    playButton.SetRenderMode(CORNER);
+    playButton.SetClickSound(clickNormalModeButtonSound);
+    allToggleButtons.add(playButton);
+    
     
   //UI Only Buttons
     massEnergyTotal = new TextWindow("Mass Energy Total UI", new PVector(column3X, row2Y),
                              new PVector(iconSize.x + 200, iconSize.y), "Mass-Energy", false);
     massEnergyTotal.textRenderMode = CORNER; 
+    
+    massEnergySec = new TextWindow("Mass Energy/sec UI", new PVector(column3X, row1Y),
+                             new PVector(iconSize.x + 200, iconSize.y), "Mass-Energy/sec", false);
+    massEnergySec.textRenderMode = CORNER; 
+    
+    //UI feedback (currently selected)
+    PVector buttonCenter = new PVector(playButton.location.x + playButton.size.x/2,
+                            playButton.location.y + playButton.size.y/2);
+    PVector backgroundSize = new PVector(playButton.size.x * 1.2, playButton.size.y * 1.2);
+    selectedButtonBackground = new Shape("UI Selected Feedback", buttonCenter, backgroundSize, 
+                color(255, 100), ShapeType._SQUARE_);
+    selectedButtonBackground.SetFillColor(color(#41ED39, 50));
   }
   
   //Draw all menus and buttons
   public void DrawUI()
   {
     statusBar.DrawObject();
-    DrawShapes(UIShapes);
+    selectedButtonBackground.DrawObject();      //Currently selected mode, set in UpdateUI
     DrawButtons(allToggleButtons);
     massEnergyTotal.DrawObject();
+    massEnergySec.DrawObject();
   }
   
   //Update all button actions to the current target (NOTE: only call this for one player, as it over-writes main UI)
@@ -108,9 +184,72 @@ public class PlayerController
       cancelOrders.varToToggle = pilot.allStopOrder;
     }
     
+  //Mass-Energy Update  
+    //Update total mass-energy stored
     String massEnergyText = "Mass-Energy:  ";
     massEnergyText += String.format("%,d",civ.massEnergy);
     massEnergyTotal.UpdateText(massEnergyText);
+    
+    //Update mass energy per second text
+    int massEperSec = 0;
+    for(Station s : civ.stations)
+    {
+      massEperSec += s.massEnergyGen;
+    }
+    String massEnergySecText = "Mass-Energy/sec:  ";
+    massEnergySecText += String.format("%,d",massEperSec);
+    massEnergySec.UpdateText(massEnergySecText);
+  
+  //Catch click of mode-change buttons
+    if(missileButtonClicked.value)
+    {
+      playMode = PlayMode.PLACE_MISSILE;
+      missileButtonClicked.Toggle();
+      
+      //Move selected icon
+      PVector buttonCenter = new PVector(buildMissileButton.location.x + buildMissileButton.size.x/2,
+                            buildMissileButton.location.y + buildMissileButton.size.y/2);
+      selectedButtonBackground.location = buttonCenter;
+      
+      //Disable all station placement UI 
+      for(Station s : civ.stations)
+      {
+        s.displayPlacementCircle = true;
+      }
+    }
+    else if(shipButtonClicked.value)
+    {
+      playMode = PlayMode.PLACE_SHIP;
+      shipButtonClicked.Toggle();
+      
+      //Move selected icon
+      PVector buttonCenter = new PVector(buildShipButton.location.x + buildShipButton.size.x/2,
+                            buildShipButton.location.y + buildShipButton.size.y/2);
+      selectedButtonBackground.location = buttonCenter;
+      
+      //Disable all station placement UI 
+      for(Station s : civ.stations)
+      {
+        s.displayPlacementCircle = true;
+      }
+    }
+    else if(playButtonClicked.value)
+    {
+      playMode = PlayMode.PLAY;
+      playButtonClicked.Toggle();
+      
+      //Move selected icon
+      PVector buttonCenter = new PVector(playButton.location.x + playButton.size.x/2,
+                            playButton.location.y + playButton.size.y/2);
+      selectedButtonBackground.location = buttonCenter;
+      
+      //Disable all station placement UI 
+      for(Station s : civ.stations)
+      {
+        s.displayPlacementCircle = false;
+      }
+    }
+
   }
   
   //Set the drawable target that the player is clicked on
@@ -126,94 +265,205 @@ public class PlayerController
     Clickable click = CheckClickableOverlap(allToggleButtons, _clickLocation);
     if(click != null)      //Do UI handling
     {
-      if(click instanceof Button)
+      if(click instanceof ToggleButton)
       {
         click.Click();
       }
       
     }
-    else          //Do gameobject handling
+    
+    else  //Process gameobjects        
     {
       //Convert to game coordinates (zoomed & panned)
       _clickLocation.x = wvd.pixel2worldX(_clickLocation.x);
       _clickLocation.y = wvd.pixel2worldY(_clickLocation.y);
       
-      //Check if we clicked on this player's fleet
-      click = CheckClickableOverlap(civ.fleet, _clickLocation);
-      
-      if(click == null)    //No ship - also check the missiles
+      if(playMode == PlayMode.PLAY)      //Do gameobject handling in local coordinates
       {
-        click = CheckClickableOverlap(civ.missiles, _clickLocation);
+        //Check if we clicked on this player's fleet
+        click = CheckClickableOverlap(civ.fleet, _clickLocation);
+        
+        if(click == null)    //No ship clicked - also check the missiles
+        {
+          click = CheckClickableOverlap(civ.missiles, _clickLocation);
+        }
+        HandleClickedGameObject(click);    //Handle whatever the player clicked
       }
-      HandleClickedGameObject(click);
+      
+      else if (playMode == PlayMode.PLACE_SHIP)   //Place ships
+      {
+        //Check if the click is in the click radius of all stations
+        boolean inClickRadius = false;
+        for(Station s : civ.stations)
+        {
+          if(CheckShapeOverlap(s.placementCircle, _clickLocation))
+          {
+            inClickRadius = true;
+            if(debugMode.value)
+            {
+              println("INFO: Spawning ship inside station radius");
+            }
+            break;
+          }
+        }
+        
+        if(inClickRadius)
+        {
+          if(shipCost <= civ.massEnergy)
+          {
+            Ship shipToAdd = new Ship("Ship", _clickLocation, new PVector(30, 22), shipSprite, 1000, civ.outlineColor, civ);
+            if(civ.orientation == CivOrientation.RIGHT)  //Rotate 180 degrees for right side
+            {
+              shipToAdd.currentAngle = radians(180);
+              shipToAdd.destinationAngle = radians(180);
+            }
+            
+            civ.massEnergy -= shipCost;
+            civ.fleet.add(shipToAdd); 
+          }
+
+          else
+          {
+            errorSound.play();
+          }
+
+        }
+        else
+        {
+          if(debugMode.value)
+          {
+            println("INFO: Requested ship spawn location outside station spawn radius");
+          }
+        }
+
+      }
+      
+      else if (playMode == PlayMode.PLACE_MISSILE)   //Place missiles
+      {
+        //Check if the click is in the click radius of all stations
+        boolean inClickRadius = false;
+        for(Station s : civ.stations)
+        {
+          if(CheckShapeOverlap(s.placementCircle, _clickLocation))
+          {
+            inClickRadius = true;
+            if(debugMode.value)
+            {
+              println("INFO: Spawning missile inside station radius");
+            }
+            break;
+          }
+        }
+        
+        if(inClickRadius)
+        {
+          if(missileCost <= civ.massEnergy)
+          {
+            Missile missileToAdd = new Missile(new PVector(_clickLocation.x, _clickLocation.y), new PVector(0,0), civ.outlineColor, civ);
+            if(civ.orientation == CivOrientation.RIGHT)  //Rotate 180 degrees for right side
+            {
+              missileToAdd.currentAngle = radians(180);
+              missileToAdd.destinationAngle = radians(180);
+            }
+            
+            civ.massEnergy -= missileCost;
+            civ.missiles.add(missileToAdd); 
+          }
+
+          else
+          {
+            errorSound.play();
+          }
+          
+        }
+        else
+        {
+          if(debugMode.value)
+          {
+            println("INFO: Requested ship missile location outside station spawn radius");
+          }
+        }
+      }
+      
+      else 
+      {
+        println("WARNING: Unhandled playmode for active player controller!");
+      }
     }
     
     click = null;
- 
   }
   
   //Pass in PVector in SCREEN coordinates and determine action
   public void HandleRightClick(PVector _clickLocation)
   {
-    //Do some UI things with right click here w/o pan/zoom compensation
-    
-    //Convert to game coordinates (zoomed & panned)
-    _clickLocation.x = wvd.pixel2worldX(_clickLocation.x);
-    _clickLocation.y = wvd.pixel2worldY(_clickLocation.y);
-    
-    //Check if this is clickable. First check is lowest priority
-    //HACK: overlapping objects will be a problem here
-    Clickable click = CheckClickableOverlap(civ.fleet, _clickLocation);
-    if(click == null) {
-      click = CheckClickableOverlap(civ.stations, _clickLocation);   
-    }
-    if(click == null) {
-      click = CheckClickableOverlap(asteroids, _clickLocation);
-    }
-    if(click == null) {
-      click = CheckClickableOverlap(otherPlayer.civ.fleet, _clickLocation);
-    }
-    if(click == null) {
-      click = CheckClickableOverlap(otherPlayer.civ.stations, _clickLocation);
-    }
-    
-    if(click != null)  //We actually clicked something
+    if(playMode == PlayMode.PLAY)
     {
-      if(click instanceof Physical)    //Check if this is owned by this civ
+      //Do some UI things with right click here w/o pan/zoom compensation
+      
+      //Convert to game coordinates (zoomed & panned)
+      _clickLocation.x = wvd.pixel2worldX(_clickLocation.x);
+      _clickLocation.y = wvd.pixel2worldY(_clickLocation.y);
+      
+      //Check if this is clickable. First check is lowest priority
+      //HACK: overlapping objects will be a problem here
+      Clickable click = CheckClickableOverlap(civ.fleet, _clickLocation);
+      if(click == null) {
+        click = CheckClickableOverlap(civ.stations, _clickLocation);   
+      }
+      if(click == null) {
+        click = CheckClickableOverlap(asteroids, _clickLocation);
+      }
+      if(click == null) {
+        click = CheckClickableOverlap(otherPlayer.civ.fleet, _clickLocation);
+      }
+      if(click == null) {
+        click = CheckClickableOverlap(otherPlayer.civ.stations, _clickLocation);
+      }
+      
+      if(click != null)  //We actually clicked something
       {
-        Physical phys = (Physical)click;
-        if(phys.owner != civ.name)    //The clicked object is NOT owned by this civ
+        if(click instanceof Physical)    //Check if this is owned by this civ
         {
-          //Safe to attack
-          if(clickFocus instanceof Pilotable)      //Kill orders 
+          Physical phys = (Physical)click;
+          if(phys.owner != civ)    //The clicked object is NOT owned by this civ
           {
-            Pilotable pilot = (Pilotable)clickFocus;
-            if(debugMode.value)
+            //Safe to attack
+            if(clickFocus instanceof Pilotable)      //Kill orders 
             {
-              print(pilot.name);
-              print(" attacking ");
-              print(phys.name);
-              println();
+              Pilotable pilot = (Pilotable)clickFocus;
+              if(debugMode.value)
+              {
+                print(pilot.name);
+                print(" attacking ");
+                print(phys.name);
+                println();
+              }
+              pilot.AddNewOrder(_clickLocation, phys, OrderType._KILL_);  
             }
-            pilot.AddNewOrder(_clickLocation, phys, OrderType._KILL_);  
+          }
+          else
+          {
+            //Orbit orders could go here
           }
         }
-        else
+      }
+      
+      else    //We clicked on nothing
+      {
+        if(clickFocus instanceof Pilotable)      //Move orders 
         {
-          //Orbit orders could go here
+          Pilotable pilot = (Pilotable)clickFocus;
+          pilot.AddNewOrder(_clickLocation, null, OrderType._MOVE_);   
         }
       }
     }
-    
-    else    //We clicked on nothing
+    else if (playMode == PlayMode.PLACE_SHIP || playMode == PlayMode.PLACE_MISSILE)
     {
-      if(clickFocus instanceof Pilotable)      //Move orders 
-      {
-        Pilotable pilot = (Pilotable)clickFocus;
-        pilot.AddNewOrder(_clickLocation, null, OrderType._MOVE_);   
-      }
+      //Return to play mode if right click during ship placement
+      //HACK emulate pressing the button
+      playButtonClicked.Toggle();
     }
-    
   }
   
   //Restores the currently selected target to its un-clicked state
@@ -264,13 +514,13 @@ public class PlayerController
     //ADD NEW CLICKABLE TYPES HERE
   }
   
-  private void HandleClickedGameObject(Clickable click)
+  private void HandleClickedGameObject(Clickable click) //<>//
   {
     if(click != null)    //We actually clicked something
     {
       if(clickFocus == null)  //We currently have NOTHING selected -- just get a new target
-      {     
-        SelectNewTarget(click); //<>//
+      {      //<>//
+        SelectNewTarget(click);
       }
       
       //We DO have something selected right now
@@ -295,6 +545,37 @@ public class PlayerController
         
         clickFocus = null;
       }
+    }
+  }
+  
+    
+  //Go through all objects and make sure they are deselected. Useful for turn changes where
+  // the opponent cannot select this civ's pieces. Prevents other player from seeing rendered
+  // station spawn radii if turn ends in placement mode
+  public void CedeControlForTurnChange()
+  {
+    if(debugMode.value)
+    {
+      print("INFO: ");
+      print(civ.name);
+      print(" is ceding turn control at t=");
+      print(millis());
+      print("\n");
+    }
+    
+    for(Ship s : civ.fleet)
+    {
+      s.currentlySelected = false;
+    }
+    for(Missile m : civ.missiles)
+    {
+      m.currentlySelected = false;
+    }
+    
+    //Disable all station placement UI 
+    for(Station s : civ.stations)
+    {
+      s.displayPlacementCircle = false;
     }
   }
   

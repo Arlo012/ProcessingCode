@@ -17,7 +17,7 @@ public class Smoke extends Drawable implements Updatable
     sprite.resize((int)size.x, (int)size.y);
     ps = new ParticleSystem(0, location, sprite);
     
-    billowDirection = rand.nextFloat() * 0.4 - 0.2;
+    billowDirection = rand.nextFloat() * 0.1 - 0.05;
   }
 
   @Override public void DrawObject() //<>//

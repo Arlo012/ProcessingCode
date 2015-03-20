@@ -6,23 +6,33 @@ PImage missileSprite;      //Loaded in setup()
 public class Missile extends Pilotable implements Clickable, Updatable
 {
   TextWindow info;
-  int damage = 40;        //How much damage this missile does when it hits something
 
-  Missile(PVector _loc, PVector _moveVector) 
+  Missile(PVector _loc, PVector _moveVector, color _outlineColor, Civilization _owner) 
   {
     //Parent constructor
-    super("Missile", _loc, new PVector(20,10), 10, DrawableType.MISSILE);    //mass = 10
+    super("Missile", _loc, new PVector(20,10), 10, DrawableType.MISSILE, _owner);    //mass = 10
+    
+    //Health
+    health.max = 60;
+    health.current = 60;
+    
+    //Damage
+    damageOnHit = 250;
     
     //Physics
     velocity = _moveVector;
     rotationRate = 0.1;          //Rotation rate on a missile is ~10x better than a ship
+    
+    //Override local speed limit
+    //TODO test me
+    localSpeedLimit = 1.25;   //Overrides physical default value
     
     //UI
     sprite = missileSprite;
     sprite.resize(int(size.x), int(size.y));
     
     //Set the overlay icon
-    iconOverlay.SetIcon(color(255,0,0),ShapeType._SQUARE_);
+    iconOverlay.SetIcon(_outlineColor,ShapeType._SQUARE_);
     
     String descriptor = new String();
     descriptor += name;
@@ -98,8 +108,6 @@ public class Missile extends Pilotable implements Clickable, Updatable
     Explosion explosion = new Explosion(location, new PVector(64,48));    //New explosion here
     explosions.add(explosion);      //Add to list of effects to render
     
-    _other.health.current -= damage;
-    
     //Explosion force!
     float explosiveForce = 0.75;
     
@@ -118,7 +126,7 @@ public class Missile extends Pilotable implements Clickable, Updatable
       print("Explosion from missile hit ");
       print(_other.name);
       print(" for ");
-      print(damage);
+      print(damageOnHit);
       print(" damage.\n");
     }
     _other.ChangeVelocity(explosionDirection);

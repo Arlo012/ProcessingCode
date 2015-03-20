@@ -23,10 +23,10 @@ public class Pilotable extends Physical implements Updatable
    * @param  _type  A DrawableType (depending who extends this class)
    * @see         Pilotable
    */
-  public Pilotable(String _name, PVector _loc, PVector _size, int _mass, DrawableType _type) 
+  public Pilotable(String _name, PVector _loc, PVector _size, int _mass, DrawableType _type, Civilization _owner) 
   {
     //Parent constructor
-    super(_name, _loc, _size, _mass, _type);
+    super(_name, _loc, _size, _mass, _type, _owner);
     
     rotationMode = RotationMode.FACE;    //Face target
     collisionStunTime = 2000;      //2 second stun

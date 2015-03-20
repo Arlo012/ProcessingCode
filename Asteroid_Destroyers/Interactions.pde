@@ -45,12 +45,12 @@ void mouseClicked()
   if(mouseButton == LEFT)
   {
     //Response from player controller when something left clicked
-    Controller1.HandleLeftClick(currentMouseLoc);
+    currentPlayer.HandleLeftClick(currentMouseLoc);
 
   }
   else if (mouseButton == RIGHT)
   {
-    Controller1.HandleRightClick(currentMouseLoc);
+    currentPlayer.HandleRightClick(currentMouseLoc);
   }
 
 }
@@ -83,46 +83,50 @@ void mouseWheel(MouseEvent e)
 //Check for keypresses
 void keyPressed() 
 {
-  //Player 1 movement
-  if (key == CODED) 
+  if(key == ENTER)      //Begin game
   {
-    if (keyCode == UP) 
+    if(gameState == GameState.START)
     {
-    }
-    else if (keyCode == DOWN) 
-    {
-    }
-    else if (keyCode == LEFT) 
-    {
-    }
-    else if (keyCode == RIGHT) 
-    {
+      gameState = GameState.PLAYERCHANGE;
+      pulseEffectStartTime = millis();
     }
   }
   
-  if(key == ENTER)
-  {
-    asteroids.get(0).SetDestinationAngle(250);
-    asteroids.get(0).SetRotationMode(RotationMode.SPIN);    //Spin
-    println("DEBUG: Rotating asteroid");
-  }
-  
-  if (key == 'x') 
+  if (key == 'x' || key == 'm') 
   {
     //Emulated 'click' the stop orders button
     currentPlayer.cancelOrders.Click();
   }
   
-  if (key == 'e') 
+
+  if (key == ' ')    //Spacebar, pause/unpause 
+  {
+    //Note: also track pause/ unpause time to offset game loop times
+    if(gameState == GameState.PLAY)
+    {
+      pauseTime = millis();
+      gameState = GameState.PAUSED;
+    }
+    else if(gameState == GameState.PAUSED)
+    {
+      long totalTimePaused = millis() - pauseTime;
+      
+      //Offset the turn start time with how long was paused, i.e. no effect on it
+      currentTurnStartTime += totalTimePaused;
+      gameState = GameState.PLAY;
+    }
+  }
+  
+  
+  if (key == 'f')
   {
     if(debugMode.value)
     {
-      Explosion boom2 = new Explosion(new PVector(wvd.pixel2worldX(mouseX),wvd.pixel2worldY(mouseY)), new PVector(64,48)); 
-      explosions.add(boom2);
+      gameState = GameState.PLAYERCHANGE;
+      pulseDrawTimeLeft = 3000;
+      pulseEffectStartTime = millis();
     }
-
   }
-
   
   if(key == 'r')
   {

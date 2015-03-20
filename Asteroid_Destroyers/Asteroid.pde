@@ -6,8 +6,15 @@ PImage asteroidSpriteSheet;      //Loaded in setup()
  */
 public class Asteroid extends Physical implements Clickable, Updatable
 {
+  private static final int minDiameter = 10;
+  private static final int maxDiameter = 20;
+  private static final int maxAsteroidHealth = 100;
+  
   TextWindow info;
   public boolean isOffScreen = false;      //Is this asteroid offscreen?
+  public boolean isRogue;                  //Asteroid's course has been altered by an impact / explosion
+  
+  private boolean isDebris = false;        //Is this asteroid just debris from another asteroid's death?
   
   /*
    * Constructor
@@ -19,7 +26,7 @@ public class Asteroid extends Physical implements Clickable, Updatable
   public Asteroid(String _name, PVector _loc, int _diameter, int _mass) 
   {
     //Parent constructor
-    super(_name, _loc, new PVector(_diameter, _diameter), _mass, DrawableType.ASTEROID);
+    super(_name, _loc, new PVector(_diameter, _diameter), _mass, DrawableType.ASTEROID, null);
     
     //Select my asteroid image from spritesheet     
     int RandomAsteroidIndex1 = rand.nextInt(8);      //x coordinate in sprite sheet
@@ -31,21 +38,31 @@ public class Asteroid extends Physical implements Clickable, Updatable
     //Scale by 128/90 where 128 is provided size above and 90 is actual size of the asteroid sprite
     sprite.resize(int(size.x * 128/90), int(size.y * 128/90));
     
+    //Setup health, scaled by size relative to max size
+    //TODO implement this into constructor (it is redundantly over-written in many places)
+    health.max = (int)(size.x/maxDiameter * maxAsteroidHealth);      //Health scaled to size, take advantage of integer division to round
+    health.current = health.max;
+    
     String descriptor = new String();
     descriptor += name;
+    descriptor += " #";
+    descriptor += ID;
     descriptor += "\n Diameter: ";
     descriptor += size.x;
     descriptor += " m \n Mass: ";
     descriptor += mass;
-    descriptor += " kg\n";
-    descriptor += "Velocity: ";
-    descriptor += velocity.mag();
+    descriptor += " kg\nHealth:";
+    descriptor += health.current;
+    descriptor += "\nVelocity: ";
+    descriptor += (int)(velocity.mag()*100);
     descriptor += " m/s ";
     info = new TextWindow("Asteroid Info", location, descriptor, true);
   }
   
-  public void Update()
+  @Override public void Update()
   {
+    super.Update();
+    
     //Check if UI is currently rendered, and if so update info
     if(info.visibleNow)
     {
@@ -56,6 +73,35 @@ public class Asteroid extends Physical implements Clickable, Updatable
     
     //Update icon overlay
     iconOverlay.UpdateLocation(location);
+    
+    if(toBeKilled && !isDebris)    //Generate debris asteroids iff dying and not already debris
+    {
+      for(int i = 0; i < 3; i++)
+      {
+        Asteroid debris = new Asteroid("Asteroid Debris", location, (int)size.x/2, (int)(mass/2));
+        
+        //New velocity with some randomness based on old velocity
+        debris.SetVelocity(new PVector(velocity.x/2 + rand.nextFloat()*velocity.x/3-velocity.x/6,
+                               velocity.y/2 + rand.nextFloat()*velocity.y/3-velocity.y/6));
+        debris.isDebris = true;
+        
+        //See AsteroidFactory for details on this implementation
+        debris.SetRotationRate(rotationRate);
+        debris.SetRotationMode(RotationMode.SPIN);    //Spinning
+        debris.SetMaxSpeed(2.5);      //Local speed limit for asteroid
+        debris.iconOverlay.SetIcon(color(255,0,0),ShapeType._CIRCLE_);
+        debris.drawOverlay = true;      //Dont draw overlay by default
+        
+        //Setup health, scaled by size relative to max size. 1/4 health of std asteroid
+        //HACK this just overwrites the constructor
+        debris.health.max = (int)(debris.size.x/maxDiameter * maxAsteroidHealth)/8;
+        debris.health.current = health.max;
+        
+        debris.isRogue = true;      //Bit flag to allow enemy ships to scan for this asteroid
+        
+        debrisSpawned.add(debris);
+      }
+    }
   }
 
   @Override public void DrawObject()
@@ -95,13 +141,17 @@ public class Asteroid extends Physical implements Clickable, Updatable
     info.UpdateLocation(location);
     
     String descriptor = new String();
-    descriptor += "This is an asteroid.\nDiameter: ";
+    descriptor += name;
+    descriptor += " #";
+    descriptor += ID;
+    descriptor += "\nDiameter: ";
     descriptor += size.x;
     descriptor += " m \nMass: ";
     descriptor += mass;
-    descriptor += " kg\n";
-    descriptor += "Velocity: ";
-    descriptor += velocity.mag();
+    descriptor += " kg\nHealth:";
+    descriptor += health.current;
+    descriptor += "\nVelocity: ";
+    descriptor += (int)(velocity.mag()*100);
     descriptor += " m/s ";
 
     info.UpdateText(descriptor);

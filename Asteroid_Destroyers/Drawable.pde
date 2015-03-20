@@ -2,8 +2,9 @@
 public enum DrawableType {
   ASTEROID, SHIP, GAMEAREA, 
   STRUCTURE, UI, PLANET,
-  MISSILE, EFFECT
-}
+  MISSILE, EFFECT, LASER,
+  SHIELD
+}    //TODO under-used, phase out
 
 int uniqueIDCounter = 0;
 /* Drawable
