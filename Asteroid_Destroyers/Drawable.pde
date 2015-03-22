@@ -54,9 +54,11 @@ public class Drawable
     return name;
   }
 
-  //Render this base object's sprite, if it is initialized
+  //Render this base object's sprite, if it is initialized.
   public void DrawObject()
   {
+    pushMatrix();
+    pushStyle();
     if(sprite != null)
     {
       imageMode(renderMode);
@@ -68,6 +70,8 @@ public class Drawable
       print(ID);
       print("\n");
     }
+    popStyle();
+    popMatrix();
   }
 
   public PVector GetLocation()

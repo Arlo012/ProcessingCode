@@ -6,16 +6,16 @@ int explosionImgCount = 90;
 */
 public class Explosion extends Drawable
 {
-  PImage[] images;
-  int imageFrames;
+  PImage[] images;                  //Array of images to display
+  int imageFrames;                  //How many images (frames) are to be displayed              
   
   //Sound
   SoundFile sound;
   boolean soundPlayed = false;
   
   //Delay action
-  int frameDelay = 0;                    //Delay how many frames after creation to draw?
-  long frameCountAtSpawn;            //At creation what was the framecount
+  int frameDelay = 0;                 //Delay how many frames after creation to draw?
+  long frameCountAtSpawn;             //At creation what was the framecount
   
   private int frameCounter = 0;      //Count how many frames of total we have gone thru
   
@@ -26,7 +26,8 @@ public class Explosion extends Drawable
     frameCountAtSpawn = frameCount;
     
     imageFrames = 90;        //based on image count
-    images = explosionImgs;
+    images = explosionImgs;  //TODO: add constructor support for different explosion images
+    renderMode = CENTER;
     
     sound = explosionSound;
   }
@@ -39,21 +40,20 @@ public class Explosion extends Drawable
   
   @Override public void DrawObject()
   {
-    if(frameCount >= frameCountAtSpawn + frameDelay)
+    //Have we passed the 'start' point for drawing? If frameDelay = 0, begin immediately
+    if(frameCount >= frameCountAtSpawn + frameDelay)     
     {
-      if(!soundPlayed)
+      if(!soundPlayed)        //Play the explosion sound
       {
         sound.amp(0.5);
         sound.play();
         soundPlayed = true;
       }
-      if(frameCounter < imageFrames)
+      if(frameCounter < imageFrames)        //Have all frames been drawn?
       {
-        pushStyle();
-        imageMode(CENTER);
-        image(images[frameCounter], location.x, location.y);
-        popStyle();
-        frameCounter++;
+        sprite = images[frameCounter];      //Update current sprite to the next frame of the explosion
+        super.DrawObject();                 //Invoke parent draw function
+        frameCounter++;                     //Prepare for next frame
       }
       else
       {

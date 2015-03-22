@@ -25,7 +25,7 @@ void LoadImageAssets()
   smokeTexture = loadImage("Assets/Effects/Smoke/0000.png");
   redLaser = loadImage("Assets/Weapons/redLaser.png");
   greenLaser = loadImage("Assets/Weapons/greenLaser.png");
-  //Load explosions (see effect.pde for variables)
+  //Load explosions (see Explosion.pde for variables)
   for (int i = 1; i < explosionImgCount + 1; i++) 
   {
     // Use nf() to number format 'i' into four digits

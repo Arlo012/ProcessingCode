@@ -199,9 +199,9 @@ void GenerateDeathExplosions(int _count, PVector _center, PVector _deadObjSize)
                   _center.y + _deadObjSize.y/2 * rand.nextFloat() - 0.5);
     
     Explosion explosion = new Explosion(spawnLoc, explosionSize); 
-    int frameDelay = rand.nextInt(60);
-    explosion.SetRenderDelay(frameDelay);
+    int frameDelay = rand.nextInt(60);                //Delay 0-60 frames
+    explosion.SetRenderDelay(frameDelay);             //Setup delay on this explosion to render
     
-    explosions.add(explosion);
+    explosions.add(explosion);                        //Add this explosion to an ArrayList<Explosion> for rendering
   }
 }
