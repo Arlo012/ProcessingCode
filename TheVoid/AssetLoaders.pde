@@ -1,20 +1,16 @@
 //Image Assetss
 PImage bg;             //Background
-PImage lion, skull;    //Icons
 
 //TODO move all PImage instances here
 PImage redLaser, greenLaser;
 void LoadImageAssets()
 {
-  //bg = loadImage("Assets/Backgrounds/image5_0.jpg");
-  bg = loadImage("Assets/Backgrounds/spacefield_a-000.png");
+  bg = loadImage("Assets/Backgrounds/back_3.png");
   bg.resize(width, height);
   
   //Load sprites
   asteroidSpriteSheet = loadImage("Assets/Environment/asteroids.png");
   shipSprite = loadImage("Assets/Ships/10(2).png");
-  lion = loadImage("Assets/Icons/Lion.png");
-  skull = loadImage("Assets/Icons/Skull.png");
   missileSprite = loadImage("Assets/Weapons/Missile05.png");
   redStation1 = loadImage("Assets/Stations/Spacestation1-1.png");
   redStation2 = loadImage("Assets/Stations/Spacestation1-2.png");
@@ -25,6 +21,7 @@ void LoadImageAssets()
   smokeTexture = loadImage("Assets/Effects/Smoke/0000.png");
   redLaser = loadImage("Assets/Weapons/redLaser.png");
   greenLaser = loadImage("Assets/Weapons/greenLaser.png");
+  
   //Load explosions (see Explosion.pde for variables)
   for (int i = 1; i < explosionImgCount + 1; i++) 
   {
@@ -32,13 +29,6 @@ void LoadImageAssets()
     String filename = "Assets/Effects/64x48/explosion1_" + nf(i, 4) + ".png";
     explosionImgs[i-1] = loadImage(filename);
   }
-  
-  //Button images
-  PVector instructionButtonSize = new PVector(200,100);
-  instructionsButton = new ToggleButton("Instructions button", 
-                  new PVector(width-instructionButtonSize.x, height-instructionButtonSize.y),
-                  new PVector(instructionButtonSize.x,instructionButtonSize.y), "Instructions", 
-                  "PNG/yellow_button00.png", showInstructions, false);
 }
 
 SoundFile explosionSound, collisionSound, laserSound, 
@@ -75,67 +65,29 @@ void LoadSoundAssets()
 
 
 //Generate the game areas used to identify pieces of the playing field. View these in debugmode
-GameArea asteroidField, topAsteroidSpawn, bottomAsteroidSpawn, P1Field, P2Field;
-void BuildGameAreas()
+int sectorID = 1;      //Unique sector ID. Begin generating @ 1 because the startSector has ID = 0
+void BuildSectors(Sector _origin)
 {
-  gameAreas = new HashMap<String, GameArea>();
+  //TODO:
+  //Around the origin sector, build all 8 other sectors....
+  //re-use for other generation
 
-  //Create asteroid field filling half of the screen
-  asteroidField = new GameArea("Asteroid Field", new PVector(width/3, 0), 
-                      new PVector(width/3, height));
-  gameAreas.put(asteroidField.GetName(), asteroidField);
-
-  //Create two asteroid spawn areas
-  topAsteroidSpawn = new GameArea("Top Asteroid Spawn", new PVector(width/3, -150), 
-                      new PVector(width/3, 100));
-  bottomAsteroidSpawn = new GameArea("Bottom Asteroid Spawn", new PVector(width/3, height + 50), 
-                      new PVector(width/3, 100));
-  gameAreas.put(topAsteroidSpawn.GetName(), topAsteroidSpawn);
-  gameAreas.put(bottomAsteroidSpawn.GetName(), bottomAsteroidSpawn);
-
-  //Left/right player area
-  P1Field = new GameArea("P1 Build Area", new PVector(0, 0), 
-                      new PVector(width/3, height));
-  P2Field = new GameArea("P2 Build Area", new PVector(2*width/3, 0), 
-                      new PVector(width/3, height));
-  P1Field.SetDebugColor(color(0, 0, 255));
-  P2Field.SetDebugColor(color(255, 0, 0));
-  gameAreas.put(P1Field.GetName(), P1Field);
-  gameAreas.put(P2Field.GetName(), P2Field);
+  //Old code for gameAreas....
+  // asteroidField = new Sector("Asteroid Field", new PVector(width/3, 0), 
+  //                     new PVector(width/3, height));
+  // sectors.put(asteroidField.GetName(), asteroidField);
 }
 
-//Setup two civilizations and associated objects
+//TODO merge in sector generation here...
+
 void GameObjectSetup()
 {
-  //Game object initializers
-  asteroids = new ArrayList<Asteroid>();
-  debrisSpawned = new ArrayList<Asteroid>();
-  GenerateAsteroids(asteroidField);        //See Helpers.pde
+  LoadImageAssets();
+  LoadSoundAssets();
   
-  //Civilization setup
-  P1 = new Civilization(new PVector(0,0), "Robot Jesus Collective");
-  P1.SetCivilizationIcon(skull,24);
+  Sector startSector = new Sector(0, new PVector(0,0), sectorSize, bg);
+  sectors.put(0, startSector);
   
-  P2 = new Civilization(new PVector(width,0), "Normal Squishy Humans");
-  P2.SetCivilizationIcon(lion,24);
- 
-  //Planet setup
-  GeneratePlanets(P1Field, P1, 4);
-  GeneratePlanets(P2Field, P2, 4); 
- 
-  //Station setup
-  GenerateStations(P1, 4);
-  GenerateStations(P2, 4);
-  
-  //Controller setup
-  Controller1 = new PlayerController(P1);
-  Controller2 = new PlayerController(P2);
-  currentPlayer = Controller1;
-  otherPlayer = Controller2;
-  
-  //UI setup
-  toDisplay = new LinkedList<Clickable>();
-  
-  //Effects setup
-  explosions = new ArrayList<Explosion>();
+  //TODO generate other sectors around this one
+  //BuildSectors(startSector);    //See AssetLoaders.pde
 }

@@ -63,7 +63,7 @@ void UpdateStations(ArrayList<Station> _stations)
     station.Update();
     if (station.toBeKilled) 
     { 
-      // Remove the current element from the iterator and the list.
+      //Remove the current element from the iterator and the list (safely).
       iterator.remove();
     }
   }

@@ -1,5 +1,5 @@
 /*
- * A planet gameobject, inheriting from Drawable
+ * A planet gameobject, inheriting from Drawable. May contain stations orbiting it
  */
 public class Planet extends Physical implements Clickable, Updatable
 {
@@ -9,6 +9,8 @@ public class Planet extends Physical implements Clickable, Updatable
                                 "Class-M Planet", "Ionically Charged Planet", "Forest Planet", "Scorched Planet"};
   
   int planetTypeIndex;
+  ArrayList<Station> stations;      //Stations around this planet
+  
   /*
    * Constructor
    * @param  _size  diameter of the asteroid
@@ -16,10 +18,10 @@ public class Planet extends Physical implements Clickable, Updatable
    * @param  _yloc  y coordinate of the asteroid
    * @see         Asteroid
    */
-  public Planet(String _name, PVector _loc, int _diameter, int _mass, Civilization _owner) 
+  public Planet(String _name, PVector _loc, int _diameter, int _mass) 
   {
     //Parent constructor
-    super(_name, _loc, new PVector(_diameter, _diameter), _mass, DrawableType.PLANET, _owner);
+    super(_name, _loc, new PVector(_diameter, _diameter), _mass);
     
     //Select my planet image from spritesheet (total of 10 options)
     planetTypeIndex = rand.nextInt(11) + 1;    //There is no p0, add 1
@@ -33,6 +35,8 @@ public class Planet extends Physical implements Clickable, Updatable
     //Set the sprite to the random subset of the spritesheet
     sprite = loadImage(filePath);
     sprite.resize((int)size.x, (int)size.y);
+    
+    stations = new ArrayList<Station>();
     
     //Set string descriptor for real-ish values that look pretty
     String descriptor = new String();

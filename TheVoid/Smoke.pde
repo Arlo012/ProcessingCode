@@ -12,7 +12,7 @@ public class Smoke extends Drawable implements Updatable
   
   Smoke(PVector _loc, PVector _size)
   {
-    super("Smoke", _loc, _size, DrawableType.EFFECT);
+    super("Smoke", _loc, _size);
     sprite = smokeTexture.get();
     sprite.resize((int)size.x, (int)size.y);
     ps = new ParticleSystem(0, location, sprite);

@@ -23,9 +23,9 @@ void DrawStations(ArrayList<Station> _stations)
 }
 
 
-void DrawGameArea(Map<String, GameArea> _gameAreas)
+void DrawSectors(Map<Integer, Sector> _sectors)
 {
-  for(GameArea a : _gameAreas.values())
+  for(Sector a : _sectors.values())
   {
     a.DrawObject();
   }
@@ -40,28 +40,6 @@ void DrawShips(ArrayList<Ship> _ships, boolean _displayIcons)
     {
       a.iconOverlay.DrawObject();
     }
-    
-    //Actions if this ship is currently selected by the player
-    if(a.currentlySelected)
-    {
-      if(a.currentOrder != null)
-      {
-        //HACK this shouldn't be in here -- handle inside pilotable class somewhere
-        pushStyle();
-        stroke(color(#E5F236));      //Draw a yellow line to indicate actual course
-        
-        //Handle in absolute coordinates (w/o translate) because delta position difficult to calculate
-        line(a.location.x,a.location.y, a.currentOrder.location.x, a.currentOrder.location.y);
-        a.currentOrder.DrawObject();      //Draw the current order
-        popStyle();
-      }
-
-      for(Order o : a.orders)
-      {
-        //Draw order waypoints
-        o.DrawObject();
-      }
-    }
   }
 }
 
@@ -73,28 +51,6 @@ void DrawMissiles(ArrayList<Missile> _missiles, boolean _displayIcons)
     if(_displayIcons)
     {
       a.iconOverlay.DrawObject();
-    }
-    
-    //Actions if this ship is currently selected by the player
-    if(a.currentlySelected)
-    {
-      if(a.currentOrder != null)
-      {
-        //HACK this shouldn't be in here -- handle inside pilotable class somewhere
-        pushStyle();
-        stroke(color(#E5F236));      //Draw a yellow line to indicate actual course
-        
-        //Handle in absolute coordinates (w/o translate) because delta position difficult to calculate
-        line(a.location.x,a.location.y, a.currentOrder.location.x, a.currentOrder.location.y);
-        a.currentOrder.DrawObject();      //Draw the current order
-        popStyle();
-      }
-
-      for(Order o : a.orders)
-      {
-        //Draw order waypoints
-        o.DrawObject();
-      }
     }
   }
 }
@@ -163,15 +119,6 @@ void MovePhysicalObject(ArrayList<? extends Physical> physical)
   }
 }
 
-//Move an array of pilotable objects
-void MovePilotableObject(ArrayList<? extends Pilotable> pilotable)
-{
-  for(Pilotable a : pilotable)
-  {
-    a.Move();
-  }
-}
-
 //******* ZOOM ********//
 
 void BeginZoom()
@@ -202,6 +149,7 @@ void GenerateDeathExplosions(int _count, PVector _center, PVector _deadObjSize)
     int frameDelay = rand.nextInt(60);                //Delay 0-60 frames
     explosion.SetRenderDelay(frameDelay);             //Setup delay on this explosion to render
     
+    //TODO add global explosion
     explosions.add(explosion);                        //Add this explosion to an ArrayList<Explosion> for rendering
   }
 }

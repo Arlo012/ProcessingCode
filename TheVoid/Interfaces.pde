@@ -21,6 +21,7 @@ public interface Collidable
 enum ClickType{
   INFO, TARGET, BUTTON
 }
+
 public interface Clickable
 {
   void UpdateUIInfo();          //Update the location and any text/ UI information in the given window

@@ -239,8 +239,7 @@ Clickable CheckClickableOverlap(Drawable obj1, PVector point)
       return clickable;
     }
   }
-  
-  
+
   return null;
 }
 

@@ -5,19 +5,12 @@ public class LaserBeam extends Physical
   static final int timeToFly = 2500;        //Effective range, related to speed (ms)
   private long spawnTime;
   
-  LaserBeam(PVector _loc, PVector _direction, Civilization _owner)
+  LaserBeam(PVector _loc, PVector _direction)
   {
-    super("Laser beam", _loc, new PVector(20,3), .01, DrawableType.LASER, _owner);    //Mass very low -- 1
+    super("Laser beam", _loc, new PVector(20,3), .01);    //HACK Mass very low!! For handling physics easier 
     
     //Set laser color
-    if(GetOwner().orientation == CivOrientation.LEFT)
-    {
-      sprite = greenLaser.get();
-    }
-    else
-    {
-      sprite = redLaser.get();
-    }
+      //TODO set laser color by player / enemy
 
     sprite.resize((int)size.x, (int)size.y);
     

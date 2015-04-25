@@ -21,7 +21,7 @@ public class Explosion extends Drawable
   
   Explosion(PVector _loc, PVector _size)
   {
-    super("Explosion", _loc, _size, DrawableType.EFFECT);
+    super("Explosion", _loc, _size);
     
     frameCountAtSpawn = frameCount;
     

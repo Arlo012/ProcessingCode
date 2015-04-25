@@ -27,12 +27,12 @@ public class AsteroidFactory
   
   
   //Generate a new asteroid in a given area
-  void SetNextAsteroidParameters(GameArea _area)
+  void SetNextAsteroidParameters(Sector _sector)
   {
-    minX = int(_area.GetLocation().x);
-    minY = int(_area.GetLocation().y);
-    maxX = int(_area.GetSize().x);
-    maxY = int(_area.GetSize().y);
+    minX = int(_sector.GetLocation().x);
+    minY = int(_sector.GetLocation().y);
+    maxX = int(_sector.GetSize().x);
+    maxY = int(_sector.GetSize().y);
   
     size = rand.nextInt(int(asteroidSizeRange.y - asteroidSizeRange.x))+ int(asteroidSizeRange.x);
     
@@ -53,7 +53,7 @@ public class AsteroidFactory
   //Build asteroid with parameters generated in SetNextAsteroidParameters and return it
   Asteroid GenerateAsteroid()
   {
-    Asteroid toBuild = new Asteroid("Asteroid", new PVector(xCoor, yCoor), size, int(100000*size/asteroidSizeRange.y));
+    Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, int(100000*size/asteroidSizeRange.y));
     toBuild.SetRotationRate(rotateSpeed);
     toBuild.SetVelocity(new PVector(xVelocity, yVelocity));
     toBuild.SetRotationMode(RotationMode.SPIN);    //Spinning

@@ -1,19 +1,15 @@
 float globalSpeedLimit = 10;      //Universal speed limit (magnitude vector)
 
 public enum RotationMode {
-NONE, INSTANT, SPIN, FACE
+  NONE, INSTANT, SPIN, FACE
 }
 
-public enum MoveMode {
-LINEAR, ORBITAL
-}
 
 public class Physical extends Drawable implements Movable, Turnable, Collidable, Updatable
 {
   //UI
   public Shape iconOverlay;
   public boolean drawOverlay = true;
-  private Civilization owner;              //Point to owner of this object, null by default
   
   //Stats
   protected float mass;
@@ -23,7 +19,6 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   protected PVector velocity;              //On absolute plane
   protected float localSpeedLimit;         //Max velocity magnitude for this object
   protected float acceleration = 0.05;     //Multiple to max velocity out of 1. 0 = none, 1 = instant
-  private MoveMode moveMode;               //Linear movement or orbit
   
   //Orbitals
   private PVector orbitForwardVector;      //Forward vector for rotation
@@ -42,18 +37,16 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   protected int damageOnHit = 0;           //Automatic damage incurred on hit
   boolean collidable = true;               //Can this object be collided with by ANYTHING? see shields when down
   
-  public Physical(String _name, PVector _loc, PVector _size, float _mass, DrawableType _type, Civilization _owner)
+  public Physical(String _name, PVector _loc, PVector _size, float _mass)
   {
-    super(_name, _loc, _size, _type);
+    super(_name, _loc, _size);
     
     health = new Health(100, 100);       //Default health
     mass = _mass;
-    owner = _owner;
     
     //Movement
     velocity = new PVector(0, 0);
     localSpeedLimit = 1.5;         //Default speed limit
-    moveMode = MoveMode.LINEAR;    //Default to linear movement
     orbitForwardVector = new PVector(0,0);    //Default no orbital vector
     
     //Rotation
@@ -67,18 +60,6 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     //UI
     iconOverlay = new Shape("Physical Overlay", location, 
                 size, color(0,255,0), ShapeType._SQUARE_);
-  }
-  
-  //Return civilization that owns this object
-  public Civilization GetOwner()
-  {
-    if(owner == null)
-    {
-      print("ERROR: Requested owner on ");
-      print(name);
-      print(" with no owner!");
-    }
-    return owner;
   }
   
   @Override public void DrawObject()
@@ -165,8 +146,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   public void ChangeVelocity(PVector _vector)
   {
     PVector newVelocity = new PVector(velocity.x + _vector.x, velocity.y + _vector.y);
-    SetVelocity(newVelocity);
-    
+    SetVelocity(newVelocity);   
   }
 
   //Set local speed limit
@@ -178,22 +158,11 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
   //Move location
   public void Move()
   {
-    if(moveMode == MoveMode.LINEAR)    //TODO phase out (only did linear motion)
-    {
-      location = PVector.add(location, velocity);      
-    }
-    else
-    {
-      print("WARNING: ");
-      print(name);
-      print(" has attempted to move in an unsupported mode.\n");
-    }
-
+    location = PVector.add(location, velocity);      
   }
  
 
 //******* ROTATE *********/
-  //0 = instant, 1 = spin, 2 = standard
   public void SetRotationMode(RotationMode _rotateMode)
   {
     rotationMode = _rotateMode;
@@ -212,10 +181,8 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     }
     else
     {
-      //TODO setting this is messing up control flow of pathing
       rotationLookTarget = new PVector(0,0);
     }
-    
   }
   
   public void SetDestinationAngle(float _destination)
@@ -223,8 +190,7 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     destinationAngle = _destination;
   }
   
-  //Rotate mode 2
-  //TODO cleanup here
+  //TODO cleanup here -- hacked together
   private void RotateToTarget()
   {
     PVector targetRelativeToLocal = new PVector(rotationLookTarget.x - location.x, 
@@ -254,12 +220,11 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     //Jitter prevention
     if (Math.abs(radToRotate - currentAngle) > radians(0.5))
     {
-      if (radToRotate - currentAngle > 0)
-      {
-        //CW
+      if (radToRotate - currentAngle > 0)  //CW
+      {      
         spinDirection = 1;
       } 
-      else
+      else    //CCW
       {
         spinDirection = -1;
       }
@@ -317,20 +282,6 @@ public class Physical extends Drawable implements Movable, Turnable, Collidable,
     deltaP.setMag(velocity.mag()/frictionFactor);
     
     SetVelocity(deltaP);
-    
-    //If the object was an asteroid it is now a projectile -- update its color
-    //TODO _other --> this
-    if(_other instanceof Asteroid)
-    {
-      //Asteroid object specific
-      Asteroid roid = (Asteroid)_other;
-      roid.isRogue = true;
-      
-      //Overlay update to red if impacted
-      _other.iconOverlay.borderColor = color(255,0,0);
-      _other.drawOverlay = true;        //Draw icon overlay when missile impacts the asteroid
-      
-    }
   }
   
 //******* UPDATE *********/

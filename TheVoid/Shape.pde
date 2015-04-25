@@ -3,21 +3,20 @@ public static enum ShapeType {
 }
 
 /*
- * UI shape
+ * UI shape (Square, circle, triangle allowed)
 */
 public class Shape extends Drawable
 {
   public ShapeType shapeType;
   public color borderColor;
   
-  private ShapeType  defaultShapeType;
   private color defaultColor;
   private boolean colorSet;          //Allow only one initial set of color after the constructor's default
   private color fillColor;
   
   public Shape(String _name, PVector _loc, PVector _size, color _color, ShapeType _shapeType)
   {
-    super(_name, _loc, _size, DrawableType.UI);
+    super(_name, _loc, _size);
     borderColor = _color;
     defaultColor = borderColor;
     shapeType = _shapeType;
@@ -70,7 +69,6 @@ public class Shape extends Drawable
     {
       //Set shape type
       shapeType = _type;
-      defaultShapeType = shapeType;
       
       //Set border color
       borderColor = _color;

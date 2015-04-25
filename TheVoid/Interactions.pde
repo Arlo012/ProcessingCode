@@ -46,34 +46,7 @@ void mouseClicked()
 {
   PVector currentMouseLoc = new PVector(mouseX, mouseY);
   
-  if(gameState == GameState.START)
-  {
-    if(mouseButton == LEFT)
-    {
-      //Check for instructions button pressed
-      Clickable buttonPressed = CheckClickableOverlap(instructionsButton, currentMouseLoc);
-      if(buttonPressed != null)
-      {
-        buttonPressed.Click();
-      }
-    }
-  }
-  
-  else if(gameState == GameState.PLAY)
-  {
-    if(mouseButton == LEFT)
-    {
-      //Response from player controller when something left clicked
-      currentPlayer.HandleLeftClick(currentMouseLoc);
-  
-    }
-    else if (mouseButton == RIGHT)
-    {
-      currentPlayer.HandleRightClick(currentMouseLoc);
-    }
-  }
-
-
+  //Click actions here, based on gamestate
 }
 
 void mouseWheel(MouseEvent e)
@@ -103,52 +76,7 @@ void mouseWheel(MouseEvent e)
 
 //Check for keypresses
 void keyPressed() 
-{
-  if(key == ENTER)      //Begin game
-  {
-    if(gameState == GameState.START)
-    {
-      gameState = GameState.PLAYERCHANGE;
-      pulseEffectStartTime = millis();
-    }
-  }
-  
-  if (key == 'x' || key == 'm') 
-  {
-    //Emulated 'click' the stop orders button
-    currentPlayer.cancelOrders.Click();
-  }
-  
-
-  if (key == ' ')    //Spacebar, pause/unpause 
-  {
-    //Note: also track pause/ unpause time to offset game loop times
-    if(gameState == GameState.PLAY)
-    {
-      pauseTime = millis();
-      gameState = GameState.PAUSED;
-    }
-    else if(gameState == GameState.PAUSED)
-    {
-      long totalTimePaused = millis() - pauseTime;
-      
-      //Offset the turn start time with how long was paused, i.e. no effect on it
-      currentTurnStartTime += totalTimePaused;
-      gameState = GameState.PLAY;
-    }
-  }
-  
-  
-  if (key == 'f')
-  {
-    if(debugMode.value)
-    {
-      gameState = GameState.PLAYERCHANGE;
-      pulseDrawTimeLeft = 3000;
-      pulseEffectStartTime = millis();
-    }
-  }
-  
+{  
   if(key == 'r')
   {
     wvd.viewRatio = 1;

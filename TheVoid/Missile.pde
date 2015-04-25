@@ -3,14 +3,14 @@ PImage missileSprite;      //Loaded in setup()
 /**
  * A missile gameobject, inheriting from Pilotable
  */
-public class Missile extends Pilotable implements Clickable, Updatable
+public class Missile extends Physical implements Clickable, Updatable
 {
   TextWindow info;
 
-  Missile(PVector _loc, PVector _moveVector, color _outlineColor, Civilization _owner) 
+  Missile(PVector _loc, PVector _moveVector, color _outlineColor) 
   {
     //Parent constructor
-    super("Missile", _loc, new PVector(20,10), 10, DrawableType.MISSILE, _owner);    //mass = 10
+    super("Missile", _loc, new PVector(20,10), 10);    //mass = 10
     
     //Health
     health.max = 60;
@@ -58,15 +58,6 @@ public class Missile extends Pilotable implements Clickable, Updatable
     //Update icon overlay
     iconOverlay.UpdateLocation(location);
     
-    //If all stop override, don't move
-    if(allStopOrder.value)
-    {
-      currentOrder = null;
-      destination = location;
-      orders.clear();
-      AllStop();
-      allStopOrder.Toggle();
-    }
   }
 
 /*Click & mouseover UI*/
@@ -84,7 +75,7 @@ public class Missile extends Pilotable implements Clickable, Updatable
   
   void Click()
   {
-    
+    //No action
   }
   
   //When the object moves its UI elements must as well

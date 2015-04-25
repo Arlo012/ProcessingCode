@@ -27,9 +27,10 @@ public class Station extends Physical implements Clickable, Updatable
   Smoke smokeEffect2;
   boolean smoke1Visible, smoke2Visible;
   
-  public Station(StationType _type, PVector _loc, PVector _size, PImage _sprite, Civilization _owner) 
+  public Station(StationType _type, PVector _loc, PVector _size, PImage _sprite) 
   {
-    super("Military Station", _loc, _size, 1500, DrawableType.STRUCTURE, _owner);
+    super("Military Station", _loc, _size, 1500);
+    //TODO implement something besides military station
 
     sprite = _sprite.get();      //Use get() for a copy
     sprite.resize((int)size.x, (int)size.y);
@@ -37,12 +38,6 @@ public class Station extends Physical implements Clickable, Updatable
     //Setup health, scaled by size
     health.max = ((int)(size.x/maxStationSize * maxStationHealth)/100)*100;      //Health scaled to size, take advantage of integer division to round
     health.current = health.max;
-
-    //Mass-energy generation proportional to size
-    massEnergyGen = (int)(6 * size.x/maxStationSize);
-    placementRadius = 4 * (int)size.x;
-    placementCircle = new Shape("Placement Station Radius", location, new PVector(placementRadius, placementRadius),
-                      color(#F4F52C, 150), ShapeType._CIRCLE_);
 
     //Generate random rotation speed
     rotationMode = RotationMode.SPIN;    //Station spins in orbit
@@ -59,16 +54,13 @@ public class Station extends Physical implements Clickable, Updatable
     //Set the description string
     String descriptor = new String();
     descriptor += name;
-    descriptor += "\nStations generate mass-";
-    descriptor += "\nenergy every second which";
-    descriptor += "\ncan be used to purchase";
-    descriptor += "\nmissiles & ships";
     info = new TextWindow("Station Info", location, descriptor, true);
   }
   
   @Override public void DrawObject()
   {
     super.DrawObject();
+    
     //Draw smoke effects
     if(smoke1Visible)
     {
@@ -77,11 +69,6 @@ public class Station extends Physical implements Clickable, Updatable
     if(smoke2Visible)
     {
       smokeEffect2.DrawObject();
-    }
-    
-    if(displayPlacementCircle)
-    {
-      placementCircle.DrawObject();
     }
   }
   
@@ -109,14 +96,7 @@ public class Station extends Physical implements Clickable, Updatable
     
     //Set the description string
     String descriptor = new String();
-    descriptor += name;
-    descriptor += "\n";
-    descriptor += GetOwner().name;
-    descriptor += "\nHealth: ";
-    descriptor += health.current;
-    descriptor += "\nGeneration/sec: ";
-    descriptor += massEnergyGen;
-    
+    descriptor += name;    
     info.UpdateText(descriptor);
   }
   

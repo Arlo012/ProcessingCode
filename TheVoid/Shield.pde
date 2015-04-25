@@ -13,8 +13,7 @@ public class Shield extends Physical implements Updatable
   {
     //HACK size is forced round to compensate for no rotation of a Shape object (even though the Shield itself is 'physical')
     //HACK shield mass set to 1500 to get around a collision w/ really massive objects
-    super("Shield", _parent.location, new PVector(_parent.size.x*1.25, _parent.size.x*1.25), 
-                  2000, DrawableType.SHIELD, _parent.owner);
+    super("Shield", _parent.location, new PVector(_parent.size.x*1.25, _parent.size.x*1.25), 2000);
     overlay = new Shape("Shield Overlay", location, size, color(#5262E3, 50), ShapeType._CIRCLE_);
     overlay.SetFillColor(color(#5262E3, 50));
     

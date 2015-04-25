@@ -12,7 +12,6 @@ class TextWindow extends UI
   
   ArrayList<Drawable> icons;  //Icons within the window
   
-  //TODO this constructor might be evil
   TextWindow(String _name, PVector _loc, String _text, boolean _scalesWithZoom)
   {
     super(_name, _loc, new PVector(200, 125), _scalesWithZoom);      //Default size 200 by 100
@@ -122,7 +121,7 @@ class TextWindow extends UI
   
   public void AddIcon(PVector _loc, PVector _size, PImage _img)
   {
-    Drawable icon = new Drawable("Civ icon", _loc, _size, DrawableType.UI);
+    Drawable icon = new Drawable("Civ icon", _loc, _size);
     icon.sprite = _img;
     icons.add(icon);
   }

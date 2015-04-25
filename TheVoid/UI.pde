@@ -11,7 +11,7 @@ public class UI extends Drawable
   
   public UI(String _name, PVector _loc, PVector _size, boolean _scalesWithZoom)
   {
-    super(_name, _loc, _size, DrawableType.UI);
+    super(_name, _loc, _size);
     scalesWithZoom = _scalesWithZoom;
     
     font = standardFont;      //Use pre-generated font from above
@@ -21,7 +21,7 @@ public class UI extends Drawable
   
   public UI(String _name, PVector _loc, PVector _size, int _fontSize, boolean _scalesWithZoom)
   {
-    super(_name, _loc, _size, DrawableType.UI);
+    super(_name, _loc, _size);
     scalesWithZoom = _scalesWithZoom;
     
     fontSize = _fontSize;
