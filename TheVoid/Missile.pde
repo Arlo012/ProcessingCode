@@ -21,7 +21,7 @@ public class Missile extends Physical implements Clickable, Updatable
     
     //Physics
     velocity = _moveVector;
-    rotationRate = 0.1;          //Rotation rate on a missile is ~10x better than a ship
+    // rotationRate = 0.1;          //Rotation rate on a missile is ~10x better than a ship
     
     //Override local speed limit
     //TODO test me

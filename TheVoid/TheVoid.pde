@@ -42,9 +42,12 @@ WorldViewData wvd = new WorldViewData();
 //UI Info
 LinkedList<Clickable> toDisplay;        //List of clickable UI objects to display //<>//
 
+//TEST AREA
+Ship testShip;
+
 void setup()
 {
-  size(1600, 1000);
+  size(800, 600);
   frame.setTitle(title);
 
   //Zoom setup
@@ -75,6 +78,10 @@ void setup()
   // introMusic.play();
   // trackStartTime = millis();
   // currentTrack = introMusic;
+
+  //TEST AREA
+  testShip = new Ship("TestShip", new PVector(width/2, height/2), new PVector(250, 100), 
+      shipSprite, 100, color(255,0,0));
 }
 
 void draw()
@@ -88,7 +95,11 @@ void draw()
   
   else if(gameState == GameState.PLAY)
   {
-    DrawPlayLoop();
+    //DrawPlayLoop();
+    background(0);
+    testShip.DrawObject();
+    testShip.Update();
+    testShip.ApplyBehaviors(1,1);
   }
 
   else if(gameState == GameState.PAUSED)

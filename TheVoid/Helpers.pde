@@ -87,9 +87,6 @@ void GeneratePlanets(Sector sector, int count)
     int xCoor = rand.nextInt(maxX-minX)+minX;
     int yCoor = rand.nextInt(maxY-minY)+minY;
     
-    //Generate random rotation speed
-    float rotateSpeed = .01 * rand.nextFloat() - .005;    //Generate random spinning value (-0.005, .005];
-    
     //Check that this planet will not spawn too near one another 
     noOverlap = true;    //Assume this coordinate is good to begin
     
@@ -110,8 +107,6 @@ void GeneratePlanets(Sector sector, int count)
     if(noOverlap)
     {  
       Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, int(10000*size/planetSizeRange.y));
-      toBuild.SetRotationRate(rotateSpeed);
-      toBuild.SetRotationMode(RotationMode.SPIN);    //Spinning
       toBuild.SetMaxSpeed(0);        //Local speed limit for planet (don't move)
 
       i++;

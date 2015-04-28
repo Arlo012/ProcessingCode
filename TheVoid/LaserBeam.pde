@@ -22,7 +22,7 @@ public class LaserBeam extends Physical
     damageOnHit = 40;
     
     //Rotation setter
-    currentAngle = _direction.heading();
+    // currentAngle = _direction.heading();
     
     //Velocity setter
     PVector scaledVelocity = _direction.get();

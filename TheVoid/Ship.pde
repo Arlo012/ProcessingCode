@@ -28,6 +28,10 @@ public class Ship extends Physical implements Clickable, Updatable
   
   //Shields
   Shield shield;
+
+  //Engines
+  float leftEnginePower, rightEnginePower;
+  float minThrust, maxThrust;
   
   //Enemy objects
   ArrayList<Asteroid> allAsteroids;    //For tracking mobile asteroid toward this ship's base
@@ -47,9 +51,6 @@ public class Ship extends Physical implements Clickable, Updatable
     health.max = 200;      //Health scaled to size, take advantage of integer division to round
     health.current = health.max;
     
-    //Rotation rate
-    rotationRate = 0.05;
-    
     //Set the overlay icon
     iconOverlay.SetIcon(_outlineColor,ShapeType._TRIANGLE_);
     
@@ -61,6 +62,12 @@ public class Ship extends Physical implements Clickable, Updatable
     smoke1Visible = false;
     smoke2Visible = false;
     
+    //Prepare engines
+    leftEnginePower = 1;
+    rightEnginePower = 1;
+    minThrust = 0.1;
+    maxThrust = 10.0;
+
     //Prepare shields
     shield = new Shield(this, 250);
     
@@ -100,7 +107,7 @@ public class Ship extends Physical implements Clickable, Updatable
   
   public void Update()
   {
-    super.Update();    //Call pilotable update
+    super.Update();    //Call Physical update
     
   //**** UI ****//
     //Check if UI is currently rendered, and if so update info
@@ -114,9 +121,12 @@ public class Ship extends Physical implements Clickable, Updatable
     
     //Update icon overlay
     iconOverlay.UpdateLocation(location);
-    
-  //**** WEAPONS *****//
+
+
+   //**** WEAPONS *****//
     //TODO
+
+   //**** MOVEMENT *****//
 
    //**** HEALTH *****//
     //Check health effect thresholds
@@ -149,6 +159,64 @@ public class Ship extends Physical implements Clickable, Updatable
       shield.toBeKilled = true;
       GenerateDeathExplosions(3, location, size);
     }
+  }
+
+//**** MOVEMENT *****//
+  void ApplyBehaviors(int _avoidWeight, int _spinWeight)
+  {
+    //PVector seekForce = seek(new PVector(mouseX,mouseY));
+    PVector spinForce = Spin();
+    ApplyForce(spinForce);
+
+    //FIXME
+    //PVector thrustForce = Thrust();
+    //ApplyForce(spinForce);    
+  }
+
+  PVector Seek(PVector target)
+  {
+    PVector desired = PVector.sub(target, location);
+    desired.normalize();
+    desired.mult(localSpeedLimit);
+    PVector steer= PVector.sub(desired, velocity);
+    steer.limit(maxForceMagnitude);
+    return steer;
+  }
+
+  PVector Spin()
+  {
+    PVector spinLeftEngine = new PVector(1,1);
+    PVector spinRightEngine = new PVector(1,1);
+    spinLeftEngine.set(-velocity.y, velocity.x);
+    spinRightEngine.set(velocity.y, -velocity.x);
+    spinLeftEngine.normalize();
+    spinRightEngine.normalize();
+
+    spinLeftEngine.mult(leftEnginePower);
+    spinRightEngine.mult(rightEnginePower);
+
+    PVector spinSum = PVector.add(spinRightEngine, spinLeftEngine);
+    PVector desired = PVector.add(spinSum, velocity);
+    desired.normalize();
+    desired.mult(localSpeedLimit);
+    PVector steer = PVector.sub(desired, velocity);
+    steer.limit(maxForceMagnitude);
+
+    return steer;
+  }
+
+  //FIXME not working
+  PVector Thrust()
+  {
+    PVector thrust = speed;
+    thrust.normalize();
+    thrust.mult(((leftEngine/maxThrust)+(rightEngine/maxThrust))/2);
+    thrust.add(speed);
+    thrust.normalize();
+    thrust.mult(maxSpeed);
+    println(thrust);
+    println("Thrust Vector: " + thrust);
+    return thrust;
   }
 
 /*Click & mouseover UI*/

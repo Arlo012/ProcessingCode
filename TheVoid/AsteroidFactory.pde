@@ -10,7 +10,7 @@ public class AsteroidFactory
 
   //Generator values (keep these stored for next asteroid to create
   private int minX, minY, maxX, maxY, size, xCoor, yCoor;
-  private float rotateSpeed, xVelocity, yVelocity;
+  private float xVelocity, yVelocity;
 
   AsteroidFactory(){
   }
@@ -41,9 +41,6 @@ public class AsteroidFactory
     xCoor = rand.nextInt(maxX - int(asteroidSizeRange.y)) + minX + int(asteroidSizeRange.y/2);
     yCoor = rand.nextInt(maxY)+minY;
     
-    //Generate random rotation speed
-    rotateSpeed = .02 * rand.nextFloat() - .01;    //Generate random spinning value (-0.01, .01];
-    
     //Generate random movement vector
     xVelocity = 2 * maxVelocity.x * rand.nextFloat() - maxVelocity.x;    //Desensitize in x direction
     yVelocity = 2 * maxVelocity.y * rand.nextFloat() - maxVelocity.y;
@@ -54,9 +51,7 @@ public class AsteroidFactory
   Asteroid GenerateAsteroid()
   {
     Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, int(100000*size/asteroidSizeRange.y));
-    toBuild.SetRotationRate(rotateSpeed);
     toBuild.SetVelocity(new PVector(xVelocity, yVelocity));
-    toBuild.SetRotationMode(RotationMode.SPIN);    //Spinning
     toBuild.SetMaxSpeed(2.5);      //Local speed limit for asteroid
     toBuild.iconOverlay.SetIcon(color(#E8E238),ShapeType._CIRCLE_);
     toBuild.drawOverlay = false;      //Dont draw overlay by default

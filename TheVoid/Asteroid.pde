@@ -58,8 +58,8 @@ public class Asteroid extends Physical implements Updatable
         debris.isDebris = true;
         
         //See AsteroidFactory for details on this implementation
-        debris.SetRotationRate(rotationRate);
-        debris.SetRotationMode(RotationMode.SPIN);    //Spinning
+        // debris.SetRotationRate(rotationRate);
+        // debris.SetRotationMode(RotationMode.SPIN);    //Spinning
         debris.SetMaxSpeed(2.5);      //Local speed limit for asteroid
         debris.iconOverlay.SetIcon(color(255,0,0),ShapeType._CIRCLE_);
         debris.drawOverlay = true;      //Dont draw overlay by default

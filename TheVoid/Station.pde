@@ -39,10 +39,6 @@ public class Station extends Physical implements Clickable, Updatable
     health.max = ((int)(size.x/maxStationSize * maxStationHealth)/100)*100;      //Health scaled to size, take advantage of integer division to round
     health.current = health.max;
 
-    //Generate random rotation speed
-    rotationMode = RotationMode.SPIN;    //Station spins in orbit
-    SetRotationRate(.02 * rand.nextFloat() - .01);    //Generate random spinning value (-0.01, .01];
-    
     //Prepare smoke damage effect
     smoke1Loc = new PVector(size.x/4 * rand.nextFloat(), size.y/2 * rand.nextFloat());
     smoke2Loc = new PVector(size.x/4 * rand.nextFloat(), size.y/2 * rand.nextFloat());

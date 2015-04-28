@@ -84,4 +84,33 @@ void keyPressed()
     wvd.orgY = 0.0f;
   }
   
+  if(key == 'h' || key == 'H')
+  {
+    if(testShip.leftEnginePower > testShip.minThrust)
+    {
+      testShip.leftEnginePower -= testShip.minThrust;
+    }
+  }
+  else if(key =='y' || key == 'Y')
+  {
+    if(testShip.leftEnginePower < testShip.maxThrust)
+    {
+      testShip.leftEnginePower += testShip.minThrust;
+      println(testShip.leftEnginePower);
+    }
+  }
+  else if(key == 'k' || key == 'K')
+  {
+    if(testShip.leftEnginePower > testShip.minThrust)
+    {
+      testShip.rightEnginePower -= .1;
+    }
+  }
+  else if(key =='i' || key == 'I')
+  {
+    if(testShip.leftEnginePower < testShip.maxThrust)
+    {
+      testShip.rightEnginePower += testShip.minThrust;
+    }
+  }
 }
