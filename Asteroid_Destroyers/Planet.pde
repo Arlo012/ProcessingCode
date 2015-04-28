@@ -37,11 +37,8 @@ public class Planet extends Physical implements Clickable, Updatable
     //Set string descriptor for real-ish values that look pretty
     String descriptor = new String();
     descriptor += planetDescriptions[planetTypeIndex-1];
-    descriptor += "\nDiameter: ";
-    descriptor += (float)size.x*150;
-    descriptor += " km \nMass: ";
-    descriptor += mass/10;
-    descriptor += "E23 kg\n";
+    descriptor += "\nAll planets support";
+    descriptor += "\nup to 4 orbital stations.";
     info = new TextWindow("Planet info", location, descriptor, true);
   }
 

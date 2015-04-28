@@ -1,3 +1,6 @@
+/*
+ * Mouse & keyboard input here.
+ */
 
 // Panning
 void mouseDragged() {
@@ -42,16 +45,34 @@ void mouseDragged() {
 void mouseClicked() 
 {
   PVector currentMouseLoc = new PVector(mouseX, mouseY);
-  if(mouseButton == LEFT)
+  
+  if(gameState == GameState.START)
   {
-    //Response from player controller when something left clicked
-    currentPlayer.HandleLeftClick(currentMouseLoc);
+    if(mouseButton == LEFT)
+    {
+      //Check for instructions button pressed
+      Clickable buttonPressed = CheckClickableOverlap(instructionsButton, currentMouseLoc);
+      if(buttonPressed != null)
+      {
+        buttonPressed.Click();
+      }
+    }
+  }
+  
+  else if(gameState == GameState.PLAY)
+  {
+    if(mouseButton == LEFT)
+    {
+      //Response from player controller when something left clicked
+      currentPlayer.HandleLeftClick(currentMouseLoc);
+  
+    }
+    else if (mouseButton == RIGHT)
+    {
+      currentPlayer.HandleRightClick(currentMouseLoc);
+    }
+  }
 
-  }
-  else if (mouseButton == RIGHT)
-  {
-    currentPlayer.HandleRightClick(currentMouseLoc);
-  }
 
 }
 

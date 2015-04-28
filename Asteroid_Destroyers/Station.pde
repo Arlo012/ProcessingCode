@@ -59,12 +59,10 @@ public class Station extends Physical implements Clickable, Updatable
     //Set the description string
     String descriptor = new String();
     descriptor += name;
-    descriptor += "\n";
-    descriptor += GetOwner().name;
-    descriptor += "\nHealth: ";
-    descriptor += health.current;
-    descriptor += "\nGeneration/sec: ";
-    descriptor += massEnergyGen;
+    descriptor += "\nStations generate mass-";
+    descriptor += "\nenergy every second which";
+    descriptor += "\ncan be used to purchase";
+    descriptor += "\nmissiles & ships";
     info = new TextWindow("Station Info", location, descriptor, true);
   }
   

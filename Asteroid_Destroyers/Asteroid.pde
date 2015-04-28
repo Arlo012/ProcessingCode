@@ -43,19 +43,13 @@ public class Asteroid extends Physical implements Clickable, Updatable
     health.max = (int)(size.x/maxDiameter * maxAsteroidHealth);      //Health scaled to size, take advantage of integer division to round
     health.current = health.max;
     
+    //Setup string (only displayed once, e.g. in instructions
     String descriptor = new String();
     descriptor += name;
-    descriptor += " #";
-    descriptor += ID;
-    descriptor += "\n Diameter: ";
-    descriptor += size.x;
-    descriptor += " m \n Mass: ";
-    descriptor += mass;
-    descriptor += " kg\nHealth:";
-    descriptor += health.current;
-    descriptor += "\nVelocity: ";
-    descriptor += (int)(velocity.mag()*100);
-    descriptor += " m/s ";
+    descriptor += "\nFast-flying objects that\n";
+    descriptor += "wreak havoc on impact.\n";
+    descriptor += "They break into pieces\n";
+    descriptor += "when destroyed!";
     info = new TextWindow("Asteroid Info", location, descriptor, true);
   }
   

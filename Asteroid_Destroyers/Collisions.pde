@@ -167,7 +167,7 @@ void HandleLaserCollision(ArrayList<? extends LaserBeam> a, ArrayList<? extends 
 }
 
 
-//Handle a click with any drawable object and a given point, checking of the obj is clickable
+//Handle a click with any drawable objects and a given point, checking of the obj is clickable
 Clickable CheckClickableOverlap(ArrayList<? extends Drawable> a, PVector point)
 {
   PVector collisionOffset;      //Offset due to center vs rect rendering (rect = 0 offset)
@@ -202,6 +202,44 @@ Clickable CheckClickableOverlap(ArrayList<? extends Drawable> a, PVector point)
       }
     }
   }
+  
+  return null;
+}
+
+//Handle a click with any drawable object and a given point, checking of the obj is clickable
+Clickable CheckClickableOverlap(Drawable obj1, PVector point)
+{
+  PVector collisionOffset;      //Offset due to center vs rect rendering (rect = 0 offset)
+  
+  //Check if this is CENTER or CORNER rendered -- center rendered needs to account for half size of self
+  if(obj1.renderMode == CENTER)
+  {
+    collisionOffset = new PVector(-obj1.size.x/2, -obj1.size.y/2);
+  }
+  else if(obj1.renderMode == CORNER)
+  {
+    collisionOffset = new PVector(0,0);
+  }
+  else
+  {
+    collisionOffset = new PVector(obj1.size.x/2, obj1.size.y/2);
+    print("WARNING: Unsupported collision offset mode on");
+    print(obj1.name);
+    print("\n");
+  }
+  
+  if(point.x >= obj1.location.x + collisionOffset.x
+    && point.y >= obj1.location.y + collisionOffset.y
+    && point.y <= obj1.location.y + collisionOffset.y + obj1.size.y
+    && point.x <= obj1.location.x + collisionOffset.x + obj1.size.x)
+  {
+    if(obj1 instanceof Clickable)
+    {
+      Clickable clickable = (Clickable)obj1;
+      return clickable;
+    }
+  }
+  
   
   return null;
 }

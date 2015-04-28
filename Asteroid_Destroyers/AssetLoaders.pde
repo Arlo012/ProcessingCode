@@ -32,6 +32,13 @@ void LoadImageAssets()
     String filename = "Assets/Effects/64x48/explosion1_" + nf(i, 4) + ".png";
     explosionImgs[i-1] = loadImage(filename);
   }
+  
+  //Button images
+  PVector instructionButtonSize = new PVector(200,100);
+  instructionsButton = new ToggleButton("Instructions button", 
+                  new PVector(width-instructionButtonSize.x, height-instructionButtonSize.y),
+                  new PVector(instructionButtonSize.x,instructionButtonSize.y), "Instructions", 
+                  "PNG/yellow_button00.png", showInstructions, false);
 }
 
 SoundFile explosionSound, collisionSound, laserSound, 

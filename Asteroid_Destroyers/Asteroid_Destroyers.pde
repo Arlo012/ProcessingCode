@@ -8,7 +8,8 @@ import java.util.LinkedList;
 import processing.sound.*;
 
 enum GameState {
-  START, PLAY, PLAYERCHANGE,
+  START, INSTRUCTIONS,
+  PLAY, PLAYERCHANGE,
   PAUSED, GAMEOVER
 }
 
@@ -116,6 +117,10 @@ void draw()
   if(gameState == GameState.START)
   {
     DrawStartupLoop();
+  }
+  else if(gameState == GameState.INSTRUCTIONS)
+  {
+    DrawInstructionLoop();
   }
   else if(gameState == GameState.PLAY)
   {

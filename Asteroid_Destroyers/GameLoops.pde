@@ -4,6 +4,8 @@
 */
 
 PFont startupFont;
+TogglableBoolean showInstructions = new TogglableBoolean(false);
+ToggleButton instructionsButton;    //See assetloaders.pde
 void DrawStartupLoop()
 {
   background(0);
@@ -17,17 +19,35 @@ void DrawStartupLoop()
   textFont(startupFont, 24);
   text("Press Enter to begin", width/2, 3*height/4);
   
+  //Instructions button
+  instructionsButton.DrawObject();
+  
+  //Check if instructions button has been clicked
+  if(showInstructions.value)
+  {
+    gameState = GameState.INSTRUCTIONS;
+  }
+  popStyle();
+}
+
+//Tutorial. Uses the default constructor-valued string descriptors prior to their first update in the main loop
+void DrawInstructionLoop()
+{
+  //Stand-still game display
+  DrawPauseLoop();
+  
+  //Tutorial info 
+  //TODO: make less hard-coded & ugly
   textFont(startupFont, 32);
-  text("CONTROLS:", width/2, height/4 - 120);
+  text("CONTROLS:", width/1.5, height - 138);
   
   textFont(startupFont, 24);
-  text("Press space to pause", width/2, height/4 - 64);
-  text("Left click to place a missile/ship", width/2, height/4 - 32);
-  text("Right click to move a missile/ship", width/2, height/4);
-  text("Press X or M to cancel orders", width/2, height/4 + 32);
-  
+  text("Press space to pause", width/1.5, height - 106);
+  text("Left click to place a missile/ship", width/1.5, height - 74);
+  text("Right click to move a missile/ship", width/1.5, height - 42);
+  text("Press X or M to cancel orders", width/1.5, height - 10);
 
-  popStyle();
+  
 }
 
 void DrawPlayLoop()
