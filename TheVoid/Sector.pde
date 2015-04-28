@@ -1,3 +1,7 @@
+enum SectorType {
+  ASTEROIDFIELD, EMPTY, PLANETARY
+}
+
 //An area in 2D space containing asteroids, planets, ships, stations, etc
 public class Sector extends Drawable
 {
@@ -11,6 +15,14 @@ public class Sector extends Drawable
                   ULSector, URSector, LLSector, LRSector;
   
   private color debugViewColor;
+  private SectorType sectorType;
+
+  //Sector parameters
+  int minPlanets = 1;
+  int maxPlanets = 4;
+  int minAsteroids = 10;
+  int maxAsteroids = 100;
+
   /*
   * Constructor
   * @param  _areaName string name of this game area
@@ -32,9 +44,41 @@ public class Sector extends Drawable
     planets = new ArrayList<Planet>();
     ships = new ArrayList<Ship>();
     
-    //Generate objects
-    GenerateAsteroids(this);
-    
+    //Determine what type of sector we are
+    int sectorTypeRand = rand.nextInt((3 - 1) + 1) + 1;   //rand.nextInt((max - min) + 1) + min;
+    if(sectorTypeRand == 1)
+    {
+      println("[INFO] Building asteroid field sector");
+      sectorType = SectorType.ASTEROIDFIELD;
+      
+      //Generate asteroids in this sector
+      int asteroidCount = rand.nextInt((maxAsteroids - minAsteroids) + 1) + minAsteroids;
+      GenerateAsteroids(this, asteroidCount);
+    }
+    else if(sectorTypeRand == 2)
+    {
+      println("[INFO] Building empty sector");   
+      sectorType = SectorType.EMPTY;
+    }
+    else if(sectorTypeRand == 3)
+    {
+      println("[INFO] Building planetary sector"); 
+      sectorType = SectorType.PLANETARY;
+
+      //Generate planets
+      int planetCount = rand.nextInt((maxPlanets - minPlanets) + 1) + minPlanets;
+      GeneratePlanets(this, planetCount);
+    }
+    else
+    {
+      println("[ERROR] Invalid sector type selected. Defaulting to asteroid field");  
+      sectorType = SectorType.ASTEROIDFIELD;
+      
+      //Generate asteroids in this sector
+      int asteroidCount = rand.nextInt((maxAsteroids - minAsteroids) + 1) + minAsteroids;
+      GenerateAsteroids(this, asteroidCount);
+    }
+
     //DEBUG INFO
     debugViewColor = color(255);    //Default = white
   }
@@ -50,7 +94,8 @@ public class Sector extends Drawable
     
     //Draw this sector's game objects
     DrawAsteroids(asteroids, false);
-    
+    DrawPlanets(planets);
+
     if(debugMode.value)    //Draw debug outline of sector
     {
       rectMode(CORNER);

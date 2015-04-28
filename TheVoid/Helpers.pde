@@ -1,13 +1,16 @@
 /*
 * Generate Asteroids
 * @param  sector Sector to render these asteroids on
+* @param  int initialAsteroidCount how many asteroids to generate (max)
 * @see         GenerateAsteroids
-* This function will generate asteroids in random locations on a given game area
+* 
+* This function will generate asteroids in random locations on a given game area. If too 
+* many asteroids are requested the function will only generate as many as it can without
+* overlapping.
 */
-int initialAsteroidCount = 20;
 int generationPersistenceFactor = 5;     //How hard should I try to generate the requested asteroids?
 AsteroidFactory asteroidFactory = new AsteroidFactory();
-void GenerateAsteroids(Sector sector)
+void GenerateAsteroids(Sector sector, int initialAsteroidCount)
 {
   println("INFO: Generating asteroids");
   
@@ -91,24 +94,25 @@ void GeneratePlanets(Sector sector, int count)
     noOverlap = true;    //Assume this coordinate is good to begin
     
     //TODO re-implement
-    // for(Planet planet : _civ.planets)
-    // {
-    //   //Check if this planet's center + diameter overlaps with planet's center + 4 * diameter
-    //   if( Math.abs(planet.GetLocation().x-xCoor) < planet.GetSize().x * 1.5 + size * 1.5
-    //         && Math.abs(planet.GetLocation().y-yCoor) < planet.GetSize().y * 1.5 + size * 1.5 )
-    //   {
-    //     noOverlap = false;
-    //     println("INFO: Planet location rejected!");
-    //     break;
-    //   }
-    // }
+    for(Planet planet : sector.planets)
+    {
+      //Check if this planet's center + diameter overlaps with planet's center + 4 * diameter
+      if( Math.abs(planet.GetLocation().x-xCoor) < planet.GetSize().x * 1.5 + size * 1.5
+            && Math.abs(planet.GetLocation().y-yCoor) < planet.GetSize().y * 1.5 + size * 1.5 )
+      {
+        noOverlap = false;
+        println("[INFO] Planet location rejected!");
+        break;
+      }
+    }
     
     //Guarantee planets are too close to each oher
     if(noOverlap)
     {  
       Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, int(10000*size/planetSizeRange.y));
       toBuild.SetMaxSpeed(0);        //Local speed limit for planet (don't move)
-
+      sector.planets.add(toBuild);
+      println("[INFO] Generated a new planet at " + toBuild.location + " in sector " + sector.name);
       i++;
     }
     else

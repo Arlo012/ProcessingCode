@@ -47,7 +47,7 @@ Ship testShip;
 
 void setup()
 {
-  size(800, 600);
+  size(1600, 1200);
   frame.setTitle(title);
 
   //Zoom setup
@@ -80,7 +80,7 @@ void setup()
   // currentTrack = introMusic;
 
   //TEST AREA
-  testShip = new Ship("TestShip", new PVector(width/2, height/2), new PVector(250, 100), 
+  testShip = new Ship("TestShip", new PVector(width/2, height/2), new PVector(125, 50), 
       shipSprite, 100, color(255,0,0));
 }
 
@@ -95,8 +95,7 @@ void draw()
   
   else if(gameState == GameState.PLAY)
   {
-    //DrawPlayLoop();
-    background(0);
+    DrawPlayLoop();
     testShip.DrawObject();
     testShip.Update();
     testShip.ApplyBehaviors(1,1);

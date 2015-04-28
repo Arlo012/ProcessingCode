@@ -208,14 +208,13 @@ public class Ship extends Physical implements Clickable, Updatable
   //FIXME not working
   PVector Thrust()
   {
-    PVector thrust = speed;
+    PVector thrust = velocity;
     thrust.normalize();
-    thrust.mult(((leftEngine/maxThrust)+(rightEngine/maxThrust))/2);
-    thrust.add(speed);
+    thrust.mult(((leftEnginePower/maxThrust)+(rightEnginePower/maxThrust))/2);
+    thrust.add(velocity);
     thrust.normalize();
-    thrust.mult(maxSpeed);
-    println(thrust);
-    println("Thrust Vector: " + thrust);
+    thrust.mult(localSpeedLimit);
+
     return thrust;
   }
 
