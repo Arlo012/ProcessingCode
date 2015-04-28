@@ -55,6 +55,14 @@ void UpdatePlanets(ArrayList<Planet> _planets)
   }
 }
 
+void UpdateSectors(HashMap<Integer, Sector> _sectors)
+{
+  for(Sector a : _sectors.values())
+  {
+    a.Update();
+  }
+}
+
 void UpdateStations(ArrayList<Station> _stations)
 {
   for (Iterator<Station> iterator = _stations.iterator(); iterator.hasNext();) 

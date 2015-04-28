@@ -3,7 +3,7 @@ enum SectorType {
 }
 
 //An area in 2D space containing asteroids, planets, ships, stations, etc
-public class Sector extends Drawable
+public class Sector extends Drawable implements Updatable
 {
   //Contents of this sector
   public ArrayList<Asteroid> asteroids;
@@ -95,12 +95,22 @@ public class Sector extends Drawable
     //Draw this sector's game objects
     DrawAsteroids(asteroids, false);
     DrawPlanets(planets);
+    DrawShips(ships, false);
 
     if(debugMode.value)    //Draw debug outline of sector
     {
       rectMode(CORNER);
       fill(debugViewColor, 50);
       rect(location.x, location.y, size.x, size.y);
+    }
+  }
+
+  public void Update()
+  {
+    for(Ship ship : ships)
+    {
+      ship.Update();
+      ship.ApplyBehaviors(1,1);
     }
   }
   

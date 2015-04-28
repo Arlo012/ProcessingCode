@@ -25,14 +25,18 @@ void DrawStartupLoop()
 void DrawPlayLoop()
 {
   textFont(startupFont, 12);
-  background(0);
+  background(bg);
   
   loopCounter++;
   
 //******* ALL ZOOMED AFTER THIS ********//
   BeginZoom();
 
-  DrawSectors(sectors);
+  DrawSectors(sectors);   //Draw sectors (and the asteroids/ planets/ ships within them)
+  UpdateSectors(sectors); //Update sectors (and all updatable objects within them)
+
+  //TODO intelligently only draw sector objects on the screen
+
   // //If zoomed out far enough, draw object icons with the objects
   // if(wvd.viewRatio < 1.5)
   // {

@@ -82,6 +82,7 @@ void setup()
   //TEST AREA
   testShip = new Ship("TestShip", new PVector(width/2, height/2), new PVector(125, 50), 
       shipSprite, 100, color(255,0,0));
+  sectors.get(0).ships.add(testShip);
 }
 
 void draw()
@@ -95,10 +96,10 @@ void draw()
   
   else if(gameState == GameState.PLAY)
   {
-    DrawPlayLoop();
-    testShip.DrawObject();
-    testShip.Update();
-    testShip.ApplyBehaviors(1,1);
+    DrawPlayLoop();     //See GameLoops.pde
+
+    //testShip is now rendered/updated in the DrawPlayLoop() by the
+    //DrawSectors(sectors) and UpdateSectors(sectors)
   }
 
   else if(gameState == GameState.PAUSED)
