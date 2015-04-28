@@ -36,11 +36,9 @@ class Player
     pushMatrix();
     translate(position.x,position.y);
     rotate(theta);
-    beginShape();
-    vertex(0, -r*2);
-    vertex(-r, r*2);
-    vertex(r, r*2);
-    endShape(CLOSE);
+    imageMode(CENTER);
+    image(playerIMG,0,0);
+    imageMode(CORNER);
     popMatrix();
   }
   
@@ -51,10 +49,8 @@ class Player
   
   void applyBehaviors(int _avoidWeight, int _spinWeight)
   {
-    //PVector seekForce = seek(new PVector(mouseX,mouseY));
     PVector spinForce = spin();
     applyForce(spinForce);
-    //applyForce(seekForce);
   }
   
   PVector seek(PVector target)
@@ -69,41 +65,28 @@ class Player
   
   PVector spin()
   {
-    float ratio = leftEngine/rightEngine;
-    map(ratio, (1/501), 501, -10, 10);
-    PVector spin = new PVector(1,1);
-    if(ratio > 0)
-    {
-      //if(speed.x == 0 && speed.y == 0)
-      //{
-      //  spin.set(0,1);
-      //}
-      //else
-      //{
-        spin.set(speed.y,-speed.x);
-      //}
-    }
-    else
-    {
-      //if(speed.x == 0 && speed.y == 0)
-      //{
-      //  spin.set(0,-1);
-      //}
-      //else
-      //{
-        spin.set(-speed.y,speed.x);
-      //}
-    }
-    spin.normalize();
-    //spin.mult((leftEngine/501 + rightEngine/501)* (maxSpeed/2));
-    spin.mult(abs(ratio));
-    PVector desired = PVector.add(spin,speed);
+    map(leftEngine, 1, 501, 0, maxSpeed);
+    map(rightEngine, 1, 501, 0, maxSpeed);
+    PVector spinLeftEngine = new PVector(1,1);
+    PVector spinRightEngine = new PVector(1,1);
+    spinLeftEngine.set(-speed.y,speed.x);
+    spinRightEngine.set(speed.y,-speed.x);
+    spinLeftEngine.normalize();
+    spinRightEngine.normalize();
+    spinLeftEngine.mult(leftEngine);
+    spinRightEngine.mult(rightEngine);
+    PVector spinSum = PVector.add(spinRightEngine,spinLeftEngine);
+    PVector desired = PVector.add(spinSum,speed);
     desired.normalize();
     desired.mult(maxSpeed);
     PVector steer = PVector.sub(desired,speed);
     steer.limit(maxForce);
     return steer;
   }
+  
+  PVector EngineSpeed()
+  {
+    
   
   
     
