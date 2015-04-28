@@ -3,6 +3,8 @@ int sector;
 PImage asteroidIMG;
 PImage planetIMG;
 PImage enemyIMG;
+PImage bgIMG;
+PImage playerIMG;
 Player player;
 
 void setup()
@@ -11,46 +13,47 @@ void setup()
   asteroidIMG = loadImage("asteroid.png");
   planetIMG = loadImage("p10shaded.png");
   enemyIMG = loadImage("Fighter.png");
-  
+  bgIMG = loadImage("back_3.png");
+  playerIMG = loadImage("Human-Battleship.png");
   player = new Player();
 }
 void draw()
 {
-  background(0);
+  image(bgIMG,0,0);
   player.display();
   player.update();
-  player.applyBehaviors(1,1);
+  player.applyBehaviors();
 }
 
 void keyPressed()
   {
     if(key == 'h' || key == 'H')
     {
-      if(player.leftEngine > 1)
+      if(player.leftEngine > player.minThrust)
       {
-        player.leftEngine -= 5;
+        player.leftEngine -= player.minThrust;
       }
     }
     else if(key =='y' || key == 'Y')
     {
-      if(player.leftEngine < 501)
+      if(player.leftEngine < player.maxThrust)
       {
-        player.leftEngine += 5;
+        player.leftEngine += player.minThrust;
         println(player.leftEngine);
       }
     }
     else if(key == 'k' || key == 'K')
     {
-      if(player.leftEngine > 1)
+      if(player.leftEngine > player.minThrust)
       {
-        player.rightEngine -= 5;
+        player.rightEngine -= .1;
       }
     }
     else if(key =='i' || key == 'I')
     {
-      if(player.leftEngine < 501)
+      if(player.leftEngine < player.maxThrust)
       {
-        player.rightEngine += 5;
+        player.rightEngine += player.minThrust;
       }
     }
   }
