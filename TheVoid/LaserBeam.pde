@@ -5,9 +5,9 @@ public class LaserBeam extends Physical
   static final int timeToFly = 2500;        //Effective range, related to speed (ms)
   private long spawnTime;
   
-  LaserBeam(PVector _loc, PVector _direction)
+  LaserBeam(PVector _loc, PVector _direction, Sector _sector)
   {
-    super("Laser beam", _loc, new PVector(20,3), .01);    //HACK Mass very low!! For handling physics easier 
+    super("Laser beam", _loc, new PVector(20,3), .01, _sector);    //HACK Mass very low!! For handling physics easier 
     
     //Set laser color
       //TODO set laser color by player / enemy

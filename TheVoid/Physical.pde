@@ -26,13 +26,19 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
   protected int damageOnHit = 0;           //Automatic damage incurred on hit
   boolean collidable = true;               //Can this object be collided with by ANYTHING? see shields when down
   
-  public Physical(String _name, PVector _loc, PVector _size, float _mass)
+  //Location
+  protected Sector currentSector;                //What physical sector this object is in
+
+
+  public Physical(String _name, PVector _loc, PVector _size, float _mass, Sector _sector)
   {
     super(_name, _loc, _size);
     
     health = new Health(100, 100);       //Default health
     mass = _mass;
     
+    currentSector = _sector;
+
     //Movement
     velocity = new PVector(0, 0);
     acceleration = new PVector(0,0);

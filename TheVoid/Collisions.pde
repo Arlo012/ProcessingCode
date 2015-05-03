@@ -18,7 +18,6 @@ void HandleCollisions(ArrayList<? extends Physical> a, ArrayList<? extends Physi
 {
   for(Physical obj1 : a)
   {
-    //TODO add a check if in the same GameArea?
     for(Physical obj2 : b)
     {
       if(obj1.collidable && obj2.collidable)
@@ -179,7 +178,6 @@ void HandleLaserCollision(ArrayList<? extends LaserBeam> a, ArrayList<? extends 
     }
   }
 }
-
 
 //Handle a click with any drawable objects and a given point, checking of the obj is clickable
 Clickable CheckClickableOverlap(ArrayList<? extends Drawable> a, PVector point)

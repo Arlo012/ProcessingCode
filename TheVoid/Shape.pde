@@ -1,5 +1,5 @@
 public static enum ShapeType {
-  _SQUARE_, _TRIANGLE_, _CIRCLE_
+  _SQUARE_, _TRIANGLE_, _CIRCLE_, _RECTANGLE_
 }
 
 /*
@@ -36,6 +36,16 @@ public class Shape extends Drawable
     {
       rectMode(renderMode);
       rect(0, 0, size.x, size.x);    //TODO forced square here
+      if(size.x != size.y)
+      {
+        println("[WARNING] Square shape being force-render with rectangle edges!");
+      }
+      
+    }
+    if(shapeType == ShapeType._RECTANGLE_)
+    {
+      rectMode(renderMode);
+      rect(0, 0, size.x, size.y); 
     }
     else if(shapeType == ShapeType._TRIANGLE_)
     {

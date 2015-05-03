@@ -65,7 +65,7 @@ public class Enemy extends Ship
           targetVector.y += rand.nextFloat() * 0.5 - 0.25;
           
           //Create laser object
-          LaserBeam beam = new LaserBeam(location, targetVector);
+          LaserBeam beam = new LaserBeam(location, targetVector, currentSector);
           
           //TODO put the beam object somewhere
 

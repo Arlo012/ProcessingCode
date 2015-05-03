@@ -47,6 +47,8 @@ String title = "The Void";
 
 //Game objects and areas
 HashMap<Integer,Sector> sectors;      //Sector IDs mapped against sector objects
+HashMap<Integer,Sector> generatedSectors;   //Storage of mid-loop generated sectors for later merging
+ArrayList<Sector> visibleSectors;     //Sectors on-screen right now (only render/update these)
 ArrayList<Explosion> explosions;      //Explosions are global game object
 PVector sectorSize;                   //Set to width/height for now
 
@@ -55,8 +57,8 @@ long loopCounter;        //How many loop iterations have been completed
 long loopStartTime;      //Millis() time main loop started
 
 //Debugging & profiling
-static boolean debuggingAllowed = false;      //Display DEBUG button on GUI?
-TogglableBoolean debugMode = new TogglableBoolean(false);
+static boolean debuggingAllowed = true;      //Display DEBUG button on GUI?
+TogglableBoolean debugMode = new TogglableBoolean(true);
 boolean profilingMode = false;
 
 //Handle zooming http://forum.processing.org/one/topic/zoom-based-on-mouse-position.html
@@ -67,7 +69,7 @@ WorldViewData wvd = new WorldViewData();
 LinkedList<Clickable> toDisplay;        //List of clickable UI objects to display //<>//
 
 //TEST AREA
-Ship testShip;
+Player playerShip;
 
 public void setup()
 {
@@ -88,7 +90,12 @@ public void setup()
 
   //Game area setup
   sectors = new HashMap<Integer, Sector>();
-  sectorSize = new PVector(width,height);
+  sectorSize = new PVector(width*2,height*2);
+  visibleSectors = new ArrayList<Sector>();
+  explosions = new ArrayList<Explosion>();
+
+  playerShip = new Player(new PVector(width/2, height/2), new PVector(100, 50), 
+    shipSprite, 100, color(255,0,0), sectors.get(0));     //Place player in start sector
 
   //Setup civilizations and their game objects, along with controllers
   GameObjectSetup();    //See AssetLoaders.pde
@@ -104,8 +111,11 @@ public void setup()
   // currentTrack = introMusic;
 
   //TEST AREA
-  testShip = new Ship("TestShip", new PVector(width/2, height/2), new PVector(125, 50), 
-      shipSprite, 100, color(255,0,0));
+  sectors.get(0).ships.add(playerShip);
+
+  //HACK just render current sector
+  visibleSectors.clear();
+  visibleSectors.add(playerShip.currentSector);
 }
 
 public void draw()
@@ -119,10 +129,7 @@ public void draw()
   
   else if(gameState == GameState.PLAY)
   {
-    DrawPlayLoop();
-    testShip.DrawObject();
-    testShip.Update();
-    testShip.ApplyBehaviors(1,1);
+    DrawPlayLoop();     //See GameLoops.pde
   }
 
   else if(gameState == GameState.PAUSED)
@@ -141,6 +148,9 @@ PImage bg;             //Background
 
 //TODO move all PImage instances here
 PImage redLaser, greenLaser;
+ArrayList<PImage> enemyShipSprites; 
+ArrayList<PVector> enemyShipSizes;      //Size (by index) of above sprite
+int enemyShipCount = 10;                //HACK this is rigid -- careful to update if add ships
 public void LoadImageAssets()
 {
   bg = loadImage("Assets/Backgrounds/back_3.png");
@@ -149,6 +159,33 @@ public void LoadImageAssets()
   //Load sprites
   asteroidSpriteSheet = loadImage("Assets/Environment/asteroids.png");
   shipSprite = loadImage("Assets/Ships/10(2).png");
+
+  //enemy ships
+  enemyShipSprites = new ArrayList<PImage>();
+  enemyShipSizes = new ArrayList<PVector>();
+
+  //Total of 10 enemy ship sprites
+  enemyShipSprites.add(loadImage("Assets/Ships/7(1).png"));
+  enemyShipSizes.add(new PVector(257,140));
+  enemyShipSprites.add(loadImage("Assets/Ships/8(1).png"));
+  enemyShipSizes.add(new PVector(232,182));
+  enemyShipSprites.add(loadImage("Assets/Ships/9(1).png"));
+  enemyShipSizes.add(new PVector(336,230));
+  enemyShipSprites.add(loadImage("Assets/Ships/10(1).png"));
+  enemyShipSizes.add(new PVector(110,116));
+  enemyShipSprites.add(loadImage("Assets/Ships/11(1).png"));
+  enemyShipSizes.add(new PVector(225,398));
+  enemyShipSprites.add(loadImage("Assets/Ships/12(1).png"));
+  enemyShipSizes.add(new PVector(122,342));
+  enemyShipSprites.add(loadImage("Assets/Ships/13(1).png"));
+  enemyShipSizes.add(new PVector(104,168));
+  enemyShipSprites.add(loadImage("Assets/Ships/1(1).png"));
+  enemyShipSizes.add(new PVector(135,124));
+  enemyShipSprites.add(loadImage("Assets/Ships/2(1).png"));
+  enemyShipSizes.add(new PVector(199,134));
+  enemyShipSprites.add(loadImage("Assets/Ships/3(1).png"));
+  enemyShipSizes.add(new PVector(248,182));
+
   missileSprite = loadImage("Assets/Weapons/Missile05.png");
   redStation1 = loadImage("Assets/Stations/Spacestation1-1.png");
   redStation2 = loadImage("Assets/Stations/Spacestation1-2.png");
@@ -202,58 +239,156 @@ public void LoadSoundAssets()
 }
 
 
-//Generate the game areas used to identify pieces of the playing field. View these in debugmode
 int sectorID = 1;      //Unique sector ID. Begin generating @ 1 because the startSector has ID = 0
-public void BuildSectors(Sector _origin)
+SectorDirection[] sectorDirections = new SectorDirection[]{SectorDirection.UL, SectorDirection.Above, 
+  SectorDirection.UR, SectorDirection.Left, SectorDirection.Right, SectorDirection.LL, 
+  SectorDirection.Below, SectorDirection.LR};
+/**
+ * Generate sectors around the provided sector. Check which sectors have already been
+ * generated by using the sector's neighbor pointers.
+ * @param {Sector} _origin The starting sector from which to generate surrounding sectors
+ * @return {HashMap<Integer,Sector>} Mapping of sector IDs to sector objects
+ */
+public HashMap<Integer,Sector> BuildSectors(Sector _origin)
 {
-  //TODO:
-  //Around the origin sector, build all 8 other sectors....
-  //re-use for other generation
+  //Hold a list of sectors to generate linkings
+  Sector[] sectorGenArray = new Sector[9];
+  sectorGenArray[4] = _origin;      //origin is at core of these 9 sectors
+  int sectorCounter = 0;
 
-  //Old code for gameAreas....
-  // asteroidField = new Sector("Asteroid Field", new PVector(width/3, 0), 
-  //                     new PVector(width/3, height));
-  // sectors.put(asteroidField.GetName(), asteroidField);
+  HashMap<Integer,Sector> generatedSectors = new HashMap<Integer,Sector>();
+
+  //Check all 8 surrounding sectors 
+  for(SectorDirection direction : sectorDirections)
+  {
+    Sector neighbor;     //Sector to generate or grab below
+    if(!_origin.HasNeighbor(direction))
+    {
+      //No neighbor in this direction -- generate one
+      PVector sectorLocation = _origin.GetNeighborLocation(direction);
+      neighbor = new Sector(sectorID, sectorLocation, sectorSize, bg, SectorType.RANDOM);
+      generatedSectors.put(sectorID, neighbor);
+      sectorID++;     //Next unique ID for this sector!
+    }
+    else
+    {
+      neighbor = _origin.GetNeighbor(direction);
+    }
+
+    sectorGenArray[sectorCounter] = neighbor;   //Track an adjacent sector
+
+    sectorCounter++;            //Next sector!
+    if(sectorCounter == 4)      //Skip -- this is the core
+    {
+      sectorCounter++;
+    }
+  }
+
+  //Attach adjacent sectors to each other
+  for(int i = 1; i < 10; i++)
+  {
+    if(i%3 != 0)    //If not far right side
+    {
+      sectorGenArray[i-1].SetNeighbor(SectorDirection.Right, sectorGenArray[i]);
+      if(i > 3)   //Not top row
+      {
+        sectorGenArray[i-1].SetNeighbor(SectorDirection.UR, sectorGenArray[i-3]);
+      }
+      if( i < 7)   //Not bottom row
+      {
+        sectorGenArray[i-1].SetNeighbor(SectorDirection.LR, sectorGenArray[i+3]);
+      }
+    }
+    if(i != 1 && i%4 != 0)    //Not far left side
+    {
+      sectorGenArray[i-1].SetNeighbor(SectorDirection.Left, sectorGenArray[i-2]);
+      if(i > 3)   //Not top row
+      {
+        sectorGenArray[i-1].SetNeighbor(SectorDirection.UL, sectorGenArray[i-5]);
+      }
+      if( i < 7)   //Not bottom row
+      {
+        sectorGenArray[i-1].SetNeighbor(SectorDirection.LL, sectorGenArray[i+1]);
+      }
+    }
+    if(i > 3)     //Not top row
+    {
+      sectorGenArray[i-1].SetNeighbor(SectorDirection.Above, sectorGenArray[i-4]);
+    }
+    if(i < 7)     //Not bottom row
+    {
+      sectorGenArray[i-1].SetNeighbor(SectorDirection.Below, sectorGenArray[i+2]);
+    }   
+  }
+  return generatedSectors;
 }
 
-//TODO merge in sector generation here...
 
+/**
+ * Load assets such as sprites, music, and build all sectors.
+ */
 public void GameObjectSetup()
 {
   LoadImageAssets();
   LoadSoundAssets();
   
-  Sector startSector = new Sector(0, new PVector(0,0), sectorSize, bg);
+  Sector startSector = new Sector(0, new PVector(0,0), sectorSize, bg, SectorType.PLANETARY);
   sectors.put(0, startSector);
   
-  //TODO generate other sectors around this one
-  //BuildSectors(startSector);    //See AssetLoaders.pde
+  //Generate other sectors around this one
+  println("[INFO] Generating sectors around the origin...");
+  sectors.putAll(BuildSectors(startSector));     //Generate new sectors, force into current
+  println("[INFO] Start sector generation complete! There are now " + sectorID + " sectors generated.");
+
+  //DEBUG FOR LINKING SECTORS
+  if(debugMode.value)
+  {
+    println(startSector);
+  }
+  
+}
+
+/**
+ * Merge the provided mapping into the current secto rmap
+ * @param toMerge Generated sectors we want to merge in after all loops are complete
+ */
+public void MergeSectorMaps(HashMap<Integer,Sector> toMerge)
+{
+  if(toMerge != null)
+  {
+    Iterator it = toMerge.entrySet().iterator();
+    while (it.hasNext()) 
+    {
+      Map.Entry pair = (Map.Entry)it.next();
+      sectors.put((Integer)pair.getKey(), (Sector)pair.getValue());   //Hack unchecked cast
+      
+      if(debugMode.value)
+      {
+        println("[DEBUG] Added new entry pair to sector map");
+      }
+      it.remove();      //Avoids a ConcurrentModificationException
+    }
+  }
+
 }
 //Each sprite spaced 128 pixels apart
 PImage asteroidSpriteSheet;      //Loaded in setup()
 
 /*
- * An asteroid gameobject, inheriting from Drawable
+ * An asteroid gameobject, inheriting from Physical
  */
 public class Asteroid extends Physical implements Updatable
 {
   private static final int minDiameter = 10;
-  private static final int maxDiameter = 20;
+  private static final int maxDiameter = 30;
   private static final int maxAsteroidHealth = 100;
   
   private boolean isDebris = false;        //Is this asteroid just debris from another asteroid's death?
   
-  /*
-   * Constructor
-   * @param  _size  diameter of the asteroid
-   * @param  _xloc  x coordinate of the asteroid
-   * @param  _yloc  y coordinate of the asteroid
-   * @see         Asteroid
-   */
-  public Asteroid(PVector _loc, int _diameter, int _mass) 
+  public Asteroid(PVector _loc, int _diameter, int _mass, Sector _sector) 
   {
     //Parent constructor
-    super("Asteroid", _loc, new PVector(_diameter, _diameter), _mass);
+    super("Asteroid", _loc, new PVector(_diameter, _diameter), _mass, _sector);
     
     //Select my asteroid image from spritesheet     
     int RandomAsteroidIndex1 = rand.nextInt(8);      //x coordinate in sprite sheet
@@ -281,7 +416,7 @@ public class Asteroid extends Physical implements Updatable
     {
       for(int i = 0; i < 3; i++)
       {
-        Asteroid debris = new Asteroid(location, (int)size.x/2, (int)(mass/2));
+        Asteroid debris = new Asteroid(location, (int)size.x/2, (int)(mass/2), currentSector);
         
         //New velocity with some randomness based on old velocity
         debris.SetVelocity(new PVector(velocity.x/2 + rand.nextFloat()*velocity.x/3-velocity.x/6,
@@ -323,23 +458,30 @@ public class Asteroid extends Physical implements Updatable
   
 
 }
-/*
- * Generates asteroids
-*/
-
+/**
+ * Tools to generate asteroid parameters, and return asteroid objects.
+ */
 public class AsteroidFactory
 {
   //Default values
-  private PVector asteroidSizeRange = new PVector(Asteroid.minDiameter, Asteroid.maxDiameter);   //Min, max asteroid size
-  private PVector maxVelocity = new PVector(0.01f,0.65f);                 //Max velocity in given x/y direction of asteroid
+  private PVector maxVelocity = new PVector(0,0);                 //Max velocity in given x/y direction of asteroid
 
   //Generator values (keep these stored for next asteroid to create
   private int minX, minY, maxX, maxY, size, xCoor, yCoor;
   private float xVelocity, yVelocity;
+  private PVector asteroidSizeRange = new PVector(Asteroid.minDiameter, Asteroid.maxDiameter);
+  private Sector nextAsteroidSector;      //Sector to place next asteroid on
 
+  /**
+   * Constructor for default asteroid factory generation
+   */
   AsteroidFactory(){
   }
 
+  /**
+   * Constructor for asteroid generation over provided size range
+   * @param {PVector} _sizeRange Overriding size range (min, max) of asteroids
+   */
   AsteroidFactory(PVector _sizeRange)
   {
     asteroidSizeRange = _sizeRange;
@@ -350,14 +492,18 @@ public class AsteroidFactory
     maxVelocity = _maxVelocity;
   }
   
-  
-  //Generate a new asteroid in a given area
+  /**
+   * Generate parameters for the next asteroid generated
+   * @param {Sector} _sector Sector to generate on
+   * @see  Helpers.pde for implementation
+   * @see  GenerateAsteroid() for object construction
+   */
   public void SetNextAsteroidParameters(Sector _sector)
   {
-    minX = PApplet.parseInt(_sector.GetLocation().x);
-    minY = PApplet.parseInt(_sector.GetLocation().y);
-    maxX = PApplet.parseInt(_sector.GetSize().x);
-    maxY = PApplet.parseInt(_sector.GetSize().y);
+    minX = PApplet.parseInt(_sector.GetLocation().x + asteroidSizeRange.x);
+    minY = PApplet.parseInt(_sector.GetLocation().y + asteroidSizeRange.y);
+    maxX = PApplet.parseInt(_sector.GetSize().x - asteroidSizeRange.x);
+    maxY = PApplet.parseInt(_sector.GetSize().y - asteroidSizeRange.y);
   
     size = rand.nextInt(PApplet.parseInt(asteroidSizeRange.y - asteroidSizeRange.x))+ PApplet.parseInt(asteroidSizeRange.x);
     
@@ -367,21 +513,24 @@ public class AsteroidFactory
     yCoor = rand.nextInt(maxY)+minY;
     
     //Generate random movement vector
+    //TODO velocity unused in asteroids!
     xVelocity = 2 * maxVelocity.x * rand.nextFloat() - maxVelocity.x;    //Desensitize in x direction
     yVelocity = 2 * maxVelocity.y * rand.nextFloat() - maxVelocity.y;
+
+    nextAsteroidSector = _sector;
   }
   
-  
-  //Build asteroid with parameters generated in SetNextAsteroidParameters and return it
+  /**
+   * Build asteroid with parameters generated in SetNextAsteroidParameters and return it
+   * @return {Asteroid} Generated asteroid
+   */
   public Asteroid GenerateAsteroid()
   {
-    Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, PApplet.parseInt(100000*size/asteroidSizeRange.y));
+    Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, PApplet.parseInt(100000*size/asteroidSizeRange.y), nextAsteroidSector);
     toBuild.SetVelocity(new PVector(xVelocity, yVelocity));
     toBuild.SetMaxSpeed(2.5f);      //Local speed limit for asteroid
     toBuild.iconOverlay.SetIcon(color(0xffE8E238),ShapeType._CIRCLE_);
     toBuild.drawOverlay = false;      //Dont draw overlay by default
-    
-    //TODO direction random?
     
     return toBuild;
   }
@@ -417,11 +566,24 @@ public class AsteroidFactory
 }
 //Handle collisiosn between two sets of drawable objects
 //ONLY VALID FOR CIRCLES/ RECTANGLES
+
+
+/**
+ * Handle intra-sector collisions between ships and asteroids
+ * @param {Map<Integer, Sector>} _sectors Sector to do collision checks on
+ */
+public void HandleSectorCollisions(Map<Integer, Sector> _sectors)
+{
+  for(Sector a : _sectors.values())
+  {
+    HandleCollisions(a.asteroids, a.ships);
+  }
+}
+
 public void HandleCollisions(ArrayList<? extends Physical> a, ArrayList<? extends Physical> b)
 {
   for(Physical obj1 : a)
   {
-    //TODO add a check if in the same GameArea?
     for(Physical obj2 : b)
     {
       if(obj1.collidable && obj2.collidable)
@@ -540,7 +702,7 @@ public void HandleMissileCollision(ArrayList<? extends Missile> a, ArrayList<? e
             print("\n");
           }
           
-          collisionSound.play();
+          collisionSound.play();    //TODO migrate this to missile object
           obj1.HandleCollision(obj2);
           obj2.HandleCollision(obj1);
         }
@@ -582,7 +744,6 @@ public void HandleLaserCollision(ArrayList<? extends LaserBeam> a, ArrayList<? e
     }
   }
 }
-
 
 //Handle a click with any drawable objects and a given point, checking of the obj is clickable
 public Clickable CheckClickableOverlap(ArrayList<? extends Drawable> a, PVector point)
@@ -706,7 +867,8 @@ public class Drawable
   
   //Image properties
   protected PVector location;               //On absolute plane
-  protected PVector size;                  
+  protected PVector size;               
+  public float baseAngle;                   //Starting angle in degrees
   public int renderMode = CENTER;          //Render mode for visible outline
   boolean toBeKilled = false;              //Does this object need to be destroyed?
   
@@ -747,8 +909,11 @@ public class Drawable
     pushStyle();
     if(sprite != null)
     {
+      translate(location.x, location.y);
+      rotate(baseAngle);
+
       imageMode(renderMode);
-      image(sprite, location.x, location.y);
+      image(sprite, 0, 0);
     }
     else
     {
@@ -780,12 +945,105 @@ public class Drawable
 public class Enemy extends Ship
 {
   //AI here
+  boolean inAvoid;
+  Player player;
   
-  public Enemy(String _name, PVector _loc, PVector _size, PImage _sprite, 
-        int _mass, int _outlineColor) 
+  
+  public Enemy(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, int _outlineColor, Sector _sector) 
   {
     //Parent constructor
-    super(_name, _loc, _size, _sprite, _mass, _outlineColor);
+    super(_name, _loc, _size, _sprite, _mass, _outlineColor, _sector);
+    player = playerShip;
+    inAvoid = false;
+    
+  }
+
+
+  @Override public void Update()
+  {
+   super.Update();
+   PVector avoidForce = Avoid(playerShip.location);
+   PVector seekForce = Seek(playerShip.location);
+   if(CheckShapeOverlap(player.seekCircle, location))    //Sees if within the Seek radius
+   {
+     if(CheckShapeOverlap(player.avoidCircle, location))
+     {
+       inAvoid = true;
+     }
+     if(inAvoid && CheckShapeOverlap(player.seekAgainCircle,location))    //Currently avoiding the player until outside seek again range
+     {
+       ApplyForce(avoidForce);      //Run away from player
+     }
+     else      //We've made it outside seek again -- attack player
+     {
+       ApplyForce(seekForce);
+       inAvoid = false;
+     } 
+   }
+
+
+   //**** WEAPONS *****//
+   //TODO update me for new AI?
+    if(millis() - lastFireTime > currentFireInterval)    //Time to fire?
+    {
+      if(!targets.isEmpty())
+      {
+        Physical closestTarget = null;    //Default go after first target
+        float closestDistance = 99999;
+        for(Physical phys : targets)    //Check each target to find if it is closest
+        {
+          PVector distance = new PVector(0,0);
+          PVector.sub(phys.location,location,distance);
+          if(distance.mag() < closestDistance)
+          {
+            closestTarget = phys;
+          }
+        }
+        
+        if(closestTarget != null)    //Found a target
+        {
+          //Calculate laser targeting vector
+          PVector targetVector = PVector.sub(closestTarget.location, location);
+          targetVector.normalize();        //Normalize to simple direction vector
+          targetVector.x += rand.nextFloat() * 0.5f - 0.25f;
+          targetVector.y += rand.nextFloat() * 0.5f - 0.25f;
+          
+          //Create laser object
+          LaserBeam beam = new LaserBeam(location, targetVector, currentSector);
+          
+          //TODO put the beam object somewhere
+
+          lastFireTime = millis();
+        }
+
+      }
+    }
+  }
+  
+  
+  public PVector Seek(PVector target)
+  {
+    //if(seekAgainDiameter is true && seekRadius true)
+    PVector desired = PVector.sub(target, location);
+    desired.normalize();
+    desired.mult(localSpeedLimit);
+    PVector steer= PVector.sub(desired, velocity);
+    steer.limit(maxForceMagnitude);
+    
+    return steer;
+  }
+  
+  public PVector Avoid(PVector target)
+  {
+    //if(avoidDiameter is true and seekAgainDiameter is false)
+    PVector desired = PVector.sub(target,location);
+    desired.normalize();
+    desired.mult(localSpeedLimit);
+    PVector steer= PVector.sub(desired,velocity);
+    steer.limit(maxForceMagnitude);
+    steer.mult(-1);                             // to flip the direction of the desired vector in the opposite direction of the target
+    
+    return steer;
   }
 }
 PImage[] explosionImgs = new PImage[90];
@@ -882,63 +1140,23 @@ public void DrawPlayLoop()
   background(0);
   
   loopCounter++;
-  
+
 //******* ALL ZOOMED AFTER THIS ********//
-  BeginZoom();
+  BeginZoom();      //See visuals.pde
+  translate(width/2 -playerShip.location.x, height/2 - playerShip.location.y);    //Pan camera on ship
 
-  DrawSectors(sectors);
-  // //If zoomed out far enough, draw object icons with the objects
-  // if(wvd.viewRatio < 1.5)
-  // {
-  //   //Draw Game objects
-  //   DrawPlanets(P1.planets);
-  //   DrawAsteroids(asteroids, true);         //See Visuals.pde
-  //   DrawShips(P1.fleet, true);
-  //   DrawShields(P1.shields);
-  //   DrawStations(P1.stations);
-  //   DrawMissiles(P1.missiles, true);
-  //   DrawLasers(P1.lasers);
-  //   DrawEffects(explosions);
-  // }
-  // else
-  // {
-  //   //Draw Game objects
-  //   DrawPlanets(P1.planets);
-  //   DrawAsteroids(asteroids, false);         //See Visuals.pde
-  //   DrawShips(P1.fleet, false);
-  //   DrawShields(P1.shields);
-  //   DrawStations(P1.stations);
-  //   DrawMissiles(P1.missiles, false);
-  //   DrawLasers(P1.lasers);
-  //   DrawEffects(explosions);
-  // }
+  //Only render/update visible sectors (slightly faster)
+  // DrawSectors(visibleSectors);
+  // UpdateSectors(visibleSectors);
   
+  //ALL sectors (slower)
+  DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
+  MoveSectorObjects(sectors);   //Move all objects in the sectors
+  HandleSectorCollisions(sectors);
+  UpdateSectors(sectors); //Update sectors (and all updatable objects within them)
 
-  // //Move game objects
-  // MovePhysicalObject(asteroids);        //See Visuals.pde
-  // MovePhysicalObject(P1.lasers);
-  // MovePilotableObject(P1.fleet);
-  // MovePilotableObject(P1.missiles);
+  //TODO handle object sector transistion
 
-//// Check collisions
-  // if(asteroidCollisionAllowed)
-  // {
-  //   HandleCollisions(asteroids);            //Self collisions    
-  // }
-  // //Asteroid - object
-  // HandleCollisions(asteroids, P1.fleet);
-  // HandleCollisions(asteroids, P1.stations);
-  // HandleShieldCollisions(P1.shields, asteroids);
-  
-  // //Missile - object
-  // HandleMissileCollision(P1.missiles, asteroids);
-  
-  // //Laser - object
-  // HandleLaserCollision(P1.lasers, asteroids);
-  
-  // //Laser - missile (Note: don't run laser-missile then missile-laser, will trigger twice)
-  // //HandleLaserCollision(P1.lasers, P2.missiles);
-  
 //// ******* UI ********//
 
 //// Mouseover text window info
@@ -969,61 +1187,28 @@ public void DrawPlayLoop()
   //   }
   // }
 
-  
-//// Debug mode display
-  // if(debugMode.value)
-  // {
-  //   DrawGameArea(gameAreas);       //See Visuals.pde
-  // }
-
 //// ******* ALL ZOOMED BEFORE THIS ********//
    EndZoom();
-  
-//// Draw Civ UI
-  // P1.DrawCivilizationUI();
   
 //// Draw main interface
   // currentPlayer.DrawUI();
 
 //// ******* UPDATES ********//
+  MergeSectorMaps(generatedSectors);
 
-  // AsteroidOffScreenUpdate(asteroids, gameAreas);      //See helpers.pde
-  
-  // UpdateShips(P1.fleet);
-  // UpdateShields(P1.shields);
-  // UpdateAsteroids(asteroids);
-  // UpdatePlanets(P1.planets);
-  // UpdateMissiles(P1.missiles);
-  // UpdateStations(P1.stations);
-  // UpdateLasers(P1.lasers);
-  
   // //Effects MUST be called as last update. Some update functions have death frame action that will not be called if this runs first
   // UpdateExplosions(explosions);       
   
   // //Update UI information for the main UI
   // currentPlayer.UpdateUI();
   
-  // //Update civilizations (TODO: move where all other updateships, etc 
-  //     //currently are after migrating them into these functions)
-  // P1.Update();
-  
 //// ******* PROFILING ********//
-  // if(profilingMode)
-  // {
-  //   println(frameRate);
-  // }
+  if(profilingMode)
+  {
+    println(frameRate);
+  }
   
 //// ******* GAMEOVER Condition ********//  
-  // if(P1.stations.isEmpty())
-  // {
-  //   winner = P2;
-  //   gameState = GameState.GAMEOVER;
-  // }
-  // else if(P2.stations.isEmpty())
-  // {
-  //   winner = P1;
-  //   gameState = GameState.GAMEOVER;
-  // }
   
 }
 
@@ -1031,120 +1216,14 @@ public void DrawPlayLoop()
 //Identical to main draw loop, but without updates
 public void DrawPauseLoop()
 {
-  textFont(startupFont, 12);
-  
-  if(debugMode.value)
-  {
-    background(0);
-  }
-  else
-  {
-    background(bg);
-  }
-
-  loopCounter++;
-//******* ALL ZOOMED AFTER THIS ********//
-  BeginZoom();
-  
-  // //If zoomed out far enough, draw object icons with the objects
-  // if(wvd.viewRatio < 1.5)
-  // {
-  //   //Draw Game objects
-  //   DrawPlanets(P1.planets);
-  //   DrawPlanets(P2.planets);
-  //   DrawAsteroids(asteroids, true);         //See Visuals.pde
-  //   DrawShips(P1.fleet, true);
-  //   DrawShips(P2.fleet, true);
-  //   DrawStations(P1.stations);
-  //   DrawStations(P2.stations);
-  //   DrawMissiles(P1.missiles, true);
-  //   DrawMissiles(P2.missiles, true);
-  //   DrawLasers(P1.lasers);
-  //   DrawLasers(P2.lasers);
-  //   DrawEffects(explosions);
-  // }
-  // else
-  // {
-  //   //Draw Game objects
-  //   DrawPlanets(P1.planets);
-  //   DrawPlanets(P2.planets);
-  //   DrawAsteroids(asteroids, false);         //See Visuals.pde
-  //   DrawShips(P1.fleet, false);
-  //   DrawShips(P2.fleet, false);
-  //   DrawStations(P1.stations);
-  //   DrawStations(P2.stations);  
-  //   DrawMissiles(P1.missiles, false);
-  //   DrawMissiles(P2.missiles, false);
-  //   DrawLasers(P1.lasers);
-  //   DrawLasers(P2.lasers);
-  //   DrawEffects(explosions);
-  // }
-  
-//// ******* UI ********//
-
-//// Mouseover text window info
-  // PVector currentMouseLoc = new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldY(mouseY));
-  
-  // //Add response from overlap checks to 'toDisplay' linkedlist
-  // toDisplay.clear();
-  // toDisplay.add(CheckClickableOverlap(asteroids, currentMouseLoc));
-  // toDisplay.add(CheckClickableOverlap(P1.planets, currentMouseLoc));
-  // toDisplay.add(CheckClickableOverlap(P2.planets, currentMouseLoc));
-  // toDisplay.add(CheckClickableOverlap(P1.fleet, currentMouseLoc));
-  // toDisplay.add(CheckClickableOverlap(P2.fleet, currentMouseLoc));
-  // toDisplay.add(CheckClickableOverlap(P1.stations, currentMouseLoc));
-  // toDisplay.add(CheckClickableOverlap(P2.stations, currentMouseLoc));
-  
-  // while(!toDisplay.isEmpty())
-  // {
-  //   Clickable _click = toDisplay.poll();
-  //   if(_click != null)
-  //   {
-  //     if(_click.GetClickType() == ClickType.INFO)
-  //     {
-  //       _click.MouseOver();
-  //     }
-  //     else
-  //     {
-  //       print("Moused over unsupported UI type: ");
-  //       print(_click.GetClickType());
-  //       print("\n");
-  //     }
-  //   }
-  // }
-
-  
-//// Debug mode display
-  // if(debugMode.value)
-  // {
-  //   DrawGameArea(gameAreas);       //See Visuals.pde
-  // }
-
-//// ******* ALL ZOOMED BEFORE THIS ********//
-  // EndZoom();
-  
-//// Draw Civ UI
-  // P1.DrawCivilizationUI();
-  // P2.DrawCivilizationUI();
-  
-//// Draw main interface
-  // currentPlayer.DrawUI();
-  
+ 
 }
+
 
 public void DrawGameOverLoop()
 {
-  background(0);
-  
-  pushStyle();
-  fill(color(255));
-  textFont(startupFont, 48);
-  textAlign(CENTER, CENTER);
-  text("GAME OVER", width/2, height/2);
-  
-  popStyle();
+ 
 }
-
 
 //--------- MISC -----------//
 
@@ -1186,21 +1265,20 @@ public class Health
   }
   
 }
-/*
-* Generate Asteroids
-* @param  sector Sector to render these asteroids on
-* @param  int initialAsteroidCount how many asteroids to generate (max)
-* @see         GenerateAsteroids
-* 
+
+int generationPersistenceFactor = 5;     //How hard should I try to generate the requested asteroids?
+AsteroidFactory asteroidFactory = new AsteroidFactory();
+/**
 * This function will generate asteroids in random locations on a given game area. If too 
 * many asteroids are requested the function will only generate as many as it can without
 * overlapping.
+* @param  {Sector} sector Sector to render these asteroids on
+* @param  {Integer} initialAsteroidCount how many asteroids to generate (max)
+* @see  Sector.pde for implementation, AsteroidFactory.pde for generation of asteroids
 */
-int generationPersistenceFactor = 5;     //How hard should I try to generate the requested asteroids?
-AsteroidFactory asteroidFactory = new AsteroidFactory();
 public void GenerateAsteroids(Sector sector, int initialAsteroidCount)
 {
-  println("INFO: Generating asteroids");
+  println("[INFO] Generating asteroids");
   
   //Tile arraylist constructor 
   int i = 0;      //Iterator  
@@ -1221,14 +1299,16 @@ public void GenerateAsteroids(Sector sector, int initialAsteroidCount)
             && Math.abs(roid.GetLocation().y-roidLoc.y) < roid.GetSize().y/2 + roidSize/2 )
       {
         noOverlap = false;
-        println("INFO: Asteroid location rejected!");
+        println("[INFO] Asteroid location rejected!");
         break;
       }
     }
     
     if(noOverlap)
-    {  
-      sector.asteroids.add(asteroidFactory.GenerateAsteroid());
+    { 
+      Asteroid toAdd = asteroidFactory.GenerateAsteroid();
+      toAdd.baseAngle = rand.nextInt((360) + 1);
+      sector.asteroids.add(toAdd);
       i++;
     }
     else
@@ -1237,7 +1317,7 @@ public void GenerateAsteroids(Sector sector, int initialAsteroidCount)
       timeoutCounter++;
       if(timeoutCounter > generationPersistenceFactor * initialAsteroidCount)
       {
-        print("Asteroid generation failed for ");
+        print("[WARNING] Asteroid generation failed for ");
         print(initialAsteroidCount - i);
         print(" asteroid(s)\n");
         break;    //abort the generation loop
@@ -1246,19 +1326,19 @@ public void GenerateAsteroids(Sector sector, int initialAsteroidCount)
   }
 }
 
-/*
-* Generate Planets
-* @param  sector Sector to render these planets on
-* @param  count How many planets to spawn
-* @see          GeneratePlanets
-* This function will generate planets in random locations on a given sector
-*/
+
 PVector planetSizeRange = new PVector(50, 100);      //Min, max planet size
 int borderSpawnDistance = 1;      //How far from the gameArea border should the planet spawn?
+/**
+* Generate planets in random locations on a given sector
+* @param  {Sector} sector Sector to render these planets on
+* @param  Integer} count How many planets to spawn
+* @see  Sector.pde for implementation
+*/
 public void GeneratePlanets(Sector sector, int count)
 {
   //Guarantee no planets within 3 diameters from the edge of the game area
-  println("Generating Planets");  
+  println("[INFO] Generating Planets");  
   int minX = PApplet.parseInt(sector.GetLocation().x + planetSizeRange.y * borderSpawnDistance);
   int minY = PApplet.parseInt(sector.GetLocation().y + planetSizeRange.y * borderSpawnDistance);
   int maxX = PApplet.parseInt(sector.GetLocation().x + sector.GetSize().x - planetSizeRange.y * borderSpawnDistance);
@@ -1297,8 +1377,9 @@ public void GeneratePlanets(Sector sector, int count)
     //Guarantee planets are too close to each oher
     if(noOverlap)
     {  
-      Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, PApplet.parseInt(10000*size/planetSizeRange.y));
+      Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, PApplet.parseInt(10000*size/planetSizeRange.y), sector);
       toBuild.SetMaxSpeed(0);        //Local speed limit for planet (don't move)
+      toBuild.baseAngle = rand.nextInt((360) + 1);
       sector.planets.add(toBuild);
       println("[INFO] Generated a new planet at " + toBuild.location + " in sector " + sector.name);
       i++;
@@ -1309,7 +1390,7 @@ public void GeneratePlanets(Sector sector, int count)
       timeoutCounter++;
       if(timeoutCounter >  4 * count)    //Try to generate 4x as many planets
       {
-        print("Planet generation failed for ");
+        print("[WARNING] Planet generation failed for ");
         print(count - i);
         print(" planet(s)\n");
         break;    //abort the generation loop
@@ -1318,98 +1399,144 @@ public void GeneratePlanets(Sector sector, int count)
   }
 }
 
-//Checks if an object implements an interface, returns bool
+
+float shipScaleFactor = 0.25f;     //Scale down ship sizes by this factor
+/**
+ * Build a given number of enemies on the provided Sector. If there
+ * are planets, generate around the planet. If asteroid, generate
+ * around asteroids. Else just generate anywhere in free space.
+ * @param {Sector} sector Sector to build the enemies on
+ * @param {Integer} count How many enemies to make
+ */
+public void GenerateEnemies(Sector sector, int count)
+{
+  PVector position = sector.location.get();   //Default position at origin of sector
+
+  int minX, minY, maxX, maxY;                 //Max allowed positions
+
+  int enemyShipRandomIndex = rand.nextInt((enemyShipCount -1) + 1);
+  PImage enemySprite = enemyShipSprites.get(enemyShipRandomIndex).get();    //Make sure to get a COPY of the vector
+  PVector enemyShipSize = enemyShipSizes.get(enemyShipRandomIndex).get();
+
+  //Scale enemyshipsize
+  enemyShipSize.x = PApplet.parseInt(shipScaleFactor * enemyShipSize.x);
+  enemyShipSize.y = PApplet.parseInt(shipScaleFactor * enemyShipSize.y);
+
+  if (enemyShipSize.x <= 0 || enemyShipSize.y <= 0)
+  {
+    println("[ERROR] Ship Scale error! Returning ship to standard size (large)");
+    enemyShipSize = enemyShipSizes.get(enemyShipRandomIndex).get();
+  }
+
+  for(int i = 0; i < count; i++)
+  {
+    PVector shipSize = new PVector(75,30);
+    if(sector.asteroids.size() > 0)   //This sector has asteroids -- check for overlap
+    {
+      boolean validLocation = false;
+      while(!validLocation)
+      {
+        //Generation parameters
+        minX = PApplet.parseInt(sector.GetLocation().x + enemyShipSize.x);
+        minY = PApplet.parseInt(sector.GetLocation().y + enemyShipSize.y);
+        maxX = PApplet.parseInt(sector.GetSize().x - enemyShipSize.x);
+        maxY = PApplet.parseInt(sector.GetSize().y - enemyShipSize.y);
+
+        //Generate position offsets from the sector location
+        position.x = rand.nextInt(maxX - PApplet.parseInt(shipSize.x)) + minX + PApplet.parseInt(shipSize.x/2);
+        position.y = rand.nextInt(maxY)+minY;
+
+        for(Asteroid roid : sector.asteroids)
+        {
+          //Check if this asteroid's center + diameter overlaps with ships center = size
+          if( Math.abs(roid.GetLocation().x-position.x) < roid.GetSize().x/2 + shipSize.x 
+                && Math.abs(roid.GetLocation().y-position.y) < roid.GetSize().y/2 + shipSize.y )
+          {
+            validLocation = false;
+            println("[INFO] Enemy placement location rejected!");
+            break;
+          }
+          validLocation = true;   //Went thru each asteroid -- no overlap
+        }
+      }
+
+    }
+    else
+    {      
+      //Generation parameters
+      minX = PApplet.parseInt(sector.GetLocation().x);
+      minY = PApplet.parseInt(sector.GetLocation().y);
+      maxX = PApplet.parseInt(sector.GetSize().x);
+      maxY = PApplet.parseInt(sector.GetSize().y);
+
+      //Generate position offsets from the sector location
+      position.x = rand.nextInt(maxX - PApplet.parseInt(shipSize.x)) + minX + PApplet.parseInt(shipSize.x/2);
+      position.y = rand.nextInt(maxY)+minY;
+    }
+
+    Enemy enemyGen = new Enemy("Bad guy", position, enemyShipSize, enemySprite, 
+      1000, color(255,0,0), sector);
+    enemyGen.baseAngle = rand.nextInt((360) + 1);     //Random rotation 0-360
+    sector.ships.add(enemyGen);
+  }
+
+}
+
+/**
+ * Checks if an object implements an interface, returns boo
+ * @param  object Any object
+ * @param  interf Interface to compare against
+ * @return {Boolean} True for implements, false if doesn't
+ */
 public static boolean implementsInterface(Object object, Class interf){
     return interf.isInstance(object);
 }
 
-//For a given planet, generate stations around it
-public void GenerateStations(Planet planet, int count)
-{
-  //Create possible station locations around each planet
-  ArrayList<PVector> stationOrbitLocationCandidates = new ArrayList<PVector>();
-  
-  PVector locationCandidate1 = new PVector(planet.location.x - 75, planet.location.y);
-  PVector locationCandidate2 = new PVector(planet.location.x + 75, planet.location.y);
-  PVector locationCandidate3 = new PVector(planet.location.x, planet.location.y - 75);
-  PVector locationCandidate4 = new PVector(planet.location.x, planet.location.y + 75);
- 
-  stationOrbitLocationCandidates.add(locationCandidate1);
-  stationOrbitLocationCandidates.add(locationCandidate2);
-  stationOrbitLocationCandidates.add(locationCandidate3);
-  stationOrbitLocationCandidates.add(locationCandidate4);
-  
-  for(int i = 0; i < count; i++)
-  {
-    //Random size
-    int sizeGen = rand.nextInt(Station.maxStationSize * 2/3) + Station.maxStationSize * 1/2;       //TODO how does this work again?
-    PVector stationSize = new PVector(sizeGen, sizeGen);
-    
-    //Randomly select station location from generated list above
-    int locationSelectedIndex = rand.nextInt(stationOrbitLocationCandidates.size());
-    PVector stationLoc = stationOrbitLocationCandidates.get(locationSelectedIndex);
-    stationOrbitLocationCandidates.remove(locationSelectedIndex);
-    
-    //Select station color & build station
-    Station station;
-    int stationLevel = rand.nextInt(2) + 1;
-    if(stationLevel == 1)
-    {
-      station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation1);
-    }
-    else if(stationLevel == 2)
-    {
-      station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2);
-    }
-    else
-    {
-      station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation3);
-    }
-
-    //TODO add this to sector
-    // _civ.stations.add(station);
-  }
-}
 /*
  * Mouse & keyboard input here.
  */
 
 // Panning
 public void mouseDragged() {
-  //Make sure we haven't panned outside the screen view
-  if(!debugMode.value)
-  {
-    if (mouseX < width && mouseY < height 
-      && wvd.pixel2worldX(width) < width 
-      && wvd.pixel2worldY(height) < height) 
-    {
-      wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
-      wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
-    }
-    
-    if(wvd.orgX < 0)
-    {
-      wvd.orgX = 0;
-    }
-    if(wvd.orgY < 0)
-    {
-      wvd.orgY = 0;
-    }
-    
-    if(wvd.pixel2worldX(width) > width)
-    {
-      wvd.orgX--;
-    }
-    if(wvd.pixel2worldY(height) > height)
-    {
-      wvd.orgY--;
-    }
-  }
-  else
-  {
+  //DEBUG ONLY
     wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
     wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
-  }
+
+  //Make sure we haven't panned outside the screen view
+  // if(!debugMode.value)
+  // {
+  //   if (mouseX < width && mouseY < height 
+  //     && wvd.pixel2worldX(width) < width 
+  //     && wvd.pixel2worldY(height) < height) 
+  //   {
+  //     wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
+  //     wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
+  //   }
+    
+  //   //Code for preventing zoom to one screen width
+  //   if(wvd.orgX < 0)
+  //   {
+  //     wvd.orgX = 0;
+  //   }
+  //   if(wvd.orgY < 0)
+  //   {
+  //     wvd.orgY = 0;
+  //   }
+    
+  //   if(wvd.pixel2worldX(width) > width)
+  //   {
+  //     wvd.orgX--;
+  //   }
+  //   if(wvd.pixel2worldY(height) > height)
+  //   {
+  //     wvd.orgY--;
+  //   }
+  // }
+  // else
+  // {
+  //   wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
+  //   wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
+  // }
 
 }
 
@@ -1423,26 +1550,31 @@ public void mouseClicked()
 
 public void mouseWheel(MouseEvent e)
 {
+  //TODO phase out mousewheel (centering camera messes up zoom... fix or remove this)
   float wmX = wvd.pixel2worldX(mouseX);
   float wmY = wvd.pixel2worldY(mouseY);
   
   wvd.viewRatio -= e.getAmount() / 20;
   wvd.viewRatio = constrain(wvd.viewRatio, 0.05f, 200.0f);
   
-  //Prevent zooming out past standard zoom
-  if(wvd.viewRatio < 1)
-  {
-    wvd.viewRatio = 1.00f;
-  }
-  else if(wvd.viewRatio > 2)
-  {
-    wvd.viewRatio = 2.00f;
-  }
-  else    //Only shift translation if we aren't zoomed out all the way
-  {
-    wvd.orgX = wmX - mouseX / wvd.viewRatio;
-    wvd.orgY = wmY - mouseY / wvd.viewRatio;
-  }
+  //DEBUG ONLY
+  wvd.orgX = wmX - mouseX / wvd.viewRatio;
+  wvd.orgY = wmY - mouseY / wvd.viewRatio;
+
+  // //Prevent zooming out past standard zoom
+  // if(wvd.viewRatio < 1)
+  // {
+  //   wvd.viewRatio = 1.00f;
+  // }
+  // else if(wvd.viewRatio > 2)
+  // {
+  //   wvd.viewRatio = 2.00f;
+  // }
+  // else    //Only shift translation if we aren't zoomed out all the way
+  // {
+  //   wvd.orgX = wmX - mouseX / wvd.viewRatio;
+  //   wvd.orgY = wmY - mouseY / wvd.viewRatio;
+  // }
 }
 
 
@@ -1458,32 +1590,65 @@ public void keyPressed()
   
   if(key == 'h' || key == 'H')
   {
-    if(testShip.leftEnginePower > testShip.minThrust)
+    if(playerShip.leftEnginePower > playerShip.minThrust)
     {
-      testShip.leftEnginePower -= testShip.minThrust;
+      playerShip.leftEnginePower -= 1;
+    }
+    else
+    {
+      playerShip.leftEnginePower = playerShip.minThrust;
     }
   }
   else if(key =='y' || key == 'Y')
   {
-    if(testShip.leftEnginePower < testShip.maxThrust)
+    if(playerShip.leftEnginePower < playerShip.maxThrust)
     {
-      testShip.leftEnginePower += testShip.minThrust;
-      println(testShip.leftEnginePower);
+      playerShip.leftEnginePower += 1;
+    }
+    else
+    {
+      playerShip.leftEnginePower = playerShip.maxThrust;
     }
   }
   else if(key == 'k' || key == 'K')
   {
-    if(testShip.leftEnginePower > testShip.minThrust)
+    if(playerShip.rightEnginePower > playerShip.minThrust)
     {
-      testShip.rightEnginePower -= .1f;
+      playerShip.rightEnginePower -= 1;
+    }
+    else
+    {
+      playerShip.rightEnginePower = playerShip.minThrust;
     }
   }
   else if(key =='i' || key == 'I')
   {
-    if(testShip.leftEnginePower < testShip.maxThrust)
+    if(playerShip.rightEnginePower < playerShip.maxThrust)
     {
-      testShip.rightEnginePower += testShip.minThrust;
+      playerShip.rightEnginePower += 1;
     }
+    else
+    {
+      playerShip.rightEnginePower = playerShip.maxThrust;
+    }
+  }
+
+  //DEBUG ONLY
+  if(key == 'w')
+  {
+    playerShip.ChangeVelocity(new PVector(0, -2));
+  }
+  else if(key == 's')
+  {
+    playerShip.ChangeVelocity(new PVector(0, 2));
+  }
+  else if(key == 'a')
+  {
+    playerShip.ChangeVelocity(new PVector(-5, 0));
+  }
+  else if(key == 'd')
+  {
+    playerShip.ChangeVelocity(new PVector(5, 0));
   }
 }
 public interface Movable
@@ -1522,9 +1687,9 @@ public class LaserBeam extends Physical
   static final int timeToFly = 2500;        //Effective range, related to speed (ms)
   private long spawnTime;
   
-  LaserBeam(PVector _loc, PVector _direction)
+  LaserBeam(PVector _loc, PVector _direction, Sector _sector)
   {
-    super("Laser beam", _loc, new PVector(20,3), .01f);    //HACK Mass very low!! For handling physics easier 
+    super("Laser beam", _loc, new PVector(20,3), .01f, _sector);    //HACK Mass very low!! For handling physics easier 
     
     //Set laser color
       //TODO set laser color by player / enemy
@@ -1589,10 +1754,10 @@ public class Missile extends Physical implements Clickable, Updatable
 {
   TextWindow info;
 
-  Missile(PVector _loc, PVector _moveVector, int _outlineColor) 
+  Missile(PVector _loc, PVector _moveVector, int _outlineColor, Sector _sector) 
   {
     //Parent constructor
-    super("Missile", _loc, new PVector(20,10), 10);    //mass = 10
+    super("Missile", _loc, new PVector(20,10), 10, _sector);    //mass = 10
     
     //Health
     health.max = 60;
@@ -1710,8 +1875,8 @@ public class Missile extends Physical implements Clickable, Updatable
 }
 float globalSpeedLimit = 10;      //Universal speed limit (magnitude vector)
 
-public enum RotationMode {
-  NONE, INSTANT, SPIN, FACE
+public enum PhysicsMode {       //Normal physics (Newtonian) or spin (planet/asteroid) 
+  STANDARD, SPIN
 }
 
 
@@ -1736,15 +1901,21 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
   protected int damageOnHit = 0;           //Automatic damage incurred on hit
   boolean collidable = true;               //Can this object be collided with by ANYTHING? see shields when down
   
-  public Physical(String _name, PVector _loc, PVector _size, float _mass)
+  //Location
+  protected Sector currentSector;                //What physical sector this object is in
+
+
+  public Physical(String _name, PVector _loc, PVector _size, float _mass, Sector _sector)
   {
     super(_name, _loc, _size);
     
     health = new Health(100, 100);       //Default health
     mass = _mass;
     
+    currentSector = _sector;
+
     //Movement
-    velocity = new PVector(1, 1);
+    velocity = new PVector(0, 0);
     acceleration = new PVector(0,0);
     localSpeedLimit = 10;         //Default speed limit
     maxForceMagnitude = .2f;          //TODO implement me
@@ -1756,31 +1927,27 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
   
   @Override public void DrawObject()
   {
+    super.DrawObject();
+
     pushMatrix();
     translate(location.x, location.y);
-    
-    if(debugMode.value)
-    {
-      //Debug velocity direction
-      stroke(255, 0, 0);
-      line(0, 0, 100 * velocity.x, 100 * velocity.y);
-    }
-
-    imageMode(renderMode);
-
-    //Handle drawing rotation
-    float theta = velocity.heading2D() + PI/2;
-    rotate(theta);
 
     //Display forward vector (white), velocity vector (red)
     if (debugMode.value)
     {
-      //Debug forward direction
-      stroke(255);
-      line(0, 0, 50 * forward.x, 50 * forward.y);    
+      //Debug forward direction (white)
+      stroke(255, 255, 255);
+      line(0, 0, 50 * forward.x, 50 * forward.y);  
+
+      //Debug velocity direction (red)
+      stroke(255, 0, 0);
+      line(0, 0, 100 * velocity.x, 100 * velocity.y);  
     }
 
-    image(sprite, 0, 0);
+    //Handle drawing rotation
+    baseAngle= velocity.heading2D();
+    rotate(baseAngle);
+
     popMatrix();
   }
   
@@ -1826,7 +1993,7 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
   //Move location
   public void Move()
   {
-    location = PVector.add(location, velocity);      
+    location.add(velocity);               //Move based on velocity   
   }
 
   
@@ -1853,7 +2020,7 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
     
     if(debugMode.value)
     {
-      print("INFO: ");
+      print("[DEBUG] ");
       print(_other.name);
       print(" collision caused ");
       print(damage);
@@ -1902,25 +2069,19 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
  */
 public class Planet extends Physical implements Clickable, Updatable
 {
-  TextWindow info;
-  String[] planetDescriptions = {"Lifeless Planet", "Ocean Planet", "Lava Planet", "Crystalline Planet",
+  public TextWindow info;     //For mouseover
+
+  private String[] planetDescriptions = {"Lifeless Planet", "Ocean Planet", "Lava Planet", "Crystalline Planet",
                                 "Desert Planet", "Swamp Planet", "Class-M Planet", "Lifeless Planet",
                                 "Class-M Planet", "Ionically Charged Planet", "Forest Planet", "Scorched Planet"};
   
-  int planetTypeIndex;
-  ArrayList<Station> stations;      //Stations around this planet
-  
-  /*
-   * Constructor
-   * @param  _size  diameter of the asteroid
-   * @param  _xloc  x coordinate of the asteroid
-   * @param  _yloc  y coordinate of the asteroid
-   * @see         Asteroid
-   */
-  public Planet(String _name, PVector _loc, int _diameter, int _mass) 
+  private int planetTypeIndex;
+  private ArrayList<Station> stations;      //Stations around this planet
+
+  public Planet(String _name, PVector _loc, int _diameter, int _mass, Sector _sector) 
   {
     //Parent constructor
-    super(_name, _loc, new PVector(_diameter, _diameter), _mass);
+    super(_name, _loc, new PVector(_diameter, _diameter), _mass, _sector);
     
     //Select my planet image from spritesheet (total of 10 options)
     planetTypeIndex = rand.nextInt(11) + 1;    //There is no p0, add 1
@@ -1935,8 +2096,13 @@ public class Planet extends Physical implements Clickable, Updatable
     sprite = loadImage(filePath);
     sprite.resize((int)size.x, (int)size.y);
     
+    //Generate stations
     stations = new ArrayList<Station>();
-    
+    int maxStations = 2;
+    int minStations = 0;
+    int stationCount = rand.nextInt((maxStations - minStations) + 1) + minStations;
+    GenerateStations(stationCount);
+
     //Set string descriptor for real-ish values that look pretty
     String descriptor = new String();
     descriptor += planetDescriptions[planetTypeIndex-1];
@@ -1945,10 +2111,83 @@ public class Planet extends Physical implements Clickable, Updatable
     info = new TextWindow("Planet info", location, descriptor, true);
   }
 
+  //Create possible station locations around each planet
+  private void GenerateStations(int _count)
+  {
+    ArrayList<PVector> stationOrbitLocationCandidates = new ArrayList<PVector>();
+    
+    PVector locationCandidate1 = new PVector(location.x - 75, location.y);
+    PVector locationCandidate2 = new PVector(location.x + 75, location.y);
+    PVector locationCandidate3 = new PVector(location.x, location.y - 75);
+    PVector locationCandidate4 = new PVector(location.x, location.y + 75);
+   
+    stationOrbitLocationCandidates.add(locationCandidate1);
+    stationOrbitLocationCandidates.add(locationCandidate2);
+    stationOrbitLocationCandidates.add(locationCandidate3);
+    stationOrbitLocationCandidates.add(locationCandidate4);
+    
+    for(int i = 0; i < _count; i++)
+    {
+      //Random size
+      int sizeGen = rand.nextInt(Station.maxStationSize * 2/3) + Station.maxStationSize * 1/2;       //TODO how does this work again?
+      PVector stationSize = new PVector(sizeGen, sizeGen);
+      
+      //Randomly select station location from generated list above
+      int locationSelectedIndex = rand.nextInt(stationOrbitLocationCandidates.size());
+      PVector stationLoc = stationOrbitLocationCandidates.get(locationSelectedIndex);
+      stationOrbitLocationCandidates.remove(locationSelectedIndex);
+      
+      //Select station color & build station
+      Station station;
+      int stationLevel = rand.nextInt(2) + 1;     //to set station size
+      int stationColor = rand.nextInt(2) + 1;     //to set station color
+      if(stationLevel == 1)
+      {
+        if(stationColor == 1)
+        {
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation1, currentSector);
+        }
+        else
+        {
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation1, currentSector);
+        }
+      }
+      else if(stationLevel == 2)
+      {
+        if(stationColor == 1)
+        {
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2, currentSector);
+        }
+        else
+        {
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2, currentSector);
+        }
+      }
+      else
+      {
+        if(stationColor == 1)
+        {
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2, currentSector);
+        }
+        else
+        {
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2, currentSector);
+        }
+      }
+
+      stations.add(station);
+    }
+  }
+
+  @Override public void DrawObject()
+  {
+    super.DrawObject();
+    DrawObjects(stations);    //Draw child stations
+  }
   public void Update()
   {    
     super.Update();    //Call physical update
-    
+
     //Check if UI is currently rendered, and if so update info
     if(info.visibleNow)
     {
@@ -1956,6 +2195,8 @@ public class Planet extends Physical implements Clickable, Updatable
     }
     //Assume UI will not be rendered next frame
     info.visibleNow = false;    //Another mouseover/ click will negate this
+
+    UpdatePhysicalObjects(stations);    //HACK Update child stations
   }
 
 /*Click & mouseover UI*/
@@ -1992,185 +2233,475 @@ public class Planet extends Physical implements Clickable, Updatable
   
 
 }
-enum SectorType {
-  ASTEROIDFIELD, EMPTY, PLANETARY
+
+/**
+ * Player ship object, with reactor cores, stations, etc.
+ */
+public class Player extends Ship
+{
+  private Reactor reactor;
+  private int maxPowerToNode;			//Maximum power any one node may have
+  
+  //Behavoir Ranges for Enemy
+  public Shape seekCircle, seekAgainCircle, avoidCircle;
+  public int seekRadius, seekAgainDiameter, avoidDiameter;
+
+  public Player(PVector _loc, PVector _size, PImage _sprite, int _mass, int _outlineColor, Sector _sector) 
+  {
+  //Parent constructor
+  super("Player", _loc, _size, _sprite, _mass, _outlineColor, _sector);
+
+  reactor = new Reactor(100);
+  maxPowerToNode = reactor.totalCapacity/3;
+  
+  //Behavior Ranges for Enemies
+  seekRadius = displayWidth;        //All ships inside the screen + 100 pixels will seek to destory
+  seekAgainDiameter = 500;
+  avoidDiameter = 400;
+  
+  seekCircle = new Shape("seekCircle", location, new PVector(seekRadius,seekRadius), color(0,255,255), ShapeType._CIRCLE_);                    //Light Blue
+  seekAgainCircle = new Shape("seekAgainCircle", location, new PVector(seekAgainDiameter,seekAgainDiameter), color(255,18,200), ShapeType._CIRCLE_); //Pink
+  avoidCircle = new Shape("avoidCircle",location , new PVector(avoidDiameter,avoidDiameter), color(18,255,47), ShapeType._CIRCLE_);                  //Green
+  }	
+
+  @Override public void Update()
+  {
+  super.Update();
+  
+  seekCircle.location = location;
+  seekAgainCircle.location = location;
+  avoidCircle.location = location;
+
+  PVector spinForce = Spin();
+  ApplyForce(spinForce);
+
+  PVector thrustForce = Thrust();
+  ApplyForce(thrustForce); 
+
+  //TODO modify ship parameters (engine power, shield, etc) based off
+  //of reactor right now
+  //Modify weapon fire speed
+  int weaponCooldownModifier = reactor.GetReactorPower(NodeType.WEAPONS)/maxPowerToNode;
+  currentFireInterval = minFireInterval + weaponCooldownModifier * minFireInterval;
+  }
+  
+  @Override public void DrawObject()
+  {
+    super.DrawObject();
+    if(debugMode.value)
+    {
+      seekCircle.DrawObject();
+      seekAgainCircle.DrawObject();
+      avoidCircle.DrawObject();
+    }
+  }	
+  
+}
+
+
+enum NodeType{
+  SHIELDS, WEAPONS, ENGINES
+}
+
+/**
+ * A power reactor that controls how much power the ship gets to each of its
+ * nodes. To be controlled by keyboard / external controller
+ */
+public class Reactor
+{
+	int totalCapacity;
+	Map<NodeType, Node> nodes;
+
+	public Reactor(int _capacity)
+	{
+		totalCapacity = _capacity;
+		nodes = new HashMap<NodeType, Node>();
+		nodes.put(NodeType.SHIELDS, new Node(NodeType.SHIELDS));
+		nodes.put(NodeType.WEAPONS, new Node(NodeType.WEAPONS));
+		nodes.put(NodeType.ENGINES, new Node(NodeType.ENGINES));
+	}
+
+	public int GetReactorPower(NodeType _type)
+	{
+		return nodes.get(_type).currentPower;
+	}
+}
+
+/**
+ * Power node on the reactor control board
+ */
+public class Node
+{
+	NodeType type;
+	int currentPower;
+
+	public Node(NodeType _type)
+	{
+		type = _type;
+		currentPower = 0;
+	}
+
+	public void SetPower(int _power)
+	{
+		currentPower = _power;
+	}
+
+}
+static enum SectorType {
+  ASTEROIDFIELD, EMPTY, PLANETARY, RANDOM
+}
+
+enum SectorDirection {
+  UL, Above, UR, Left, Right, LL, Below, LR
 }
 
 //An area in 2D space containing asteroids, planets, ships, stations, etc
-public class Sector extends Drawable
+public class Sector extends Drawable implements Updatable
 {
-  //Contents of this sector
+  //Contents of this sector. Built by helper functions in helpers.pde
   public ArrayList<Asteroid> asteroids;
   public ArrayList<Planet> planets;
-  public ArrayList<Ship> ships;
+  public ArrayList<Ship> ships;           //May include enemies and the player ship
   
   //Link to neighboring sectors
-  public Sector aboveSector, belowSector, leftSector, rightSector,
-                  ULSector, URSector, LLSector, LRSector;
-  
-  private int debugViewColor;
-  private SectorType sectorType;
+  public HashMap<SectorDirection, Sector> neighbors;
+
+  //Collider shape
+  Shape collider;     //For checking overlap of game objects in this sector
+
+  private int debugViewColor;       //Color displayed over this sector in debug mode
+  private SectorType sectorType;      //What kind of sector is this? Asteroid field, planetary, etc
 
   //Sector parameters
   int minPlanets = 1;
   int maxPlanets = 4;
   int minAsteroids = 10;
-  int maxAsteroids = 100;
+  int maxAsteroids = 60;
 
-  /*
-  * Constructor
-  * @param  _areaName string name of this game area
-  * @param  _loc      posistion vector of sector location
-  * @param  _size     size of the sector
-  * @see         Sector
-  */
-  public Sector(int _ID, PVector _loc, PVector _size, PImage _background)
+/**
+ * [Sector description]
+ * @param {Integer} _ID Unique identifier for this sector
+ * @param {PVector} _loc Pixel location of this sector
+ * @param {PVector} _size Pixel size of this sector
+ * @param {PImage} _background Sprite of the background of this sector
+ */
+  public Sector(int _ID, PVector _loc, PVector _size, PImage _background, SectorType _sectorType)
   {
     super(Integer.toString(_ID), _loc, _size);
-    
+
     sprite = _background;
     sprite.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
-    
+
     renderMode = CORNER;        //Don't draw sector in center
      
+    //Shape for collision detection
+    collider = new Shape("collider", location, size, color(255,255,255), ShapeType._RECTANGLE_);
+    collider.renderMode = CORNER;
+
     //Object containers
     asteroids = new ArrayList<Asteroid>();
     planets = new ArrayList<Planet>();
     ships = new ArrayList<Ship>();
+
+    //Neighbors
+    neighbors = new HashMap<SectorDirection, Sector>();
+
+    //Generate all objects in the sector
+    GenerateSectorObjects(_sectorType);   //Build static objects (asteroids, planets, stations)
+    GenerateSectorEnemies();          //Build dynamic objects (enemies)
     
-    //Determine what type of sector we are
-    int sectorTypeRand = rand.nextInt((3 - 1) + 1) + 1;   //rand.nextInt((max - min) + 1) + min;
-    if(sectorTypeRand == 1)
-    {
-      println("[INFO] Building asteroid field sector");
-      sectorType = SectorType.ASTEROIDFIELD;
-      
-      //Generate asteroids in this sector
-      int asteroidCount = rand.nextInt((maxAsteroids - minAsteroids) + 1) + minAsteroids;
-      GenerateAsteroids(this, asteroidCount);
-    }
-    else if(sectorTypeRand == 2)
-    {
-      println("[INFO] Building empty sector");   
-      sectorType = SectorType.EMPTY;
-    }
-    else if(sectorTypeRand == 3)
-    {
-      println("[INFO] Building planetary sector"); 
-      sectorType = SectorType.PLANETARY;
-
-      //Generate planets
-      int planetCount = rand.nextInt((maxPlanets - minPlanets) + 1) + minPlanets;
-      GeneratePlanets(this, planetCount);
-    }
-    else
-    {
-      println("[ERROR] Invalid sector type selected. Defaulting to asteroid field");  
-      sectorType = SectorType.ASTEROIDFIELD;
-      
-      //Generate asteroids in this sector
-      int asteroidCount = rand.nextInt((maxAsteroids - minAsteroids) + 1) + minAsteroids;
-      GenerateAsteroids(this, asteroidCount);
-    }
-
     //DEBUG INFO
     debugViewColor = color(255);    //Default = white
   }
   
+  /**
+   * Generate the sector's objects (asteroids, planets, etc)
+   * @param {SectorType} _sectorType What kind of sector to generate
+   * @see  Helpers.pde for generation function
+   */
+  private void GenerateSectorObjects(SectorType _sectorType)
+  {
+    if(_sectorType == SectorType.RANDOM)
+    {
+      //Determine what type of sector we are
+      int sectorTypeRand = rand.nextInt((3 - 1) + 1) + 1;   //rand.nextInt((max - min) + 1) + min;
+      if(sectorTypeRand == 1)
+      {
+        println("[INFO] Building asteroid field sector");
+        sectorType = SectorType.ASTEROIDFIELD;
+      }
+      else if(sectorTypeRand == 2)
+      {
+        println("[INFO] Building empty sector");   
+        sectorType = SectorType.EMPTY;
+      }
+      else if(sectorTypeRand == 3)
+      {
+        println("[INFO] Building planetary sector"); 
+        sectorType = SectorType.PLANETARY;
+      }
+      else
+      {
+        println("[ERROR] Invalid sector type selected. Defaulting to asteroid field");  
+        sectorType = SectorType.ASTEROIDFIELD;
+      }
+    }
+    else    //Passed in parameter determines sectorType
+    {
+      sectorType = _sectorType;
+    }
+
+    if(sectorType == SectorType.PLANETARY)
+    {
+      //Generate planets
+      int planetCount = rand.nextInt((maxPlanets - minPlanets) + 1) + minPlanets;
+      GeneratePlanets(this, planetCount);         //See helpers.pde
+    }
+    else if(sectorType == SectorType.ASTEROIDFIELD)
+    {
+      //Generate asteroids in this sector
+      int asteroidCount = rand.nextInt((maxAsteroids - minAsteroids) + 1) + minAsteroids;
+      GenerateAsteroids(this, asteroidCount);     //See helpers.pde
+    }
+  }
+
+  /**
+   * Generate dynamic entities (enemies) in this sector
+   * @see  Helpers.pde for generation function
+   */
+  private void GenerateSectorEnemies()
+  {
+    int maxEnemies = 4;
+    int minEnemies = 1;
+    int enemyCount = rand.nextInt((maxEnemies - minEnemies) + 1) + minEnemies;
+    GenerateEnemies(this, enemyCount);
+  }
+
   public void SetDebugColor(int _color)
   {
     debugViewColor = _color;
   }
   
+  /**
+   * Draw the sector itself
+   * @see Visuals.pde DrawSectors() for drawing of child objects in the sector
+   */
   @Override public void DrawObject()
   {
     super.DrawObject();    //Draw using parent method
     
-    //Draw this sector's game objects
-    DrawAsteroids(asteroids, false);
-    DrawPlanets(planets);
+    //Sector's game objects are drawn in visuals.pde DrawSectors()
 
-    if(debugMode.value)    //Draw debug outline of sector
+    if(debugMode.value)    //Draw sector ID
     {
-      rectMode(CORNER);
-      fill(debugViewColor, 50);
-      rect(location.x, location.y, size.x, size.y);
+      pushStyle();
+      textFont(startupFont, 80);
+      pushMatrix();
+      translate(location.x + size.x/2, location.y + size.y/2);
+      text(name, 0, 0);
+      popMatrix();
+      popStyle();
     }
   }
-  
-  /*
-   * Check if this sector has already popualted & linked its neighbors
-   */
-  public boolean HasNeighbor(String _neighbor)
+
+  public void Update()
   {
-    //Switch statements not allowed in Processing except on Strings/Enums
-    if(_neighbor == "UL")
+    //TODO handle ships moving between sectors
+      //TODO subset: generate more sectors if player moves between sectors
+  }
+  
+  /**
+   * Attach a neighboring sector to this sector
+   * @param {SectorDirection} _direction Where relative to this sector?
+   * @param {Sector} _neighbor Neighboring sector object
+   */
+  public void SetNeighbor(SectorDirection _direction, Sector _neighbor)
+  {
+    if(neighbors.get(_direction) == null)    //If mapping already exists
     {
-      if(ULSector != null)    //If UL sector exists
+      neighbors.put(_direction, _neighbor);
+      if(debugMode.value)
       {
-        return true;  
-      }
-      //Break out of ifs, return false
+        println("[DEBUG] Created neighbor relationship between " + name + " and " + _neighbor.name);
+      }    
     }
-    else if(_neighbor == "Above")
+  }
+
+  /**
+   * Check if this sector has already popualted and linked a neighbor
+   * in the provided direction
+   * @param {SectorDirection} _direction Which direction to check
+   * @return {boolean} True if neighbor populated, false if none
+   */
+  public boolean HasNeighbor(SectorDirection _direction)
+  {
+    if(neighbors.get(_direction) == null)   
     {
-      if(aboveSector != null)  
+      return false;  //If mapping already exists, already has neighbor
+    }
+    else
+    {
+      return true;
+    }
+  }
+
+  /**
+   * Returns the PVector coordinates of an adjacent neighbor
+   * (upper left corner of that sector coordinates)
+   * @param {SectorDirection} _neighbor Direction to check
+   * @return {PVector} Coordinates of where this neighbor would be (raw calculation)
+   */
+  public PVector GetNeighborLocation(SectorDirection _neighbor)
+  {
+    if(_neighbor == SectorDirection.UL)
+    {
+      return new PVector(location.x - size.x, location.y - size.y);  
+    }
+    else if(_neighbor == SectorDirection.Above)
+    {
+      return new PVector(location.x, location.y - size.y);  
+    }
+    else if(_neighbor == SectorDirection.UR)
+    {
+      return new PVector(location.x + size.x, location.y - size.y);  
+    }
+    else if(_neighbor == SectorDirection.Left)
+    {
+      return new PVector(location.x - size.x, location.y);  
+    }
+    else if(_neighbor == SectorDirection.Right)
+    {
+      return new PVector(location.x + size.x, location.y);   
+    }
+    else if(_neighbor == SectorDirection.LL)
+    {
+      return new PVector(location.x - size.x, location.y + size.y);  
+    }
+    else if(_neighbor == SectorDirection.Below)
+    {
+      return new PVector(location.x, location.y + size.y);  
+    }
+    else if(_neighbor == SectorDirection.LR)
+    {
+      return new PVector(location.x + size.x, location.y + size.y);  
+    }
+    else    //A weird value was passed in....
+    {
+      println("[ERROR] Requested neighbor on unspecified direction. Coordinates will be invalid!");
+    }
+
+    println("[ERROR] Returned invalid sector coordinates!");
+    return new PVector(0,0);
+  }
+
+  /**
+   * Return arraylist of all generated neighboring cells
+   * @return arraylist of sectors
+   */
+  public ArrayList<Sector> GetAllNeighbors()
+  {
+    ArrayList<Sector> allNeighbors = new ArrayList<Sector>();
+    for(Sector neighbor : neighbors.values())
+    {
+      allNeighbors.add(neighbor);
+    }
+
+    return allNeighbors;
+  }
+
+  /**
+   * Get a neighbor at a given direction. Returns null if DNE
+   * @param {SectorDirection} _direction Which way?
+   * @return {Sector} Null / valid sector
+   */
+  public Sector GetNeighbor(SectorDirection _direction)
+  {
+    return neighbors.get(_direction);
+  }
+
+
+  /**
+   * A new object has entered this sector -- typecast it and place in
+   * appropriate container
+   * @param {Physical} obj object to cast and hold
+   * @see  Updaters.pde > UpdatePhysicalObjects()
+   */
+  public void ReceiveNewObject(Physical obj)
+  {
+    if(obj instanceof Ship)
+    {
+      ships.add((Ship)obj);
+    }
+    else if(obj instanceof Asteroid)
+    {
+      asteroids.add((Asteroid)obj);
+    }
+    else if(obj instanceof Planet)
+    {
+      planets.add((Planet)obj);
+      println("[INFO] That's interesting.... a planet moved sectors.");
+    }
+  }
+
+  //Print debug sector ID map
+  public String toString() 
+  {
+    String[] ids = {"~", "~", "~", "~", "~", "~", "~", "~", "~"};
+
+    for(SectorDirection key : neighbors.keySet()) 
+    {
+      SectorDirection direction = key;
+      Sector sector = neighbors.get(key);   //Grab sector from map
+      String sectorID = sector.name;       //Get sector ID name
+
+      if(direction == SectorDirection.UL)
       {
-        return true;  
+        ids[0] = sectorID;
       }
-    }
-    else if(_neighbor == "UR")
-    {
-      if(URSector != null)
+      else if(direction == SectorDirection.Above)
       {
-        return true;  
+        ids[1] = sectorID;
       }
-    }
-    else if(_neighbor == "Left")
-    {
-      if(leftSector != null)
+      else if(direction == SectorDirection.UR)
       {
-        return true;  
+        ids[2] = sectorID;
       }
-    }
-    else if(_neighbor == "Right")
-    {
-      if(rightSector != null)
+      else if(direction == SectorDirection.Left)
       {
-        return true;  
+        ids[3] = sectorID;
       }
-    }
-    else if(_neighbor == "LL")
-    {
-      if(LLSector != null)
+      else if(direction == SectorDirection.Right)
       {
-        return true;  
+        ids[5] = sectorID;
       }
-    }
-    else if(_neighbor == "Below")
-    {
-      if(belowSector != null)
+      else if(direction == SectorDirection.LL)
       {
-        return true;  
+        ids[6] = sectorID;
       }
-    }
-    else if(_neighbor == "LR")
-    {
-      if(LRSector != null) 
+      else if(direction == SectorDirection.Below)
       {
-        return true;  
+        ids[7] = sectorID;
       }
+      else if(direction == SectorDirection.LR)
+      {
+        ids[8] = sectorID;
+      }
+
     }
-    else    //A weird string was passed in....
-    {
-      println("[WARNING] Requested neighbor on unspecified direction.");
-    } //<>//
-    
-    return false;
+    ids[4] = this.name;
+
+    String toReturn = "";
+    toReturn += "Sector " + name + " map\n";
+    toReturn += "----------\n";
+    toReturn += ("| " + ids[0] + " " + ids[1] + " " + ids[2] + " |\n");
+    toReturn += ("| " + ids[3] + " " + ids[4] + " " + ids[5] + " |\n");
+    toReturn += ("| " + ids[6] + " " + ids[7] + " " + ids[8] + " |\n");
+    toReturn += "----------\n";
+    return toReturn;
   }
 }
 public static enum ShapeType {
-  _SQUARE_, _TRIANGLE_, _CIRCLE_
+  _SQUARE_, _TRIANGLE_, _CIRCLE_, _RECTANGLE_
 }
 
 /*
@@ -2207,6 +2738,16 @@ public class Shape extends Drawable
     {
       rectMode(renderMode);
       rect(0, 0, size.x, size.x);    //TODO forced square here
+      if(size.x != size.y)
+      {
+        println("[WARNING] Square shape being force-render with rectangle edges!");
+      }
+      
+    }
+    if(shapeType == ShapeType._RECTANGLE_)
+    {
+      rectMode(renderMode);
+      rect(0, 0, size.x, size.y); 
     }
     else if(shapeType == ShapeType._TRIANGLE_)
     {
@@ -2280,11 +2821,11 @@ public class Shield extends Physical implements Updatable
   int failureTime = 5000;       //How long shields are offline in event they fail, ms
   
   //String _name, PVector _loc, PVector _size, float _mass, DrawableType _type, Civilization _owner
-  Shield(Physical _parent, int _dmgCapacity)
+  Shield(Physical _parent, int _dmgCapacity, Sector _sector)
   {
     //HACK size is forced round to compensate for no rotation of a Shape object (even though the Shield itself is 'physical')
     //HACK shield mass set to 1500 to get around a collision w/ really massive objects
-    super("Shield", _parent.location, new PVector(_parent.size.x*1.25f, _parent.size.x*1.25f), 2000);
+    super("Shield", _parent.location, new PVector(_parent.size.x*1.25f, _parent.size.x*1.25f), 2000, _sector);
     overlay = new Shape("Shield Overlay", location, size, color(0xff5262E3, 50), ShapeType._CIRCLE_);
     overlay.SetFillColor(color(0xff5262E3, 50));
     
@@ -2342,14 +2883,16 @@ public class Ship extends Physical implements Clickable, Updatable
   boolean smoke1Visible, smoke2Visible;
   
   //Scanners
-  int scanInterval = 500;         //ms between scans
-  long lastScanTime;              //When last scan occured
-  int sensorRange = 250;          //Units of pixels
-  Shape scanRadius;               //Circle outline, when hovered over, shows sensor/weapons range
+  protected int scanInterval = 500;         //ms between scans
+  protected long lastScanTime;              //When last scan occured
+  protected int sensorRange = 250;          //Units of pixels
+  protected Shape scanRadius;               //Circle outline, when hovered over, shows sensor/weapons range
   
   //Weapons
-  long lastFireTime;
-  float fireInterval = 850;          //ms between shots
+  protected long lastFireTime;
+  protected float minFireInterval = 850;          //ms between shots
+  protected float currentFireInterval = minFireInterval;
+
   ArrayList<Physical> targets;    //Firing targets selected after scan
   
   //Shields
@@ -2365,10 +2908,11 @@ public class Ship extends Physical implements Clickable, Updatable
   ArrayList<Ship> enemyShips;
   ArrayList<Station> enemyStations;
   
-  public Ship(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, int _outlineColor) 
+  public Ship(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, 
+    int _outlineColor, Sector _sector) 
   {
     //Parent constructor
-    super(_name, _loc, _size, _mass);
+    super(_name, _loc, _size, _mass, _sector);
     sprite = _sprite.get(); 
     sprite.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
 
@@ -2389,13 +2933,13 @@ public class Ship extends Physical implements Clickable, Updatable
     smoke2Visible = false;
     
     //Prepare engines
-    leftEnginePower = 1;
-    rightEnginePower = 1;
-    minThrust = 0.1f;
+    leftEnginePower = 0;
+    rightEnginePower = 0;
+    minThrust = 0.0f;
     maxThrust = 10.0f;
 
     //Prepare shields
-    shield = new Shield(this, 250);
+    shield = new Shield(this, 250, currentSector);
     
     //Prepare sensors
     scanRadius = new Shape("Scan radius", location, new PVector(sensorRange,sensorRange), 
@@ -2413,12 +2957,13 @@ public class Ship extends Physical implements Clickable, Updatable
     descriptor += "\nShield: ";
     descriptor += shield.health.current ;
     info = new TextWindow("Ship Info", location, descriptor, true);
+    
   }
   
   @Override public void DrawObject()
   {
     super.DrawObject();
-    
+
     //Draw smoke effects
     if(smoke1Visible)
     {
@@ -2431,9 +2976,18 @@ public class Ship extends Physical implements Clickable, Updatable
 
   }
   
-  public void Update()
+  /**
+   * Set the sector this ship is currently in.
+   * @param {Sector} _sector Sector object of current location
+   */
+  public void UpdateCurrentSector(Sector _sector)
   {
-    super.Update();    //Call Physical update
+    currentSector = _sector;
+  }
+
+  @Override public void Update()
+  {
+    super.Update();    //Call Physical update (movement occurs here)
     
   //**** UI ****//
     //Check if UI is currently rendered, and if so update info
@@ -2448,9 +3002,6 @@ public class Ship extends Physical implements Clickable, Updatable
     //Update icon overlay
     iconOverlay.UpdateLocation(location);
 
-
-   //**** WEAPONS *****//
-    //TODO
 
    //**** MOVEMENT *****//
 
@@ -2487,59 +3038,47 @@ public class Ship extends Physical implements Clickable, Updatable
     }
   }
 
-//**** MOVEMENT *****//
-  public void ApplyBehaviors(int _avoidWeight, int _spinWeight)
-  {
-    //PVector seekForce = seek(new PVector(mouseX,mouseY));
-    PVector spinForce = Spin();
-    ApplyForce(spinForce);
-
-    //FIXME
-    //PVector thrustForce = Thrust();
-    //ApplyForce(spinForce);    
-  }
-
-  public PVector Seek(PVector target)
-  {
-    PVector desired = PVector.sub(target, location);
-    desired.normalize();
-    desired.mult(localSpeedLimit);
-    PVector steer= PVector.sub(desired, velocity);
-    steer.limit(maxForceMagnitude);
-    return steer;
-  }
-
+   /*
+  SPIN: 
+  Creates two 'spin' vectors for each of the two engines.
+  The vectors are both perpendicular to the Velocity vector and face opposite directions from one another
+  They are scaled based on the engines power and then summed to each other and passed as a steering force to be summed to the acceleration vector
+  */
   public PVector Spin()
   {
-    PVector spinLeftEngine = new PVector(1,1);
-    PVector spinRightEngine = new PVector(1,1);
-    spinLeftEngine.set(-velocity.y, velocity.x);
-    spinRightEngine.set(velocity.y, -velocity.x);
-    spinLeftEngine.normalize();
-    spinRightEngine.normalize();
-
-    spinLeftEngine.mult(leftEnginePower);
-    spinRightEngine.mult(rightEnginePower);
-
-    PVector spinSum = PVector.add(spinRightEngine, spinLeftEngine);
-    PVector desired = PVector.add(spinSum, velocity);
+    PVector spinLeftEngine = new PVector(1,0);
+    PVector spinRightEngine = new PVector(1,0);
+   
+    spinLeftEngine.rotate(velocity.heading() + HALF_PI);    //left engine vector set perdendicular to Velocity facing left.
+    spinRightEngine.rotate(velocity.heading() - HALF_PI);   //right engine vector set perpendiuclar to Velocity facing right.
+    spinLeftEngine.setMag(leftEnginePower);                 //Set magnitudes to Engines power ranging 0-10
+    spinRightEngine.setMag(rightEnginePower);
+    PVector spinSum = PVector.add(spinRightEngine, spinLeftEngine);  //Sum the apposing facing spin vectors
+    
+    PVector desired = PVector.add(spinSum, velocity);                // Sum 'spin' vector with velocity go get a desired direction
     desired.normalize();
-    desired.mult(localSpeedLimit);
+    desired.mult(localSpeedLimit);                                   // Scale based on Maximum Player Speed
     PVector steer = PVector.sub(desired, velocity);
-    steer.limit(maxForceMagnitude);
-
-    return steer;
+    steer.x = map(steer.x, 0,7.66f, 0,.5f);                            // 7.66 was max value seen when debugging---- .5 seems reasonable for max spin
+    steer.y = map(steer.y, 0,7.66f, 0,.5f);
+    //steer.limit(maxForceMagnitude);
+    println("Spin: "+steer.mag());
+    println("Velocity Mag: "+velocity.mag());
+    return steer;                                                    // Pass Vector to be applied to ship
   }
 
   //FIXME not working
   public PVector Thrust()
   {
-    PVector thrust = velocity;
-    thrust.normalize();
-    thrust.mult(((leftEnginePower/maxThrust)+(rightEnginePower/maxThrust))/2);
-    thrust.add(velocity);
-    thrust.normalize();
-    thrust.mult(localSpeedLimit);
+    PVector thrust = new PVector(1,0);
+    thrust.rotate(velocity.heading());
+    float thrustPower = (leftEnginePower/maxThrust)+(rightEnginePower/maxThrust);
+    println("Left: "+leftEnginePower);
+    println("Right: "+rightEnginePower);
+    println("Thrust BEFORE: "+thrustPower);
+    thrustPower = map(thrustPower, 0, 2, 0, maxForceMagnitude);
+    println("Thrust AFTER: "+thrustPower);
+    thrust.setMag(thrustPower);
 
     return thrust;
   }
@@ -2752,9 +3291,9 @@ public class Station extends Physical implements Clickable, Updatable
   Smoke smokeEffect2;
   boolean smoke1Visible, smoke2Visible;
   
-  public Station(StationType _type, PVector _loc, PVector _size, PImage _sprite) 
+  public Station(StationType _type, PVector _loc, PVector _size, PImage _sprite, Sector _sector) 
   {
-    super("Military Station", _loc, _size, 1500);
+    super("Military Station", _loc, _size, 1500, _sector);
     //TODO implement something besides military station
 
     sprite = _sprite.get();      //Use get() for a copy
@@ -2771,7 +3310,7 @@ public class Station extends Physical implements Clickable, Updatable
     smokeEffect2 = new Smoke(location, new PVector(10,10));  
     smoke1Visible = false;
     smoke2Visible = false;
-    
+
     //Set the description string
     String descriptor = new String();
     descriptor += name;
@@ -3216,212 +3755,152 @@ public class UI extends Drawable
   }
 }
 /*
- *  This is a bunch of updater methods that iterate through arraylist of objects.
- *  It is pretty clunky to do it this way, but there are problems with child objects 
- *  having different update methods than their parents. 
- *     TODO: Investigate a way around this
+ *  Updater methods on physical objects that run update loop and check for
+ *  death condition.
  */
 
-public void UpdateAsteroids(ArrayList<Asteroid> _asteroids)
+public void UpdatePhysicalObjects(ArrayList<? extends Physical> _object)
 {
-  for (Iterator<Asteroid> iterator = _asteroids.iterator(); iterator.hasNext();) 
+  for (Iterator<? extends Physical> iterator = _object.iterator(); iterator.hasNext();) 
   {
-    Asteroid roid = iterator.next();
-    roid.Update();
-    if (roid.toBeKilled) 
-    {
-        // Remove the current element from the iterator and the list.
-        iterator.remove();
-    }
-  }
-}
-
-public void UpdateShips(ArrayList<Ship> _ships)
-{
-  for (Iterator<Ship> iterator = _ships.iterator(); iterator.hasNext();) 
-  {
-    Ship ship = iterator.next();
-    ship.Update();
-    if (ship.toBeKilled) 
-    {
-        // Remove the current element from the iterator and the list.
-        iterator.remove();
-    }
-  }
-}
-
-public void UpdateShields(ArrayList<Shield> _shields)
-{
-  for (Iterator<Shield> iterator = _shields.iterator(); iterator.hasNext();) 
-  {
-    Shield shield = iterator.next();
-    shield.Update();
-    if (shield.toBeKilled) 
+    Physical obj = iterator.next();
+    obj.Update();
+    if (obj.toBeKilled) 
     {
       // Remove the current element from the iterator and the list.
       iterator.remove();
     }
-  }
-}
 
-public void UpdatePlanets(ArrayList<Planet> _planets)
-{
-  for(Planet a : _planets)
-  {
-    a.Update();
-  }
-}
-
-public void UpdateStations(ArrayList<Station> _stations)
-{
-  for (Iterator<Station> iterator = _stations.iterator(); iterator.hasNext();) 
-  {
-    Station station = iterator.next();
-    station.Update();
-    if (station.toBeKilled) 
-    { 
-      //Remove the current element from the iterator and the list (safely).
-      iterator.remove();
-    }
-  }
-}
-
-public void UpdateLasers(ArrayList<LaserBeam> _lasers)
-{
-  for (Iterator<LaserBeam> iterator = _lasers.iterator(); iterator.hasNext();) 
-  {
-    LaserBeam beam = iterator.next();
-    beam.Update();
-    if (beam.toBeKilled) 
-    { 
-      // Remove the current element from the iterator and the list.
-      iterator.remove();
-    }
-  }
-}
-
-public void UpdateExplosions(ArrayList<Explosion> _explosion)
-{
-  for (Iterator<Explosion> iterator = _explosion.iterator(); iterator.hasNext();) 
-  {
-    Explosion explosion = iterator.next();
-    if (explosion.toBeKilled) 
-    { 
-      // Remove the current element from the iterator and the list.
-      iterator.remove();
-    }
-  }
-}
-
-public void UpdateMissiles(ArrayList<Missile> _missiles)
-{
-  for (Iterator<Missile> iterator = _missiles.iterator(); iterator.hasNext();) 
-  {
-    Missile missile = iterator.next();
-    missile.Update();
-    if (missile.toBeKilled) 
+    if(obj.velocity.mag() > 0)      //If moving, check if it has left the sector
     {
-        // Remove the current element from the iterator and the list.
-        iterator.remove();
+      if(!CheckShapeOverlap(obj.currentSector.collider, obj.location))   //Is object inside the sector still?
+      {
+        println("[INFO] " + obj.name + " has left its parent sector...");
+        //TODO should be doing rectangle-rectangle collision, not point-point. This should do for now
+        //Object left sector -- find new sector it is in
+        for(Sector sector : sectors.values())
+        {
+          if(CheckShapeOverlap(sector.collider, obj.location))
+          {
+            obj.currentSector = sector;
+            println("[INFO] " + obj.name + " moved to sector " + sector.name);
+
+            //HACK check if this is the playership to generate more sectors
+            if(obj.name.toLowerCase().contains("player"))
+            {
+              //Add to temp hashmap, merge at end (see GameLoops & AssetLoader's MergeSectorMaps)
+              generatedSectors = BuildSectors(obj.currentSector);
+            }
+
+            //Remove from current sector's objects, add to next sector's objects
+            sector.ReceiveNewObject(obj);
+            iterator.remove();      //Remove from current list inside sector
+            return;
+          }
+        }
+        println("[ERROR] Couldn't find what sector " + obj.name + " is in!");
+      }
     }
   }
 }
-//******* DRAW ********//
 
-//Draw asteroid game object
-public void DrawAsteroids(ArrayList<Asteroid> _asteroids, boolean _displayIcons)
-{
-  for(Asteroid a : _asteroids)
-  {
-    a.DrawObject();
-    if(_displayIcons && a.drawOverlay)
-    {
-      a.iconOverlay.DrawObject();
-    }
-  }
-}
 
-//Draw structure game object
-public void DrawStations(ArrayList<Station> _stations)
+public void UpdateSectors(ArrayList<Sector> _sectors)
 {
-  for(Station a : _stations)
+  for(Sector a : _sectors)
   {
-    a.DrawObject();
+    UpdatePhysicalObjects(a.ships);
+    UpdatePhysicalObjects(a.asteroids);
+    UpdatePhysicalObjects(a.planets);    //Station updates occur in planet update loop
   }
 }
 
 
-public void DrawSectors(Map<Integer, Sector> _sectors)
+public void UpdateSectors(HashMap<Integer, Sector> _sectors)
 {
   for(Sector a : _sectors.values())
   {
+    UpdatePhysicalObjects(a.ships);
+    UpdatePhysicalObjects(a.asteroids);
+    UpdatePhysicalObjects(a.planets);  //Station updates occur in planet update loop
+  }
+}
+
+//******* DRAW ********//
+
+public void DrawObjects(ArrayList<? extends Drawable> _objects)
+{
+  for(Drawable a : _objects)
+  {
     a.DrawObject();
   }
 }
 
-public void DrawShips(ArrayList<Ship> _ships, boolean _displayIcons)
+/**
+ * Draw sectors and all child objects
+ * @param {Hashmap<Int,Sector> _sectors Draw sector background
+ * then all objects on top of it
+ */
+public void DrawSectors(Map<Integer, Sector> _sectors)
 {
-  for(Ship a : _ships)
+  //Draw sector backgrounds themselves
+  for(Sector a : _sectors.values())
   {
     a.DrawObject();
-    if(_displayIcons)
+
+    if(debugMode.value)
     {
-      a.iconOverlay.DrawObject();
+      a.collider.DrawObject();
     }
   }
-}
 
-public void DrawMissiles(ArrayList<Missile> _missiles, boolean _displayIcons)
-{
-  for(Missile a : _missiles)
+  for(Sector a : _sectors.values())
   {
-    a.DrawObject();
-    if(_displayIcons)
-    {
-      a.iconOverlay.DrawObject();
-    }
+    DrawObjects(a.planets);     //Stations drawn here too
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    DrawObjects(a.asteroids);
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    DrawObjects(a.ships);
   }
 }
 
-public void DrawLasers(ArrayList<LaserBeam> _projectiles)
+/**
+ * Draw a raw arraylist of sector objects and their contents
+ * @param {ArrayList<Sector>} _sectors Sector list to draw
+ */
+public void DrawSectors(ArrayList<Sector> _sectors)
 {
-  for(LaserBeam lb : _projectiles)
-  {
-    lb.DrawObject();
-  }
-}
-
-public void DrawPlanets(ArrayList<Planet> _planets)
-{
-  for(Planet a : _planets)
-  {
-    a.DrawObject();
-  }
-}
-
-public void DrawEffects(ArrayList<Explosion> _effect)
-{
-  for(Explosion a : _effect)
+  //Draw sector backgrounds themselves
+  for(Sector a : _sectors)
   {
     a.DrawObject();
   }
-}
 
-public void DrawButtons(ArrayList<ToggleButton> _buttons)
-{
-  for(ToggleButton a : _buttons)
+  for(Sector a : _sectors)
   {
-    a.DrawObject();
+    ArrayList<Planet> planets = a.planets;
+    DrawObjects(planets);     //Stations drawn here too
+  }
+
+  for(Sector a : _sectors)
+  {
+    ArrayList<Asteroid> asteroids = a.asteroids;
+    DrawObjects(asteroids);
+  }
+
+  for(Sector a : _sectors)
+  {
+    ArrayList<Ship> ships = a.ships;
+    DrawObjects(ships);
   }
 }
 
-public void DrawShapes(ArrayList<Shape> _shapes)
-{
-  for(Shape a : _shapes)
-  {
-    a.DrawObject();
-  }
-}
 
 public void DrawShields(ArrayList<Shield> _shields)
 {
@@ -3437,6 +3916,28 @@ public void DrawShields(ArrayList<Shield> _shields)
 }
 
 //******* MOVE ********//
+
+/**
+ * Move all objects in a sector
+ * @param _sectors [description]
+ */
+public void MoveSectorObjects(Map<Integer, Sector> _sectors)
+{
+  for(Sector a : _sectors.values())
+  {
+    MovePhysicalObject(a.planets);     //Stations drawn here too
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    MovePhysicalObject(a.asteroids);
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    MovePhysicalObject(a.ships);
+  }
+}
 
 //Move an array of movable objects
 public void MovePhysicalObject(ArrayList<? extends Physical> physical)

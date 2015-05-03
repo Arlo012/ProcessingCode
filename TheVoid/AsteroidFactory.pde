@@ -10,6 +10,7 @@ public class AsteroidFactory
   private int minX, minY, maxX, maxY, size, xCoor, yCoor;
   private float xVelocity, yVelocity;
   private PVector asteroidSizeRange = new PVector(Asteroid.minDiameter, Asteroid.maxDiameter);
+  private Sector nextAsteroidSector;      //Sector to place next asteroid on
 
   /**
    * Constructor for default asteroid factory generation
@@ -55,6 +56,8 @@ public class AsteroidFactory
     //TODO velocity unused in asteroids!
     xVelocity = 2 * maxVelocity.x * rand.nextFloat() - maxVelocity.x;    //Desensitize in x direction
     yVelocity = 2 * maxVelocity.y * rand.nextFloat() - maxVelocity.y;
+
+    nextAsteroidSector = _sector;
   }
   
   /**
@@ -63,7 +66,7 @@ public class AsteroidFactory
    */
   Asteroid GenerateAsteroid()
   {
-    Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, int(100000*size/asteroidSizeRange.y));
+    Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, int(100000*size/asteroidSizeRange.y), nextAsteroidSector);
     toBuild.SetVelocity(new PVector(xVelocity, yVelocity));
     toBuild.SetMaxSpeed(2.5);      //Local speed limit for asteroid
     toBuild.iconOverlay.SetIcon(color(#E8E238),ShapeType._CIRCLE_);

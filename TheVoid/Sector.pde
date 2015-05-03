@@ -17,6 +17,9 @@ public class Sector extends Drawable implements Updatable
   //Link to neighboring sectors
   public HashMap<SectorDirection, Sector> neighbors;
 
+  //Collider shape
+  Shape collider;     //For checking overlap of game objects in this sector
+
   private color debugViewColor;       //Color displayed over this sector in debug mode
   private SectorType sectorType;      //What kind of sector is this? Asteroid field, planetary, etc
 
@@ -39,9 +42,13 @@ public class Sector extends Drawable implements Updatable
 
     sprite = _background;
     sprite.resize(int(size.x), int(size.y));
-    
+
     renderMode = CORNER;        //Don't draw sector in center
      
+    //Shape for collision detection
+    collider = new Shape("collider", location, size, color(255,255,255), ShapeType._RECTANGLE_);
+    collider.renderMode = CORNER;
+
     //Object containers
     asteroids = new ArrayList<Asteroid>();
     planets = new ArrayList<Planet>();
@@ -261,6 +268,30 @@ public class Sector extends Drawable implements Updatable
   public Sector GetNeighbor(SectorDirection _direction)
   {
     return neighbors.get(_direction);
+  }
+
+
+  /**
+   * A new object has entered this sector -- typecast it and place in
+   * appropriate container
+   * @param {Physical} obj object to cast and hold
+   * @see  Updaters.pde > UpdatePhysicalObjects()
+   */
+  public void ReceiveNewObject(Physical obj)
+  {
+    if(obj instanceof Ship)
+    {
+      ships.add((Ship)obj);
+    }
+    else if(obj instanceof Asteroid)
+    {
+      asteroids.add((Asteroid)obj);
+    }
+    else if(obj instanceof Planet)
+    {
+      planets.add((Planet)obj);
+      println("[INFO] That's interesting.... a planet moved sectors.");
+    }
   }
 
   //Print debug sector ID map

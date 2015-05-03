@@ -23,6 +23,7 @@ String title = "The Void";
 
 //Game objects and areas
 HashMap<Integer,Sector> sectors;      //Sector IDs mapped against sector objects
+HashMap<Integer,Sector> generatedSectors;   //Storage of mid-loop generated sectors for later merging
 ArrayList<Sector> visibleSectors;     //Sectors on-screen right now (only render/update these)
 ArrayList<Explosion> explosions;      //Explosions are global game object
 PVector sectorSize;                   //Set to width/height for now

@@ -19,6 +19,11 @@ void DrawSectors(Map<Integer, Sector> _sectors)
   for(Sector a : _sectors.values())
   {
     a.DrawObject();
+
+    if(debugMode.value)
+    {
+      a.collider.DrawObject();
+    }
   }
 
   for(Sector a : _sectors.values())

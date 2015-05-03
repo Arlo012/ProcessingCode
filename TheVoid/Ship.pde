@@ -8,9 +8,6 @@ PImage shipSprite;      //Loaded in setup()
 public class Ship extends Physical implements Clickable, Updatable
 {
   TextWindow info;
-
-  //Location information
-  Sector currentSector;
   
   //Damage effects
   PVector smoke1Loc, smoke2Loc;    //In local coordinats relative to ship's location
@@ -48,11 +45,9 @@ public class Ship extends Physical implements Clickable, Updatable
     color _outlineColor, Sector _sector) 
   {
     //Parent constructor
-    super(_name, _loc, _size, _mass);
+    super(_name, _loc, _size, _mass, _sector);
     sprite = _sprite.get(); 
     sprite.resize(int(size.x), int(size.y));
-
-    currentSector = _sector;
 
     //Setup health, scaled by size relative to max size
     //TODO implement this into constructor (it is redundantly over-written in many places)
@@ -77,7 +72,7 @@ public class Ship extends Physical implements Clickable, Updatable
     maxThrust = 10.0;
 
     //Prepare shields
-    shield = new Shield(this, 250);
+    shield = new Shield(this, 250, currentSector);
     
     //Prepare sensors
     scanRadius = new Shape("Scan radius", location, new PVector(sensorRange,sensorRange), 

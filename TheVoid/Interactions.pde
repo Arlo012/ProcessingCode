@@ -142,18 +142,18 @@ void keyPressed()
   //DEBUG ONLY
   if(key == 'w')
   {
-    playerShip.location.y -= 5;
+    playerShip.ChangeVelocity(new PVector(0, -2));
   }
   else if(key == 's')
   {
-    playerShip.location.y += 5;
+    playerShip.ChangeVelocity(new PVector(0, 2));
   }
   else if(key == 'a')
   {
-    playerShip.location.x -= 5;
+    playerShip.ChangeVelocity(new PVector(-5, 0));
   }
   else if(key == 'd')
   {
-    playerShip.location.x += 5;
+    playerShip.ChangeVelocity(new PVector(5, 0));
   }
 }

@@ -9,11 +9,11 @@ public class Shield extends Physical implements Updatable
   int failureTime = 5000;       //How long shields are offline in event they fail, ms
   
   //String _name, PVector _loc, PVector _size, float _mass, DrawableType _type, Civilization _owner
-  Shield(Physical _parent, int _dmgCapacity)
+  Shield(Physical _parent, int _dmgCapacity, Sector _sector)
   {
     //HACK size is forced round to compensate for no rotation of a Shape object (even though the Shield itself is 'physical')
     //HACK shield mass set to 1500 to get around a collision w/ really massive objects
-    super("Shield", _parent.location, new PVector(_parent.size.x*1.25, _parent.size.x*1.25), 2000);
+    super("Shield", _parent.location, new PVector(_parent.size.x*1.25, _parent.size.x*1.25), 2000, _sector);
     overlay = new Shape("Shield Overlay", location, size, color(#5262E3, 50), ShapeType._CIRCLE_);
     overlay.SetFillColor(color(#5262E3, 50));
     

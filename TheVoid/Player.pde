@@ -64,8 +64,7 @@ public class Player extends Ship
 }
 
 
-enum NodeType
-{
+enum NodeType{
   SHIELDS, WEAPONS, ENGINES
 }
 
@@ -75,21 +74,22 @@ enum NodeType
  */
 public class Reactor
 {
-  int totalCapacity;
-  Map<NodeType, Node> nodes;
+	int totalCapacity;
+	Map<NodeType, Node> nodes;
 
-  public Reactor(int _capacity)
-  {
-    totalCapacity = _capacity;
-    nodes = new HashMap<NodeType, Node>();
-    nodes.put(NodeType.SHIELDS, new Node(NodeType.SHIELDS));
-    nodes.put(NodeType.WEAPONS, new Node(NodeType.WEAPONS));
-    nodes.put(NodeType.ENGINES, new Node(NodeType.ENGINES));
-  }
-  public int GetReactorPower(NodeType _type)
-  {
-    return nodes.get(_type).currentPower;
-  }
+	public Reactor(int _capacity)
+	{
+		totalCapacity = _capacity;
+		nodes = new HashMap<NodeType, Node>();
+		nodes.put(NodeType.SHIELDS, new Node(NodeType.SHIELDS));
+		nodes.put(NodeType.WEAPONS, new Node(NodeType.WEAPONS));
+		nodes.put(NodeType.ENGINES, new Node(NodeType.ENGINES));
+	}
+
+	public int GetReactorPower(NodeType _type)
+	{
+		return nodes.get(_type).currentPower;
+	}
 }
 
 /**

@@ -12,10 +12,10 @@ public class Planet extends Physical implements Clickable, Updatable
   private int planetTypeIndex;
   private ArrayList<Station> stations;      //Stations around this planet
 
-  public Planet(String _name, PVector _loc, int _diameter, int _mass) 
+  public Planet(String _name, PVector _loc, int _diameter, int _mass, Sector _sector) 
   {
     //Parent constructor
-    super(_name, _loc, new PVector(_diameter, _diameter), _mass);
+    super(_name, _loc, new PVector(_diameter, _diameter), _mass, _sector);
     
     //Select my planet image from spritesheet (total of 10 options)
     planetTypeIndex = rand.nextInt(11) + 1;    //There is no p0, add 1
@@ -79,33 +79,33 @@ public class Planet extends Physical implements Clickable, Updatable
       {
         if(stationColor == 1)
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation1);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation1, currentSector);
         }
         else
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation1);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation1, currentSector);
         }
       }
       else if(stationLevel == 2)
       {
         if(stationColor == 1)
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2, currentSector);
         }
         else
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2, currentSector);
         }
       }
       else
       {
         if(stationColor == 1)
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2, currentSector);
         }
         else
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2, currentSector);
         }
       }
 

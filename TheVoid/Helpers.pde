@@ -110,7 +110,7 @@ void GeneratePlanets(Sector sector, int count)
     //Guarantee planets are too close to each oher
     if(noOverlap)
     {  
-      Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, int(10000*size/planetSizeRange.y));
+      Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, int(10000*size/planetSizeRange.y), sector);
       toBuild.SetMaxSpeed(0);        //Local speed limit for planet (don't move)
       toBuild.baseAngle = rand.nextInt((360) + 1);
       sector.planets.add(toBuild);

@@ -12,17 +12,10 @@ public class Asteroid extends Physical implements Updatable
   
   private boolean isDebris = false;        //Is this asteroid just debris from another asteroid's death?
   
-  /**
-   * Constructor
-   * @param  _size  diameter of the asteroid
-   * @param  _xloc  x coordinate of the asteroid
-   * @param  _yloc  y coordinate of the asteroid
-   * @see         Asteroid
-   */
-  public Asteroid(PVector _loc, int _diameter, int _mass) 
+  public Asteroid(PVector _loc, int _diameter, int _mass, Sector _sector) 
   {
     //Parent constructor
-    super("Asteroid", _loc, new PVector(_diameter, _diameter), _mass);
+    super("Asteroid", _loc, new PVector(_diameter, _diameter), _mass, _sector);
     
     //Select my asteroid image from spritesheet     
     int RandomAsteroidIndex1 = rand.nextInt(8);      //x coordinate in sprite sheet
@@ -50,7 +43,7 @@ public class Asteroid extends Physical implements Updatable
     {
       for(int i = 0; i < 3; i++)
       {
-        Asteroid debris = new Asteroid(location, (int)size.x/2, (int)(mass/2));
+        Asteroid debris = new Asteroid(location, (int)size.x/2, (int)(mass/2), currentSector);
         
         //New velocity with some randomness based on old velocity
         debris.SetVelocity(new PVector(velocity.x/2 + rand.nextFloat()*velocity.x/3-velocity.x/6,
