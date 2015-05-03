@@ -46,7 +46,7 @@ public class Station extends Physical implements Clickable, Updatable
     smokeEffect2 = new Smoke(location, new PVector(10,10));  
     smoke1Visible = false;
     smoke2Visible = false;
-    
+
     //Set the description string
     String descriptor = new String();
     descriptor += name;

@@ -1,5 +1,19 @@
 //Handle collisiosn between two sets of drawable objects
 //ONLY VALID FOR CIRCLES/ RECTANGLES
+
+
+/**
+ * Handle intra-sector collisions between ships and asteroids
+ * @param {Map<Integer, Sector>} _sectors Sector to do collision checks on
+ */
+void HandleSectorCollisions(Map<Integer, Sector> _sectors)
+{
+  for(Sector a : _sectors.values())
+  {
+    HandleCollisions(a.asteroids, a.ships);
+  }
+}
+
 void HandleCollisions(ArrayList<? extends Physical> a, ArrayList<? extends Physical> b)
 {
   for(Physical obj1 : a)
@@ -123,7 +137,7 @@ void HandleMissileCollision(ArrayList<? extends Missile> a, ArrayList<? extends 
             print("\n");
           }
           
-          collisionSound.play();
+          collisionSound.play();    //TODO migrate this to missile object
           obj1.HandleCollision(obj2);
           obj2.HandleCollision(obj1);
         }

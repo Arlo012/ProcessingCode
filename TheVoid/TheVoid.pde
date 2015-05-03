@@ -23,6 +23,7 @@ String title = "The Void";
 
 //Game objects and areas
 HashMap<Integer,Sector> sectors;      //Sector IDs mapped against sector objects
+ArrayList<Sector> visibleSectors;     //Sectors on-screen right now (only render/update these)
 ArrayList<Explosion> explosions;      //Explosions are global game object
 PVector sectorSize;                   //Set to width/height for now
 
@@ -31,8 +32,8 @@ long loopCounter;        //How many loop iterations have been completed
 long loopStartTime;      //Millis() time main loop started
 
 //Debugging & profiling
-static boolean debuggingAllowed = false;      //Display DEBUG button on GUI?
-TogglableBoolean debugMode = new TogglableBoolean(false);
+static boolean debuggingAllowed = true;      //Display DEBUG button on GUI?
+TogglableBoolean debugMode = new TogglableBoolean(true);
 boolean profilingMode = false;
 
 //Handle zooming http://forum.processing.org/one/topic/zoom-based-on-mouse-position.html
@@ -43,7 +44,7 @@ WorldViewData wvd = new WorldViewData();
 LinkedList<Clickable> toDisplay;        //List of clickable UI objects to display //<>//
 
 //TEST AREA
-Ship testShip;
+Ship playerShip;
 
 void setup()
 {
@@ -64,7 +65,9 @@ void setup()
 
   //Game area setup
   sectors = new HashMap<Integer, Sector>();
-  sectorSize = new PVector(width,height);
+  sectorSize = new PVector(width*2,height*2);
+  visibleSectors = new ArrayList<Sector>();
+  explosions = new ArrayList<Explosion>();
 
   //Setup civilizations and their game objects, along with controllers
   GameObjectSetup();    //See AssetLoaders.pde
@@ -80,9 +83,13 @@ void setup()
   // currentTrack = introMusic;
 
   //TEST AREA
-  testShip = new Ship("TestShip", new PVector(width/2, height/2), new PVector(125, 50), 
-      shipSprite, 100, color(255,0,0));
-  sectors.get(0).ships.add(testShip);
+  playerShip = new Ship("playerShip", new PVector(width/2, height/2), new PVector(100, 50), 
+      shipSprite, 100, color(255,0,0), sectors.get(0));     //Place player in start sector
+  sectors.get(0).ships.add(playerShip);
+
+  //HACK just render current sector
+  visibleSectors.clear();
+  visibleSectors.add(playerShip.currentSector);
 }
 
 void draw()
@@ -97,9 +104,6 @@ void draw()
   else if(gameState == GameState.PLAY)
   {
     DrawPlayLoop();     //See GameLoops.pde
-
-    //testShip is now rendered/updated in the DrawPlayLoop() by the
-    //DrawSectors(sectors) and UpdateSectors(sectors)
   }
 
   else if(gameState == GameState.PAUSED)

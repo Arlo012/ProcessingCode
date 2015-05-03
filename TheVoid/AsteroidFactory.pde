@@ -1,20 +1,26 @@
-/*
- * Generates asteroids
-*/
-
+/**
+ * Tools to generate asteroid parameters, and return asteroid objects.
+ */
 public class AsteroidFactory
 {
   //Default values
-  private PVector asteroidSizeRange = new PVector(Asteroid.minDiameter, Asteroid.maxDiameter);   //Min, max asteroid size
-  private PVector maxVelocity = new PVector(0.01,0.65);                 //Max velocity in given x/y direction of asteroid
+  private PVector maxVelocity = new PVector(0,0);                 //Max velocity in given x/y direction of asteroid
 
   //Generator values (keep these stored for next asteroid to create
   private int minX, minY, maxX, maxY, size, xCoor, yCoor;
   private float xVelocity, yVelocity;
+  private PVector asteroidSizeRange = new PVector(Asteroid.minDiameter, Asteroid.maxDiameter);
 
+  /**
+   * Constructor for default asteroid factory generation
+   */
   AsteroidFactory(){
   }
 
+  /**
+   * Constructor for asteroid generation over provided size range
+   * @param {PVector} _sizeRange Overriding size range (min, max) of asteroids
+   */
   AsteroidFactory(PVector _sizeRange)
   {
     asteroidSizeRange = _sizeRange;
@@ -25,14 +31,18 @@ public class AsteroidFactory
     maxVelocity = _maxVelocity;
   }
   
-  
-  //Generate a new asteroid in a given area
+  /**
+   * Generate parameters for the next asteroid generated
+   * @param {Sector} _sector Sector to generate on
+   * @see  Helpers.pde for implementation
+   * @see  GenerateAsteroid() for object construction
+   */
   void SetNextAsteroidParameters(Sector _sector)
   {
-    minX = int(_sector.GetLocation().x);
-    minY = int(_sector.GetLocation().y);
-    maxX = int(_sector.GetSize().x);
-    maxY = int(_sector.GetSize().y);
+    minX = int(_sector.GetLocation().x + asteroidSizeRange.x);
+    minY = int(_sector.GetLocation().y + asteroidSizeRange.y);
+    maxX = int(_sector.GetSize().x - asteroidSizeRange.x);
+    maxY = int(_sector.GetSize().y - asteroidSizeRange.y);
   
     size = rand.nextInt(int(asteroidSizeRange.y - asteroidSizeRange.x))+ int(asteroidSizeRange.x);
     
@@ -42,12 +52,15 @@ public class AsteroidFactory
     yCoor = rand.nextInt(maxY)+minY;
     
     //Generate random movement vector
+    //TODO velocity unused in asteroids!
     xVelocity = 2 * maxVelocity.x * rand.nextFloat() - maxVelocity.x;    //Desensitize in x direction
     yVelocity = 2 * maxVelocity.y * rand.nextFloat() - maxVelocity.y;
   }
   
-  
-  //Build asteroid with parameters generated in SetNextAsteroidParameters and return it
+  /**
+   * Build asteroid with parameters generated in SetNextAsteroidParameters and return it
+   * @return {Asteroid} Generated asteroid
+   */
   Asteroid GenerateAsteroid()
   {
     Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, int(100000*size/asteroidSizeRange.y));
@@ -55,8 +68,6 @@ public class AsteroidFactory
     toBuild.SetMaxSpeed(2.5);      //Local speed limit for asteroid
     toBuild.iconOverlay.SetIcon(color(#E8E238),ShapeType._CIRCLE_);
     toBuild.drawOverlay = false;      //Dont draw overlay by default
-    
-    //TODO direction random?
     
     return toBuild;
   }

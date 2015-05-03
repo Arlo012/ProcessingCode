@@ -1,7 +1,7 @@
 float globalSpeedLimit = 10;      //Universal speed limit (magnitude vector)
 
-public enum RotationMode {
-  NONE, INSTANT, SPIN, FACE
+public enum PhysicsMode {       //Normal physics (Newtonian) or spin (planet/asteroid) 
+  STANDARD, SPIN
 }
 
 
@@ -34,7 +34,7 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
     mass = _mass;
     
     //Movement
-    velocity = new PVector(1, 1);
+    velocity = new PVector(0, 0);
     acceleration = new PVector(0,0);
     localSpeedLimit = 10;         //Default speed limit
     maxForceMagnitude = .2;          //TODO implement me
@@ -46,31 +46,26 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
   
   @Override public void DrawObject()
   {
+    super.DrawObject();
+
     pushMatrix();
     translate(location.x, location.y);
-    
-    if(debugMode.value)
-    {
-      //Debug velocity direction
-      stroke(255, 0, 0);
-      line(0, 0, 100 * velocity.x, 100 * velocity.y);
-    }
-
-    imageMode(renderMode);
-
-    //Handle drawing rotation
-    float theta = velocity.heading2D() + PI/2;
-    rotate(theta);
 
     //Display forward vector (white), velocity vector (red)
     if (debugMode.value)
     {
       //Debug forward direction
-      stroke(255);
-      line(0, 0, 50 * forward.x, 50 * forward.y);    
+      stroke(255, 255, 255);
+      line(0, 0, 50 * forward.x, 50 * forward.y);  
+
+      //Debug velocity direction
+      stroke(255, 0, 0);
+      line(0, 0, 100 * velocity.x, 100 * velocity.y);  
     }
 
-    image(sprite, 0, 0);
+    //Handle drawing rotation
+    rotate(radians(baseAngle));
+
     popMatrix();
   }
   
@@ -116,7 +111,7 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
   //Move location
   public void Move()
   {
-    location = PVector.add(location, velocity);      
+    location.add(velocity);               //Move based on velocity   
   }
 
   
@@ -143,7 +138,7 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
     
     if(debugMode.value)
     {
-      print("INFO: ");
+      print("[DEBUG] ");
       print(_other.name);
       print(" collision caused ");
       print(damage);

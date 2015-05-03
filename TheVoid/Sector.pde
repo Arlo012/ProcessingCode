@@ -1,39 +1,42 @@
-enum SectorType {
-  ASTEROIDFIELD, EMPTY, PLANETARY
+static enum SectorType {
+  ASTEROIDFIELD, EMPTY, PLANETARY, RANDOM
+}
+
+enum SectorDirection {
+  UL, Above, UR, Left, Right, LL, Below, LR
 }
 
 //An area in 2D space containing asteroids, planets, ships, stations, etc
 public class Sector extends Drawable implements Updatable
 {
-  //Contents of this sector
+  //Contents of this sector. Built by helper functions in helpers.pde
   public ArrayList<Asteroid> asteroids;
   public ArrayList<Planet> planets;
-  public ArrayList<Ship> ships;
+  public ArrayList<Ship> ships;           //May include enemies and the player ship
   
   //Link to neighboring sectors
-  public Sector aboveSector, belowSector, leftSector, rightSector,
-                  ULSector, URSector, LLSector, LRSector;
-  
-  private color debugViewColor;
-  private SectorType sectorType;
+  public HashMap<SectorDirection, Sector> neighbors;
+
+  private color debugViewColor;       //Color displayed over this sector in debug mode
+  private SectorType sectorType;      //What kind of sector is this? Asteroid field, planetary, etc
 
   //Sector parameters
   int minPlanets = 1;
   int maxPlanets = 4;
   int minAsteroids = 10;
-  int maxAsteroids = 100;
+  int maxAsteroids = 60;
 
-  /*
-  * Constructor
-  * @param  _areaName string name of this game area
-  * @param  _loc      posistion vector of sector location
-  * @param  _size     size of the sector
-  * @see         Sector
-  */
-  public Sector(int _ID, PVector _loc, PVector _size, PImage _background)
+/**
+ * [Sector description]
+ * @param {Integer} _ID Unique identifier for this sector
+ * @param {PVector} _loc Pixel location of this sector
+ * @param {PVector} _size Pixel size of this sector
+ * @param {PImage} _background Sprite of the background of this sector
+ */
+  public Sector(int _ID, PVector _loc, PVector _size, PImage _background, SectorType _sectorType)
   {
     super(Integer.toString(_ID), _loc, _size);
-    
+
     sprite = _background;
     sprite.resize(int(size.x), int(size.y));
     
@@ -43,145 +46,277 @@ public class Sector extends Drawable implements Updatable
     asteroids = new ArrayList<Asteroid>();
     planets = new ArrayList<Planet>();
     ships = new ArrayList<Ship>();
+
+    //Neighbors
+    neighbors = new HashMap<SectorDirection, Sector>();
+
+    //Generate all objects in the sector
+    GenerateSectorObjects(_sectorType);   //Build static objects (asteroids, planets, stations)
+    GenerateSectorEnemies();          //Build dynamic objects (enemies)
     
-    //Determine what type of sector we are
-    int sectorTypeRand = rand.nextInt((3 - 1) + 1) + 1;   //rand.nextInt((max - min) + 1) + min;
-    if(sectorTypeRand == 1)
-    {
-      println("[INFO] Building asteroid field sector");
-      sectorType = SectorType.ASTEROIDFIELD;
-      
-      //Generate asteroids in this sector
-      int asteroidCount = rand.nextInt((maxAsteroids - minAsteroids) + 1) + minAsteroids;
-      GenerateAsteroids(this, asteroidCount);
-    }
-    else if(sectorTypeRand == 2)
-    {
-      println("[INFO] Building empty sector");   
-      sectorType = SectorType.EMPTY;
-    }
-    else if(sectorTypeRand == 3)
-    {
-      println("[INFO] Building planetary sector"); 
-      sectorType = SectorType.PLANETARY;
-
-      //Generate planets
-      int planetCount = rand.nextInt((maxPlanets - minPlanets) + 1) + minPlanets;
-      GeneratePlanets(this, planetCount);
-    }
-    else
-    {
-      println("[ERROR] Invalid sector type selected. Defaulting to asteroid field");  
-      sectorType = SectorType.ASTEROIDFIELD;
-      
-      //Generate asteroids in this sector
-      int asteroidCount = rand.nextInt((maxAsteroids - minAsteroids) + 1) + minAsteroids;
-      GenerateAsteroids(this, asteroidCount);
-    }
-
     //DEBUG INFO
     debugViewColor = color(255);    //Default = white
   }
   
+  /**
+   * Generate the sector's objects (asteroids, planets, etc)
+   * @param {SectorType} _sectorType What kind of sector to generate
+   * @see  Helpers.pde for generation function
+   */
+  private void GenerateSectorObjects(SectorType _sectorType)
+  {
+    if(_sectorType == SectorType.RANDOM)
+    {
+      //Determine what type of sector we are
+      int sectorTypeRand = rand.nextInt((3 - 1) + 1) + 1;   //rand.nextInt((max - min) + 1) + min;
+      if(sectorTypeRand == 1)
+      {
+        println("[INFO] Building asteroid field sector");
+        sectorType = SectorType.ASTEROIDFIELD;
+      }
+      else if(sectorTypeRand == 2)
+      {
+        println("[INFO] Building empty sector");   
+        sectorType = SectorType.EMPTY;
+      }
+      else if(sectorTypeRand == 3)
+      {
+        println("[INFO] Building planetary sector"); 
+        sectorType = SectorType.PLANETARY;
+      }
+      else
+      {
+        println("[ERROR] Invalid sector type selected. Defaulting to asteroid field");  
+        sectorType = SectorType.ASTEROIDFIELD;
+      }
+    }
+    else    //Passed in parameter determines sectorType
+    {
+      sectorType = _sectorType;
+    }
+
+    if(sectorType == SectorType.PLANETARY)
+    {
+      //Generate planets
+      int planetCount = rand.nextInt((maxPlanets - minPlanets) + 1) + minPlanets;
+      GeneratePlanets(this, planetCount);         //See helpers.pde
+    }
+    else if(sectorType == SectorType.ASTEROIDFIELD)
+    {
+      //Generate asteroids in this sector
+      int asteroidCount = rand.nextInt((maxAsteroids - minAsteroids) + 1) + minAsteroids;
+      GenerateAsteroids(this, asteroidCount);     //See helpers.pde
+    }
+  }
+
+  /**
+   * Generate dynamic entities (enemies) in this sector
+   * @see  Helpers.pde for generation function
+   */
+  private void GenerateSectorEnemies()
+  {
+    int maxEnemies = 4;
+    int minEnemies = 1;
+    int enemyCount = rand.nextInt((maxEnemies - minEnemies) + 1) + minEnemies;
+    GenerateEnemies(this, enemyCount);
+  }
+
   public void SetDebugColor(color _color)
   {
     debugViewColor = _color;
   }
   
+  /**
+   * Draw the sector itself
+   * @see Visuals.pde DrawSectors() for drawing of child objects in the sector
+   */
   @Override public void DrawObject()
   {
     super.DrawObject();    //Draw using parent method
     
-    //Draw this sector's game objects
-    DrawAsteroids(asteroids, false);
-    DrawPlanets(planets);
-    DrawShips(ships, false);
+    //Sector's game objects are drawn in visuals.pde DrawSectors()
 
-    if(debugMode.value)    //Draw debug outline of sector
+    if(debugMode.value)    //Draw sector ID
     {
-      rectMode(CORNER);
-      fill(debugViewColor, 50);
-      rect(location.x, location.y, size.x, size.y);
+      pushStyle();
+      textFont(startupFont, 80);
+      pushMatrix();
+      translate(location.x + size.x/2, location.y + size.y/2);
+      text(name, 0, 0);
+      popMatrix();
+      popStyle();
     }
   }
 
   public void Update()
   {
-    for(Ship ship : ships)
-    {
-      ship.Update();
-      ship.ApplyBehaviors(1,1);
-    }
+    //TODO handle ships moving between sectors
+      //TODO subset: generate more sectors if player moves between sectors
   }
   
-  /*
-   * Check if this sector has already popualted & linked its neighbors
+  /**
+   * Attach a neighboring sector to this sector
+   * @param {SectorDirection} _direction Where relative to this sector?
+   * @param {Sector} _neighbor Neighboring sector object
    */
-  public boolean HasNeighbor(String _neighbor)
+  public void SetNeighbor(SectorDirection _direction, Sector _neighbor)
   {
-    //Switch statements not allowed in Processing except on Strings/Enums
-    if(_neighbor == "UL")
+    if(neighbors.get(_direction) == null)    //If mapping already exists
     {
-      if(ULSector != null)    //If UL sector exists
+      neighbors.put(_direction, _neighbor);
+      if(debugMode.value)
       {
-        return true;  
-      }
-      //Break out of ifs, return false
+        println("[DEBUG] Created neighbor relationship between " + name + " and " + _neighbor.name);
+      }    
     }
-    else if(_neighbor == "Above")
+  }
+
+  /**
+   * Check if this sector has already popualted and linked a neighbor
+   * in the provided direction
+   * @param {SectorDirection} _direction Which direction to check
+   * @return {boolean} True if neighbor populated, false if none
+   */
+  public boolean HasNeighbor(SectorDirection _direction)
+  {
+    if(neighbors.get(_direction) == null)   
     {
-      if(aboveSector != null)  
+      return false;  //If mapping already exists, already has neighbor
+    }
+    else
+    {
+      return true;
+    }
+  }
+
+  /**
+   * Returns the PVector coordinates of an adjacent neighbor
+   * (upper left corner of that sector coordinates)
+   * @param {SectorDirection} _neighbor Direction to check
+   * @return {PVector} Coordinates of where this neighbor would be (raw calculation)
+   */
+  public PVector GetNeighborLocation(SectorDirection _neighbor)
+  {
+    if(_neighbor == SectorDirection.UL)
+    {
+      return new PVector(location.x - size.x, location.y - size.y);  
+    }
+    else if(_neighbor == SectorDirection.Above)
+    {
+      return new PVector(location.x, location.y - size.y);  
+    }
+    else if(_neighbor == SectorDirection.UR)
+    {
+      return new PVector(location.x + size.x, location.y - size.y);  
+    }
+    else if(_neighbor == SectorDirection.Left)
+    {
+      return new PVector(location.x - size.x, location.y);  
+    }
+    else if(_neighbor == SectorDirection.Right)
+    {
+      return new PVector(location.x + size.x, location.y);   
+    }
+    else if(_neighbor == SectorDirection.LL)
+    {
+      return new PVector(location.x - size.x, location.y + size.y);  
+    }
+    else if(_neighbor == SectorDirection.Below)
+    {
+      return new PVector(location.x, location.y + size.y);  
+    }
+    else if(_neighbor == SectorDirection.LR)
+    {
+      return new PVector(location.x + size.x, location.y + size.y);  
+    }
+    else    //A weird value was passed in....
+    {
+      println("[ERROR] Requested neighbor on unspecified direction. Coordinates will be invalid!");
+    }
+
+    println("[ERROR] Returned invalid sector coordinates!");
+    return new PVector(0,0);
+  }
+
+  /**
+   * Return arraylist of all generated neighboring cells
+   * @return arraylist of sectors
+   */
+  public ArrayList<Sector> GetAllNeighbors()
+  {
+    ArrayList<Sector> allNeighbors = new ArrayList<Sector>();
+    for(Sector neighbor : neighbors.values())
+    {
+      allNeighbors.add(neighbor);
+    }
+
+    return allNeighbors;
+  }
+
+  /**
+   * Get a neighbor at a given direction. Returns null if DNE
+   * @param {SectorDirection} _direction Which way?
+   * @return {Sector} Null / valid sector
+   */
+  public Sector GetNeighbor(SectorDirection _direction)
+  {
+    return neighbors.get(_direction);
+  }
+
+  //Print debug sector ID map
+  public String toString() 
+  {
+    String[] ids = {"~", "~", "~", "~", "~", "~", "~", "~", "~"};
+
+    for(SectorDirection key : neighbors.keySet()) 
+    {
+      SectorDirection direction = key;
+      Sector sector = neighbors.get(key);   //Grab sector from map
+      String sectorID = sector.name;       //Get sector ID name
+
+      if(direction == SectorDirection.UL)
       {
-        return true;  
+        ids[0] = sectorID;
       }
-    }
-    else if(_neighbor == "UR")
-    {
-      if(URSector != null)
+      else if(direction == SectorDirection.Above)
       {
-        return true;  
+        ids[1] = sectorID;
       }
-    }
-    else if(_neighbor == "Left")
-    {
-      if(leftSector != null)
+      else if(direction == SectorDirection.UR)
       {
-        return true;  
+        ids[2] = sectorID;
       }
-    }
-    else if(_neighbor == "Right")
-    {
-      if(rightSector != null)
+      else if(direction == SectorDirection.Left)
       {
-        return true;  
+        ids[3] = sectorID;
       }
-    }
-    else if(_neighbor == "LL")
-    {
-      if(LLSector != null)
+      else if(direction == SectorDirection.Right)
       {
-        return true;  
+        ids[5] = sectorID;
       }
-    }
-    else if(_neighbor == "Below")
-    {
-      if(belowSector != null)
+      else if(direction == SectorDirection.LL)
       {
-        return true;  
+        ids[6] = sectorID;
       }
-    }
-    else if(_neighbor == "LR")
-    {
-      if(LRSector != null) 
+      else if(direction == SectorDirection.Below)
       {
-        return true;  
+        ids[7] = sectorID;
       }
+      else if(direction == SectorDirection.LR)
+      {
+        ids[8] = sectorID;
+      }
+
     }
-    else    //A weird string was passed in....
-    {
-      println("[WARNING] Requested neighbor on unspecified direction.");
-    } //<>//
-    
-    return false;
+    ids[4] = this.name;
+
+    String toReturn = "";
+    toReturn += "Sector " + name + " map\n";
+    toReturn += "----------\n";
+    toReturn += ("| " + ids[0] + " " + ids[1] + " " + ids[2] + " |\n");
+    toReturn += ("| " + ids[3] + " " + ids[4] + " " + ids[5] + " |\n");
+    toReturn += ("| " + ids[6] + " " + ids[7] + " " + ids[8] + " |\n");
+    toReturn += "----------\n";
+    return toReturn;
   }
 }

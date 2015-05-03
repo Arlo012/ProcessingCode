@@ -25,70 +25,26 @@ void DrawStartupLoop()
 void DrawPlayLoop()
 {
   textFont(startupFont, 12);
-  background(bg);
+  background(0);
   
   loopCounter++;
-  
-//******* ALL ZOOMED AFTER THIS ********//
-  BeginZoom();
 
-  DrawSectors(sectors);   //Draw sectors (and the asteroids/ planets/ ships within them)
+//******* ALL ZOOMED AFTER THIS ********//
+  BeginZoom();      //See visuals.pde
+  translate(width/2 -playerShip.location.x, height/2 - playerShip.location.y);    //Pan camera on ship
+
+  //Only render/update visible sectors (slightly faster)
+  // DrawSectors(visibleSectors);
+  // UpdateSectors(visibleSectors);
+  
+  //ALL sectors (slower)
+  DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
+  MoveSectorObjects(sectors);   //Move all objects in the sectors
+  HandleSectorCollisions(sectors);
   UpdateSectors(sectors); //Update sectors (and all updatable objects within them)
 
-  //TODO intelligently only draw sector objects on the screen
+  //TODO handle object sector transistion
 
-  // //If zoomed out far enough, draw object icons with the objects
-  // if(wvd.viewRatio < 1.5)
-  // {
-  //   //Draw Game objects
-  //   DrawPlanets(P1.planets);
-  //   DrawAsteroids(asteroids, true);         //See Visuals.pde
-  //   DrawShips(P1.fleet, true);
-  //   DrawShields(P1.shields);
-  //   DrawStations(P1.stations);
-  //   DrawMissiles(P1.missiles, true);
-  //   DrawLasers(P1.lasers);
-  //   DrawEffects(explosions);
-  // }
-  // else
-  // {
-  //   //Draw Game objects
-  //   DrawPlanets(P1.planets);
-  //   DrawAsteroids(asteroids, false);         //See Visuals.pde
-  //   DrawShips(P1.fleet, false);
-  //   DrawShields(P1.shields);
-  //   DrawStations(P1.stations);
-  //   DrawMissiles(P1.missiles, false);
-  //   DrawLasers(P1.lasers);
-  //   DrawEffects(explosions);
-  // }
-  
-
-  // //Move game objects
-  // MovePhysicalObject(asteroids);        //See Visuals.pde
-  // MovePhysicalObject(P1.lasers);
-  // MovePilotableObject(P1.fleet);
-  // MovePilotableObject(P1.missiles);
-
-//// Check collisions
-  // if(asteroidCollisionAllowed)
-  // {
-  //   HandleCollisions(asteroids);            //Self collisions    
-  // }
-  // //Asteroid - object
-  // HandleCollisions(asteroids, P1.fleet);
-  // HandleCollisions(asteroids, P1.stations);
-  // HandleShieldCollisions(P1.shields, asteroids);
-  
-  // //Missile - object
-  // HandleMissileCollision(P1.missiles, asteroids);
-  
-  // //Laser - object
-  // HandleLaserCollision(P1.lasers, asteroids);
-  
-  // //Laser - missile (Note: don't run laser-missile then missile-laser, will trigger twice)
-  // //HandleLaserCollision(P1.lasers, P2.missiles);
-  
 //// ******* UI ********//
 
 //// Mouseover text window info
@@ -119,33 +75,13 @@ void DrawPlayLoop()
   //   }
   // }
 
-  
-//// Debug mode display
-  // if(debugMode.value)
-  // {
-  //   DrawGameArea(gameAreas);       //See Visuals.pde
-  // }
-
 //// ******* ALL ZOOMED BEFORE THIS ********//
    EndZoom();
-  
-//// Draw Civ UI
-  // P1.DrawCivilizationUI();
   
 //// Draw main interface
   // currentPlayer.DrawUI();
 
 //// ******* UPDATES ********//
-
-  // AsteroidOffScreenUpdate(asteroids, gameAreas);      //See helpers.pde
-  
-  // UpdateShips(P1.fleet);
-  // UpdateShields(P1.shields);
-  // UpdateAsteroids(asteroids);
-  // UpdatePlanets(P1.planets);
-  // UpdateMissiles(P1.missiles);
-  // UpdateStations(P1.stations);
-  // UpdateLasers(P1.lasers);
   
   // //Effects MUST be called as last update. Some update functions have death frame action that will not be called if this runs first
   // UpdateExplosions(explosions);       
@@ -153,27 +89,13 @@ void DrawPlayLoop()
   // //Update UI information for the main UI
   // currentPlayer.UpdateUI();
   
-  // //Update civilizations (TODO: move where all other updateships, etc 
-  //     //currently are after migrating them into these functions)
-  // P1.Update();
-  
 //// ******* PROFILING ********//
-  // if(profilingMode)
-  // {
-  //   println(frameRate);
-  // }
+  if(profilingMode)
+  {
+    println(frameRate);
+  }
   
 //// ******* GAMEOVER Condition ********//  
-  // if(P1.stations.isEmpty())
-  // {
-  //   winner = P2;
-  //   gameState = GameState.GAMEOVER;
-  // }
-  // else if(P2.stations.isEmpty())
-  // {
-  //   winner = P1;
-  //   gameState = GameState.GAMEOVER;
-  // }
   
 }
 

@@ -10,7 +10,8 @@ public class Drawable
   
   //Image properties
   protected PVector location;               //On absolute plane
-  protected PVector size;                  
+  protected PVector size;               
+  public float baseAngle;                   //Starting angle in degrees
   public int renderMode = CENTER;          //Render mode for visible outline
   boolean toBeKilled = false;              //Does this object need to be destroyed?
   
@@ -51,8 +52,11 @@ public class Drawable
     pushStyle();
     if(sprite != null)
     {
+      translate(location.x, location.y);
+      rotate(radians(baseAngle));
+
       imageMode(renderMode);
-      image(sprite, location.x, location.y);
+      image(sprite, 0, 0);
     }
     else
     {

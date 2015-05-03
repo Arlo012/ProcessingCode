@@ -2,17 +2,17 @@
 PImage asteroidSpriteSheet;      //Loaded in setup()
 
 /*
- * An asteroid gameobject, inheriting from Drawable
+ * An asteroid gameobject, inheriting from Physical
  */
 public class Asteroid extends Physical implements Updatable
 {
   private static final int minDiameter = 10;
-  private static final int maxDiameter = 20;
+  private static final int maxDiameter = 30;
   private static final int maxAsteroidHealth = 100;
   
   private boolean isDebris = false;        //Is this asteroid just debris from another asteroid's death?
   
-  /*
+  /**
    * Constructor
    * @param  _size  diameter of the asteroid
    * @param  _xloc  x coordinate of the asteroid

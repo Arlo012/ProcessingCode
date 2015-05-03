@@ -8,6 +8,9 @@ PImage shipSprite;      //Loaded in setup()
 public class Ship extends Physical implements Clickable, Updatable
 {
   TextWindow info;
+
+  //Location information
+  Sector currentSector;
   
   //Damage effects
   PVector smoke1Loc, smoke2Loc;    //In local coordinats relative to ship's location
@@ -16,14 +19,16 @@ public class Ship extends Physical implements Clickable, Updatable
   boolean smoke1Visible, smoke2Visible;
   
   //Scanners
-  int scanInterval = 500;         //ms between scans
-  long lastScanTime;              //When last scan occured
-  int sensorRange = 250;          //Units of pixels
-  Shape scanRadius;               //Circle outline, when hovered over, shows sensor/weapons range
+  protected int scanInterval = 500;         //ms between scans
+  protected long lastScanTime;              //When last scan occured
+  protected int sensorRange = 250;          //Units of pixels
+  protected Shape scanRadius;               //Circle outline, when hovered over, shows sensor/weapons range
   
   //Weapons
-  long lastFireTime;
-  float fireInterval = 850;          //ms between shots
+  protected long lastFireTime;
+  protected float minFireInterval = 850;          //ms between shots
+  protected float currentFireInterval = minFireInterval;
+
   ArrayList<Physical> targets;    //Firing targets selected after scan
   
   //Shields
@@ -39,12 +44,15 @@ public class Ship extends Physical implements Clickable, Updatable
   ArrayList<Ship> enemyShips;
   ArrayList<Station> enemyStations;
   
-  public Ship(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, color _outlineColor) 
+  public Ship(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, 
+    color _outlineColor, Sector _sector) 
   {
     //Parent constructor
     super(_name, _loc, _size, _mass);
     sprite = _sprite.get(); 
     sprite.resize(int(size.x), int(size.y));
+
+    currentSector = _sector;
 
     //Setup health, scaled by size relative to max size
     //TODO implement this into constructor (it is redundantly over-written in many places)
@@ -92,7 +100,7 @@ public class Ship extends Physical implements Clickable, Updatable
   @Override public void DrawObject()
   {
     super.DrawObject();
-    
+
     //Draw smoke effects
     if(smoke1Visible)
     {
@@ -105,9 +113,18 @@ public class Ship extends Physical implements Clickable, Updatable
 
   }
   
-  public void Update()
+  /**
+   * Set the sector this ship is currently in.
+   * @param {Sector} _sector Sector object of current location
+   */
+  public void UpdateCurrentSector(Sector _sector)
   {
-    super.Update();    //Call Physical update
+    currentSector = _sector;
+  }
+
+  @Override public void Update()
+  {
+    super.Update();    //Call Physical update (movement occurs here)
     
   //**** UI ****//
     //Check if UI is currently rendered, and if so update info
@@ -122,9 +139,6 @@ public class Ship extends Physical implements Clickable, Updatable
     //Update icon overlay
     iconOverlay.UpdateLocation(location);
 
-
-   //**** WEAPONS *****//
-    //TODO
 
    //**** MOVEMENT *****//
 

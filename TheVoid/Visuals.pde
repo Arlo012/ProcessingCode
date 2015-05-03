@@ -1,99 +1,73 @@
 //******* DRAW ********//
 
-//Draw asteroid game object
-void DrawAsteroids(ArrayList<Asteroid> _asteroids, boolean _displayIcons)
+void DrawObjects(ArrayList<? extends Drawable> _objects)
 {
-  for(Asteroid a : _asteroids)
-  {
-    a.DrawObject();
-    if(_displayIcons && a.drawOverlay)
-    {
-      a.iconOverlay.DrawObject();
-    }
-  }
-}
-
-//Draw structure game object
-void DrawStations(ArrayList<Station> _stations)
-{
-  for(Station a : _stations)
+  for(Drawable a : _objects)
   {
     a.DrawObject();
   }
 }
 
-
+/**
+ * Draw sectors and all child objects
+ * @param {Hashmap<Int,Sector> _sectors Draw sector background
+ * then all objects on top of it
+ */
 void DrawSectors(Map<Integer, Sector> _sectors)
 {
+  //Draw sector backgrounds themselves
   for(Sector a : _sectors.values())
   {
     a.DrawObject();
   }
-}
 
-void DrawShips(ArrayList<Ship> _ships, boolean _displayIcons)
-{
-  for(Ship a : _ships)
+  for(Sector a : _sectors.values())
   {
-    a.DrawObject();
-    if(_displayIcons)
-    {
-      a.iconOverlay.DrawObject();
-    }
+    DrawObjects(a.planets);     //Stations drawn here too
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    DrawObjects(a.asteroids);
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    DrawObjects(a.ships);
   }
 }
 
-void DrawMissiles(ArrayList<Missile> _missiles, boolean _displayIcons)
+/**
+ * Draw a raw arraylist of sector objects and their contents
+ * @param {ArrayList<Sector>} _sectors Sector list to draw
+ */
+void DrawSectors(ArrayList<Sector> _sectors)
 {
-  for(Missile a : _missiles)
-  {
-    a.DrawObject();
-    if(_displayIcons)
-    {
-      a.iconOverlay.DrawObject();
-    }
-  }
-}
-
-void DrawLasers(ArrayList<LaserBeam> _projectiles)
-{
-  for(LaserBeam lb : _projectiles)
-  {
-    lb.DrawObject();
-  }
-}
-
-void DrawPlanets(ArrayList<Planet> _planets)
-{
-  for(Planet a : _planets)
+  //Draw sector backgrounds themselves
+  for(Sector a : _sectors)
   {
     a.DrawObject();
   }
-}
 
-void DrawEffects(ArrayList<Explosion> _effect)
-{
-  for(Explosion a : _effect)
+  for(Sector a : _sectors)
   {
-    a.DrawObject();
+    ArrayList<Planet> planets = a.planets;
+    DrawObjects(planets);     //Stations drawn here too
+  }
+
+  for(Sector a : _sectors)
+  {
+    ArrayList<Asteroid> asteroids = a.asteroids;
+    DrawObjects(asteroids);
+  }
+
+  for(Sector a : _sectors)
+  {
+    ArrayList<Ship> ships = a.ships;
+    DrawObjects(ships);
   }
 }
 
-void DrawButtons(ArrayList<ToggleButton> _buttons)
-{
-  for(ToggleButton a : _buttons)
-  {
-    a.DrawObject();
-  }
-}
-
-void DrawShapes(ArrayList<Shape> _shapes)
-{
-  for(Shape a : _shapes)
-  {
-    a.DrawObject();
-  }
-}
 
 void DrawShields(ArrayList<Shield> _shields)
 {
@@ -109,6 +83,28 @@ void DrawShields(ArrayList<Shield> _shields)
 }
 
 //******* MOVE ********//
+
+/**
+ * Move all objects in a sector
+ * @param _sectors [description]
+ */
+void MoveSectorObjects(Map<Integer, Sector> _sectors)
+{
+  for(Sector a : _sectors.values())
+  {
+    MovePhysicalObject(a.planets);     //Stations drawn here too
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    MovePhysicalObject(a.asteroids);
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    MovePhysicalObject(a.ships);
+  }
+}
 
 //Move an array of movable objects
 void MovePhysicalObject(ArrayList<? extends Physical> physical)
