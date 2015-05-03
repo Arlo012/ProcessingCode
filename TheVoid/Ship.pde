@@ -71,9 +71,9 @@ public class Ship extends Physical implements Clickable, Updatable
     smoke2Visible = false;
     
     //Prepare engines
-    leftEnginePower = 1;
-    rightEnginePower = 1;
-    minThrust = 0.1;
+    leftEnginePower = 0;
+    rightEnginePower = 0;
+    minThrust = 0.0;
     maxThrust = 10.0;
 
     //Prepare shields
@@ -95,6 +95,7 @@ public class Ship extends Physical implements Clickable, Updatable
     descriptor += "\nShield: ";
     descriptor += shield.health.current ;
     info = new TextWindow("Ship Info", location, descriptor, true);
+    
   }
   
   @Override public void DrawObject()
@@ -175,59 +176,47 @@ public class Ship extends Physical implements Clickable, Updatable
     }
   }
 
-//**** MOVEMENT *****//
-  void ApplyBehaviors(int _avoidWeight, int _spinWeight)
-  {
-    //PVector seekForce = seek(new PVector(mouseX,mouseY));
-    PVector spinForce = Spin();
-    ApplyForce(spinForce);
-
-    //FIXME
-    //PVector thrustForce = Thrust();
-    //ApplyForce(spinForce);    
-  }
-
-  PVector Seek(PVector target)
-  {
-    PVector desired = PVector.sub(target, location);
-    desired.normalize();
-    desired.mult(localSpeedLimit);
-    PVector steer= PVector.sub(desired, velocity);
-    steer.limit(maxForceMagnitude);
-    return steer;
-  }
-
+   /*
+  SPIN: 
+  Creates two 'spin' vectors for each of the two engines.
+  The vectors are both perpendicular to the Velocity vector and face opposite directions from one another
+  They are scaled based on the engines power and then summed to each other and passed as a steering force to be summed to the acceleration vector
+  */
   PVector Spin()
   {
-    PVector spinLeftEngine = new PVector(1,1);
-    PVector spinRightEngine = new PVector(1,1);
-    spinLeftEngine.set(-velocity.y, velocity.x);
-    spinRightEngine.set(velocity.y, -velocity.x);
-    spinLeftEngine.normalize();
-    spinRightEngine.normalize();
-
-    spinLeftEngine.mult(leftEnginePower);
-    spinRightEngine.mult(rightEnginePower);
-
-    PVector spinSum = PVector.add(spinRightEngine, spinLeftEngine);
-    PVector desired = PVector.add(spinSum, velocity);
+    PVector spinLeftEngine = new PVector(1,0);
+    PVector spinRightEngine = new PVector(1,0);
+   
+    spinLeftEngine.rotate(velocity.heading() + HALF_PI);    //left engine vector set perdendicular to Velocity facing left.
+    spinRightEngine.rotate(velocity.heading() - HALF_PI);   //right engine vector set perpendiuclar to Velocity facing right.
+    spinLeftEngine.setMag(leftEnginePower);                 //Set magnitudes to Engines power ranging 0-10
+    spinRightEngine.setMag(rightEnginePower);
+    PVector spinSum = PVector.add(spinRightEngine, spinLeftEngine);  //Sum the apposing facing spin vectors
+    
+    PVector desired = PVector.add(spinSum, velocity);                // Sum 'spin' vector with velocity go get a desired direction
     desired.normalize();
-    desired.mult(localSpeedLimit);
+    desired.mult(localSpeedLimit);                                   // Scale based on Maximum Player Speed
     PVector steer = PVector.sub(desired, velocity);
-    steer.limit(maxForceMagnitude);
-
-    return steer;
+    steer.x = map(steer.x, 0,7.66, 0,.5);                            // 7.66 was max value seen when debugging---- .5 seems reasonable for max spin
+    steer.y = map(steer.y, 0,7.66, 0,.5);
+    //steer.limit(maxForceMagnitude);
+    println("Spin: "+steer.mag());
+    println("Velocity Mag: "+velocity.mag());
+    return steer;                                                    // Pass Vector to be applied to ship
   }
 
   //FIXME not working
   PVector Thrust()
   {
-    PVector thrust = velocity;
-    thrust.normalize();
-    thrust.mult(((leftEnginePower/maxThrust)+(rightEnginePower/maxThrust))/2);
-    thrust.add(velocity);
-    thrust.normalize();
-    thrust.mult(localSpeedLimit);
+    PVector thrust = new PVector(1,0);
+    thrust.rotate(velocity.heading());
+    float thrustPower = (leftEnginePower/maxThrust)+(rightEnginePower/maxThrust);
+    println("Left: "+leftEnginePower);
+    println("Right: "+rightEnginePower);
+    println("Thrust BEFORE: "+thrustPower);
+    thrustPower = map(thrustPower, 0, 2, 0, maxForceMagnitude);
+    println("Thrust AFTER: "+thrustPower);
+    thrust.setMag(thrustPower);
 
     return thrust;
   }

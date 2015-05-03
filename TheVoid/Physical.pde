@@ -54,17 +54,18 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
     //Display forward vector (white), velocity vector (red)
     if (debugMode.value)
     {
-      //Debug forward direction
+      //Debug forward direction (white)
       stroke(255, 255, 255);
       line(0, 0, 50 * forward.x, 50 * forward.y);  
 
-      //Debug velocity direction
+      //Debug velocity direction (red)
       stroke(255, 0, 0);
       line(0, 0, 100 * velocity.x, 100 * velocity.y);  
     }
 
     //Handle drawing rotation
-    rotate(radians(baseAngle));
+    baseAngle= velocity.heading2D();
+    rotate(baseAngle);
 
     popMatrix();
   }

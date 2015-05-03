@@ -44,7 +44,7 @@ WorldViewData wvd = new WorldViewData();
 LinkedList<Clickable> toDisplay;        //List of clickable UI objects to display //<>//
 
 //TEST AREA
-Ship playerShip;
+Player playerShip;
 
 void setup()
 {
@@ -69,6 +69,9 @@ void setup()
   visibleSectors = new ArrayList<Sector>();
   explosions = new ArrayList<Explosion>();
 
+  playerShip = new Player(new PVector(width/2, height/2), new PVector(100, 50), 
+    shipSprite, 100, color(255,0,0), sectors.get(0));     //Place player in start sector
+
   //Setup civilizations and their game objects, along with controllers
   GameObjectSetup();    //See AssetLoaders.pde
   
@@ -83,8 +86,6 @@ void setup()
   // currentTrack = introMusic;
 
   //TEST AREA
-  playerShip = new Ship("playerShip", new PVector(width/2, height/2), new PVector(100, 50), 
-      shipSprite, 100, color(255,0,0), sectors.get(0));     //Place player in start sector
   sectors.get(0).ships.add(playerShip);
 
   //HACK just render current sector

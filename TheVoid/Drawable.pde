@@ -53,7 +53,7 @@ public class Drawable
     if(sprite != null)
     {
       translate(location.x, location.y);
-      rotate(radians(baseAngle));
+      rotate(baseAngle);
 
       imageMode(renderMode);
       image(sprite, 0, 0);

@@ -98,29 +98,44 @@ void keyPressed()
   {
     if(playerShip.leftEnginePower > playerShip.minThrust)
     {
-      playerShip.leftEnginePower -= playerShip.minThrust;
+      playerShip.leftEnginePower -= 1;
+    }
+    else
+    {
+      playerShip.leftEnginePower = playerShip.minThrust;
     }
   }
   else if(key =='y' || key == 'Y')
   {
     if(playerShip.leftEnginePower < playerShip.maxThrust)
     {
-      playerShip.leftEnginePower += playerShip.minThrust;
-      println(playerShip.leftEnginePower);
+      playerShip.leftEnginePower += 1;
+    }
+    else
+    {
+      playerShip.leftEnginePower = playerShip.maxThrust;
     }
   }
   else if(key == 'k' || key == 'K')
   {
-    if(playerShip.leftEnginePower > playerShip.minThrust)
+    if(playerShip.rightEnginePower > playerShip.minThrust)
     {
-      playerShip.rightEnginePower -= .1;
+      playerShip.rightEnginePower -= 1;
+    }
+    else
+    {
+      playerShip.rightEnginePower = playerShip.minThrust;
     }
   }
   else if(key =='i' || key == 'I')
   {
-    if(playerShip.leftEnginePower < playerShip.maxThrust)
+    if(playerShip.rightEnginePower < playerShip.maxThrust)
     {
-      playerShip.rightEnginePower += playerShip.minThrust;
+      playerShip.rightEnginePower += 1;
+    }
+    else
+    {
+      playerShip.rightEnginePower = playerShip.maxThrust;
     }
   }
 
