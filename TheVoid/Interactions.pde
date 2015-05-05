@@ -49,9 +49,8 @@ void mouseDragged() {
 // Change zoom level
 void mouseClicked() 
 {
-  PVector currentMouseLoc = new PVector(mouseX, mouseY);
+  PVector currentMouseLoc = new PVector(mouseX*2, mouseY*2);    //HACK why is this coordinate system messed up like this?
 
-  //Click actions here, based on gamestate
 }
 
 void mouseWheel(MouseEvent e)
@@ -106,7 +105,7 @@ void keyPressed()
       playerShip.leftEnginePower = playerShip.minThrust;
     }
   }
-  else if(key =='y' || key == 'Y')
+  if(key =='y' || key == 'Y')
   {
     if(playerShip.leftEnginePower < playerShip.maxThrust)
     {
@@ -117,7 +116,7 @@ void keyPressed()
       playerShip.leftEnginePower = playerShip.maxThrust;
     }
   }
-  else if(key == 'k' || key == 'K')
+  if(key == 'k' || key == 'K')
   {
     if(playerShip.rightEnginePower > playerShip.minThrust)
     {
@@ -128,7 +127,7 @@ void keyPressed()
       playerShip.rightEnginePower = playerShip.minThrust;
     }
   }
-  else if(key =='i' || key == 'I')
+  if(key =='i' || key == 'I')
   {
     if(playerShip.rightEnginePower < playerShip.maxThrust)
     {
@@ -145,7 +144,7 @@ void keyPressed()
   {
     playerShip.SelectNextTarget();
   }
-    if(key == 'e' || key == 'E')    //Cycle targets
+  if(key == 'e' || key == 'E')    //Cycle targets
   {
     playerShip.FireAtTarget();
   }

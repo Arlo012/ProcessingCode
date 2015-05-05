@@ -2,11 +2,13 @@
 PImage bg;             //Background
 
 //TODO move all PImage instances here
+PImage nebula1, nebula2, nebula3;
+ArrayList<PImage> nebulaSprites;
 PImage shieldSprite;
 PImage redLaser, greenLaser;
 ArrayList<PImage> enemyShipSprites; 
 ArrayList<PVector> enemyShipSizes;      //Size (by index) of above sprite
-int enemyShipCount = 10;                //HACK this is rigid -- careful to update if add ships
+int enemyShipTypeCount = 10;                //HACK this is rigid -- careful to update if add ships
 void LoadImageAssets()
 {
   bg = loadImage("Assets/Backgrounds/back_3.png");
@@ -22,6 +24,15 @@ void LoadImageAssets()
 
   //Shields
   shieldSprite = loadImage("Assets/Effects/ShieldRotated.png");
+
+  //Nebulas
+  nebula1 = loadImage("Assets/Nebula/Nebula1.png");
+  nebula2 = loadImage("Assets/Nebula/Nebula2.png");
+  nebula3 = loadImage("Assets/Nebula/Nebula3.png");
+  nebulaSprites = new ArrayList<PImage>();
+  nebulaSprites.add(nebula1);
+  nebulaSprites.add(nebula2);
+  nebulaSprites.add(nebula3);
 
   //Total of 10 enemy ship sprites
   enemyShipSprites.add(loadImage("Assets/Ships/7(1).png"));

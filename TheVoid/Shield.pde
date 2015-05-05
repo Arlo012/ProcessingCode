@@ -47,8 +47,8 @@ public class Shield extends Physical implements Updatable
 
     //HACK the triangle size for the shields is just tuned to match the player.... need a real formula
     //Setup collider (note: in a triangle the Y dimension is ignored))
-    collider = new Shape("ShieldCollider", location, new PVector(0.8*size.x, size.y), color(0,0,255), ShapeType._TRIANGLE_);
-       
+    collider = new Shape("ShieldCollider", location, new PVector(0.8*size.x, 0.8*size.x), color(0,0,255), ShapeType._TRIANGLE_);
+
     locationShift = new PVector(0,0);
     rotationShift = 0;
 
@@ -136,7 +136,7 @@ public class Shield extends Physical implements Updatable
   {
     super.HandleCollision(_other);
 
-    //Play sounds
+    //TODO Play sounds....
 
   }
 

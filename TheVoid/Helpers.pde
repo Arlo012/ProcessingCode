@@ -147,7 +147,7 @@ void GenerateEnemies(Sector sector, int count)
 
   int minX, minY, maxX, maxY;                 //Max allowed positions
 
-  int enemyShipRandomIndex = rand.nextInt((enemyShipCount -1) + 1);
+  int enemyShipRandomIndex = rand.nextInt((enemyShipTypeCount -1) + 1);
   PImage enemySprite = enemyShipSprites.get(enemyShipRandomIndex).get();    //Make sure to get a COPY of the vector
   PVector enemyShipSize = enemyShipSizes.get(enemyShipRandomIndex).get();
 

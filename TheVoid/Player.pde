@@ -45,7 +45,7 @@ public class Player extends Ship
 
     //Behavior Ranges for Enemies
     seekDiameter = 3000;        //All ships inside the screen + 100 pixels will seek to destory
-    seekAgainDiameter = 650;
+    seekAgainDiameter = 800;
     avoidDiameter = 600;
     
     seekCircle = new Shape("seekCircle", location, new PVector(seekDiameter,seekDiameter), color(0,255,255), ShapeType._CIRCLE_);                    //Light Blue

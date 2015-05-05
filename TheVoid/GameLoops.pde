@@ -22,6 +22,8 @@ void DrawStartupLoop()
   popStyle();
 }
 
+
+PVector cameraPan = new PVector(0,0);     //Pixels of camera pan to follow ship
 void DrawPlayLoop()
 {
   textFont(startupFont, 12);
@@ -31,7 +33,9 @@ void DrawPlayLoop()
 
   //******* ALL ZOOMED AFTER THIS ********//
   BeginZoom();      //See visuals.pde
-  translate(width/2 -playerShip.location.x, height/2 - playerShip.location.y);    //Pan camera on ship
+  cameraPan.x = width/2 -playerShip.location.x;
+  cameraPan.y = height/2 - playerShip.location.y;
+  translate(cameraPan.x, cameraPan.y);    //Pan camera on ship
 
   //Only render/update visible sectors (slightly faster)
   // DrawSectors(visibleSectors);

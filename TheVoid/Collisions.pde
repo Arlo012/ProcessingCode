@@ -24,8 +24,6 @@ void HandleSectorCollisions(Map<Integer, Sector> _sectors)
     {
       // if(CheckShapeOverlap(s.collider, )
     }
-    
-    
   }
 }
 
@@ -151,6 +149,57 @@ boolean CheckDrawableOverlap(Drawable obj, PVector point)
       && point.y >= obj.location.y + collisionOffset.y
       && point.y <= obj.location.y + collisionOffset.y + obj.size.y
       && point.x <= obj.location.x + collisionOffset.x + obj.size.x)
+    {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+//Check if a point falls within a drawable object
+boolean CheckDrawableOverlap(Drawable obj1, Drawable obj2)
+{
+  if(obj1 != null)
+  {  
+    PVector collisionOffset1, collisionOffset2;      //Offset due to center vs rect rendering (rect = 0 offset)
+    //Check if this is CENTER or CORNER rendered -- center rendered needs to account for half size of self
+    if(obj1.renderMode == CENTER)
+    {
+      collisionOffset1 = new PVector(-obj1.size.x/2, -obj1.size.y/2);
+    }
+    else if(obj1.renderMode == CORNER)
+    {
+      collisionOffset1 = new PVector(0,0);
+    }
+    else
+    {
+      collisionOffset1 = new PVector(obj1.size.x/2, obj1.size.y/2);
+      print("WARNING: Unsupported collision offset mode on");
+      print(obj1.name);
+      print("\n");
+    }
+
+    if(obj2.renderMode == CENTER)
+    {
+      collisionOffset2 = new PVector(-obj2.size.x/2, -obj2.size.y/2);
+    }
+    else if(obj2.renderMode == CORNER)
+    {
+      collisionOffset2 = new PVector(0,0);
+    }
+    else
+    {
+      collisionOffset2 = new PVector(obj2.size.x/2, obj2.size.y/2);
+      print("WARNING: Unsupported collision offset mode on");
+      print(obj2.name);
+      print("\n");
+    }
+    
+    if(obj1.location.x + collisionOffset1.x >= obj2.location.x - collisionOffset2.x   //X from right
+        && obj1.location.y + collisionOffset1.y >= obj2.location.y - collisionOffset2.y  //Y from top
+        && obj1.location.x - collisionOffset1.x <= obj2.location.x + collisionOffset2.x  //X from left
+        && obj1.location.y - collisionOffset1.y <= obj2.location.y + collisionOffset2.x)    //Y from bottom
     {
       return true;
     }

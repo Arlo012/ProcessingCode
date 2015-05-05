@@ -33,9 +33,9 @@ long loopCounter;        //How many loop iterations have been completed
 long loopStartTime;      //Millis() time main loop started
 
 //Debugging & profiling
-static boolean debuggingAllowed = true;      //Display DEBUG button on GUI?
+static boolean debuggingAllowed = false;      //Display DEBUG button on GUI?
 TogglableBoolean debugMode = new TogglableBoolean(true);
-boolean profilingMode = false;
+boolean profilingMode = true;
 
 //Handle zooming http://forum.processing.org/one/topic/zoom-based-on-mouse-position.html
 float minX, maxX, minY, maxY;
