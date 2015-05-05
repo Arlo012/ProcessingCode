@@ -43,7 +43,7 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
     velocity = new PVector(0, 0);
     acceleration = new PVector(0,0);
     localSpeedLimit = 10;         //Default speed limit
-    maxForceMagnitude = .2;          //TODO implement me
+    maxForceMagnitude = 1;       //TODO implement me
     
     //UI
     iconOverlay = new Shape("Physical Overlay", location, 
@@ -76,6 +76,32 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
     popMatrix();
   }
   
+//******* UPDATE *********/
+  public void Update()
+  {
+    velocity.add(acceleration);           //Update velocity by acceleration vector
+    velocity.limit(localSpeedLimit);      //Make sure we haven't accelerated over speed limit
+
+    acceleration.setMag(0);
+
+    //Update forward vector based on rotation
+    forward.x = cos(baseAngle);
+    forward.y = sin(baseAngle);
+    forward.normalize();
+
+    if(health.current <= 0)
+    {
+      toBeKilled = true;
+      if(debugMode.value)
+      {
+        print("[INFO] ");
+        print(name);
+        print(" has died\n");
+      }
+
+    }
+  }
+
 //******* MOVE *********/
   public void SetVelocity(PVector _vector)
   {
@@ -104,6 +130,10 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
     SetVelocity(newVelocity);   
   }
 
+  /**
+   * Add to the acceleration the ship will feel
+   * @param {PVector} _accel acceleration vector
+   */
   public void ApplyForce(PVector _accel)
   {
     acceleration.add(_accel);
@@ -123,34 +153,34 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
 
   
 //******* COLLIDE *********/
-
-  //The other object's effect on this object
-  float frictionFactor = 1.5;        //How much to slow down after collision (divisor)
-  public void HandleCollision(Physical _other)
+float frictionFactor = 1.5;        //Slow down factor after collision
+  
+  /**
+   * Cause collision effects on the OTHER object
+   * @param  {Physical} _other Other object to affect by this collision
+   */
+  @Override public void HandleCollision(Physical _other)
   {
     lastCollisionTime = millis();
-    
-    //Damage based on automatic damage 
-    health.current -= _other.damageOnHit;
     
     //Damage this object based on delta velocity
     PVector deltaV = new PVector(0,0);
     PVector.sub(_other.velocity, velocity, deltaV);
     float velocityMagDiff = deltaV.mag();
     
-    //Mass scaling factor (other/mine)
+    //Mass scaling factor (other/mine) for damage
     float massRatio = _other.mass/mass;
-    float damage = 10 * massRatio * velocityMagDiff;
-    health.current -= damage;        //Lower this health
+    float damage = 1 * massRatio * velocityMagDiff;
+    _other.health.current -= damage;        //Lower other's health
     
     if(debugMode.value)
     {
       print("[DEBUG] ");
-      print(_other.name);
+      print(name);
       print(" collision caused ");
       print(damage);
       print(" damage to ");
-      print(name);
+      print(_other.name);
       print("\n");
     }
     
@@ -161,31 +191,10 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
     
     deltaP.normalize();      //Create unit vector for new direction from deltaP
     
-    //Opposite vector for this object (reverse direction)
-    deltaP.mult(-1);
+    //Use this delta position to flip direction -- slow down by friction factor
     deltaP.setMag(velocity.mag()/frictionFactor);
     
-    SetVelocity(deltaP);
+    _other.ApplyForce(deltaP);
   }
-  
-//******* UPDATE *********/
-  public void Update()
-  {
-    velocity.add(acceleration);           //Update velocity by acceleration vector
-    velocity.limit(localSpeedLimit);      //Make sure we haven't accelerated over speed limit
 
-    //acceleration.mult(0);                 //Reset acceleration (acts like an impulse)
-
-    if(health.current <= 0)
-    {
-      toBeKilled = true;
-      if(debugMode.value)
-      {
-        print("INFO: ");
-        print(name);
-        print(" has died\n");
-      }
-
-    }
-  }
 }

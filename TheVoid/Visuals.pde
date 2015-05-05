@@ -40,50 +40,10 @@ void DrawSectors(Map<Integer, Sector> _sectors)
   {
     DrawObjects(a.ships);
   }
-}
 
-/**
- * Draw a raw arraylist of sector objects and their contents
- * @param {ArrayList<Sector>} _sectors Sector list to draw
- */
-void DrawSectors(ArrayList<Sector> _sectors)
-{
-  //Draw sector backgrounds themselves
-  for(Sector a : _sectors)
+  for(Sector a : _sectors.values())
   {
-    a.DrawObject();
-  }
-
-  for(Sector a : _sectors)
-  {
-    ArrayList<Planet> planets = a.planets;
-    DrawObjects(planets);     //Stations drawn here too
-  }
-
-  for(Sector a : _sectors)
-  {
-    ArrayList<Asteroid> asteroids = a.asteroids;
-    DrawObjects(asteroids);
-  }
-
-  for(Sector a : _sectors)
-  {
-    ArrayList<Ship> ships = a.ships;
-    DrawObjects(ships);
-  }
-}
-
-
-void DrawShields(ArrayList<Shield> _shields)
-{
-  for(Shield shield : _shields)
-  {
-    //Draw shield
-    if(shield.collidable)
-    {
-      //TODO allow for shield rotation (need a physical object with rotation, shape wont cut it)
-      shield.overlay.DrawObject();
-    }
+    DrawObjects(a.laserFire);
   }
 }
 
@@ -91,7 +51,7 @@ void DrawShields(ArrayList<Shield> _shields)
 
 /**
  * Move all objects in a sector
- * @param _sectors [description]
+ * @param _sectors map of sectors by ID
  */
 void MoveSectorObjects(Map<Integer, Sector> _sectors)
 {
@@ -108,6 +68,11 @@ void MoveSectorObjects(Map<Integer, Sector> _sectors)
   for(Sector a : _sectors.values())
   {
     MovePhysicalObject(a.ships);
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    MovePhysicalObject(a.laserFire);
   }
 }
 

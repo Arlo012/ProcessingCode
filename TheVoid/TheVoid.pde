@@ -49,7 +49,7 @@ Player playerShip;
 
 void setup()
 {
-  size(1600, 1200);
+  size(1600, 1200, P3D);    //Need 3D acceleration to make this game run at decent FPS
   frame.setTitle(title);
 
   //Zoom setup
@@ -59,6 +59,9 @@ void setup()
   maxX = width;
   maxY = height;
 
+  //Camera setup
+  beginCamera();
+
   //Load all image/sound assets
   LoadImageAssets();      //See AssetLoader.pde
   LoadSoundAssets();
@@ -66,16 +69,20 @@ void setup()
 
   //Game area setup
   sectors = new HashMap<Integer, Sector>();
+  generatedSectors = new HashMap<Integer, Sector>();
   sectorSize = new PVector(width*2,height*2);
   visibleSectors = new ArrayList<Sector>();
   explosions = new ArrayList<Explosion>();
 
-  playerShip = new Player(new PVector(width/2, height/2), new PVector(100, 50), 
-    shipSprite, 100, color(255,0,0), sectors.get(0));     //Place player in start sector
+  playerShip = new Player(new PVector(width, height), new PVector(100, 50), 
+      shipSprite, 100, color(255,0,0), null);     //Place player in start sector
+  playerShip.health.current = 10000;
 
   //Setup civilizations and their game objects, along with controllers
   GameObjectSetup();    //See AssetLoaders.pde
-  
+  playerShip.currentSector = sectors.get(0);      //Now that sector is created, feed to player obj
+  sectors.get(0).ships.add(playerShip);
+
   //Counters & framerate
   loopCounter = 0;
   frameRate(60);
@@ -85,9 +92,6 @@ void setup()
   // introMusic.play();
   // trackStartTime = millis();
   // currentTrack = introMusic;
-
-  //TEST AREA
-  sectors.get(0).ships.add(playerShip);
 
   //HACK just render current sector
   visibleSectors.clear();

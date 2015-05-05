@@ -26,78 +26,64 @@ void DrawPlayLoop()
 {
   textFont(startupFont, 12);
   background(0);
-  
+
   loopCounter++;
 
-//******* ALL ZOOMED AFTER THIS ********//
+  //******* ALL ZOOMED AFTER THIS ********//
   BeginZoom();      //See visuals.pde
   translate(width/2 -playerShip.location.x, height/2 - playerShip.location.y);    //Pan camera on ship
 
   //Only render/update visible sectors (slightly faster)
   // DrawSectors(visibleSectors);
   // UpdateSectors(visibleSectors);
-  
+
   //ALL sectors (slower)
-  DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
-  MoveSectorObjects(sectors);   //Move all objects in the sectors
-  HandleSectorCollisions(sectors);
-  UpdateSectors(sectors); //Update sectors (and all updatable objects within them)
-
-  //TODO handle object sector transistion
-
-//// ******* UI ********//
-
-//// Mouseover text window info
-  // PVector currentMouseLoc = new PVector(wvd.pixel2worldX(mouseX), wvd.pixel2worldY(mouseY));
-  
-  // //Add response from overlap checks to 'toDisplay' linkedlist
-  // toDisplay.clear();
-  // toDisplay.add(CheckClickableOverlap(asteroids, currentMouseLoc));
-  // toDisplay.add(CheckClickableOverlap(P1.planets, currentMouseLoc));
-  // toDisplay.add(CheckClickableOverlap(P1.fleet, currentMouseLoc));
-  // toDisplay.add(CheckClickableOverlap(P1.stations, currentMouseLoc));
-  
-  // while(!toDisplay.isEmpty())
-  // {
-  //   Clickable _click = toDisplay.poll();
-  //   if(_click != null)
-  //   {
-  //     if(_click.GetClickType() == ClickType.INFO)
-  //     {
-  //       _click.MouseOver();
-  //     }
-  //     else
-  //     {
-  //       print("Moused over unsupported UI type: ");
-  //       print(_click.GetClickType());
-  //       print("\n");
-  //     }
-  //   }
-  // }
-
-//// ******* ALL ZOOMED BEFORE THIS ********//
-   EndZoom();
-  
-//// Draw main interface
-  // currentPlayer.DrawUI();
-
-//// ******* UPDATES ********//
-  MergeSectorMaps(generatedSectors);
-
-  // //Effects MUST be called as last update. Some update functions have death frame action that will not be called if this runs first
-  // UpdateExplosions(explosions);       
-  
-  // //Update UI information for the main UI
-  // currentPlayer.UpdateUI();
-  
-//// ******* PROFILING ********//
   if(profilingMode)
   {
-    println(frameRate);
+    long start1 = millis();
+    DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
+    println("Draw time: " + (millis() - start1));
+
+    long start2 = millis();
+    MoveSectorObjects(sectors);   //Move all objects in the sectors
+    println("Move time: " + (millis() - start2));
+
+    long start3 = millis();
+    HandleSectorCollisions(sectors);
+    println("Collision time: " + (millis() - start3));
+
+    long start4 = millis();
+    UpdateSectorMap(sectors); //Update sectors (and all updatable objects within them)
+    println("Update time: " + (millis() - start4));
+  }
+  else
+  {
+    DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
+    MoveSectorObjects(sectors);   //Move all objects in the sectors
+    HandleSectorCollisions(sectors);
+    UpdateSectorMap(sectors); //Update sectors (and all updatable objects within them)
   }
   
-//// ******* GAMEOVER Condition ********//  
-  
+  //// ******* ALL ZOOMED BEFORE THIS ********//
+  EndZoom();
+
+  //// Draw main interface
+  // currentPlayer.DrawUI();
+
+  //// ******* UPDATES ********//
+  if(!generatedSectors.isEmpty())
+  {
+    MergeSectorMaps(generatedSectors);
+  }
+
+  //// ******* PROFILING ********//
+  if(profilingMode)
+  {
+    println("Framerate: " + frameRate);
+  }
+
+  //// ******* GAMEOVER Condition ********//  
+
 }
 
 
@@ -124,7 +110,7 @@ void MusicHandler()
   {
     if(currentTrackIndex < mainTracks.size())
     {
-      println("INFO: New track now playing");
+      println("[INFO] New track now playing");
       currentTrack = mainTracks.get(currentTrackIndex);
       currentTrack.play();
       currentTrackIndex++;

@@ -29,10 +29,10 @@ public class Ship extends Physical implements Clickable, Updatable
   ArrayList<Physical> targets;    //Firing targets selected after scan
   
   //Shields
-  Shield shield;
+  Shield rightShield, leftShield, frontShield, backShield;
+  ArrayList<Shield> shields;
 
   //Engines
-  float leftEnginePower, rightEnginePower;
   float minThrust, maxThrust;
   
   //Enemy objects
@@ -65,15 +65,28 @@ public class Ship extends Physical implements Clickable, Updatable
     smoke1Visible = false;
     smoke2Visible = false;
     
+    //Shield setup
+    rightShield = new Shield(this, 10000, ShieldDirection.RIGHT, this.currentSector);
+    leftShield = new Shield(this, 10000, ShieldDirection.LEFT, this.currentSector);
+    backShield = new Shield(this, 10000, ShieldDirection.BACK, this.currentSector);
+    frontShield = new Shield(this, 10000, ShieldDirection.FORWARD, this.currentSector);
+
+    shields = new ArrayList<Shield>();
+    shields.add(rightShield);
+    shields.add(leftShield);
+    shields.add(frontShield);
+    shields.add(backShield);
+
+    //Only enable shields for player for now
+    // rightShield.online = true;
+    // backShield.online = true;
+    // leftShield.online = true;
+    // frontShield.online = true;
+
     //Prepare engines
-    leftEnginePower = 0;
-    rightEnginePower = 0;
     minThrust = 0.0;
     maxThrust = 10.0;
 
-    //Prepare shields
-    shield = new Shield(this, 250, currentSector);
-    
     //Prepare sensors
     scanRadius = new Shape("Scan radius", location, new PVector(sensorRange,sensorRange), 
                 color(255,0,0), ShapeType._CIRCLE_);
@@ -87,8 +100,6 @@ public class Ship extends Physical implements Clickable, Updatable
     descriptor += name;
     descriptor += "\nHealth: ";
     descriptor += health.current ;
-    descriptor += "\nShield: ";
-    descriptor += shield.health.current ;
     info = new TextWindow("Ship Info", location, descriptor, true);
     
   }
@@ -97,6 +108,23 @@ public class Ship extends Physical implements Clickable, Updatable
   {
     super.DrawObject();
 
+    if(rightShield.online)
+    {
+      rightShield.DrawObject();
+    }
+    if(leftShield.online)
+    {
+      leftShield.DrawObject();
+    }
+    if(frontShield.online)
+    {
+      frontShield.DrawObject();
+    }
+    if(backShield.online)
+    {
+      backShield.DrawObject();
+    }
+    
     //Draw smoke effects
     if(smoke1Visible)
     {
@@ -122,6 +150,13 @@ public class Ship extends Physical implements Clickable, Updatable
   {
     super.Update();    //Call Physical update (movement occurs here)
     
+    //Shield info update
+    frontShield.Update();
+    backShield.Update();
+    leftShield.Update();
+    rightShield.Update();
+
+
   //**** UI ****//
     //Check if UI is currently rendered, and if so update info
     if(info.visibleNow)
@@ -166,54 +201,32 @@ public class Ship extends Physical implements Clickable, Updatable
     //If the ship will die after this frame
     if(toBeKilled)
     {
-      shield.toBeKilled = true;
+      frontShield.toBeKilled = true;
+      rightShield.toBeKilled = true;
+      backShield.toBeKilled = true;
+      frontShield.toBeKilled = true;
       GenerateDeathExplosions(3, location, size);
     }
   }
 
-   /*
-  SPIN: 
-  Creates two 'spin' vectors for each of the two engines.
-  The vectors are both perpendicular to the Velocity vector and face opposite directions from one another
-  They are scaled based on the engines power and then summed to each other and passed as a steering force to be summed to the acceleration vector
-  */
-  PVector Spin()
+  /**
+   * Calculates shoot vector and builds a laser object to fire.
+   * Note that the laser object adds itself to the sector in its
+   * constructor, and does not need explicit appending.
+   * @param {PVector} _target Target to shoot at
+   */
+  protected void BuildLaserToTarget(Physical _target)
   {
-    PVector spinLeftEngine = new PVector(1,0);
-    PVector spinRightEngine = new PVector(1,0);
-   
-    spinLeftEngine.rotate(velocity.heading() + HALF_PI);    //left engine vector set perdendicular to Velocity facing left.
-    spinRightEngine.rotate(velocity.heading() - HALF_PI);   //right engine vector set perpendiuclar to Velocity facing right.
-    spinLeftEngine.setMag(leftEnginePower);                 //Set magnitudes to Engines power ranging 0-10
-    spinRightEngine.setMag(rightEnginePower);
-    PVector spinSum = PVector.add(spinRightEngine, spinLeftEngine);  //Sum the apposing facing spin vectors
+    //Calculate laser targeting vector
+    PVector targetVector = PVector.sub(_target.location, location);
+    targetVector.normalize();        //Normalize to simple direction vector
+    targetVector.x += rand.nextFloat() * 0.5 - 0.25;
+    targetVector.y += rand.nextFloat() * 0.5 - 0.25;
     
-    PVector desired = PVector.add(spinSum, velocity);                // Sum 'spin' vector with velocity go get a desired direction
-    desired.normalize();
-    desired.mult(localSpeedLimit);                                   // Scale based on Maximum Player Speed
-    PVector steer = PVector.sub(desired, velocity);
-    steer.x = map(steer.x, 0,7.66, 0,.5);                            // 7.66 was max value seen when debugging---- .5 seems reasonable for max spin
-    steer.y = map(steer.y, 0,7.66, 0,.5);
-    //steer.limit(maxForceMagnitude);
-    println("Spin: "+steer.mag());
-    println("Velocity Mag: "+velocity.mag());
-    return steer;                                                    // Pass Vector to be applied to ship
-  }
-
-  //FIXME not working
-  PVector Thrust()
-  {
-    PVector thrust = new PVector(1,0);
-    thrust.rotate(velocity.heading());
-    float thrustPower = (leftEnginePower/maxThrust)+(rightEnginePower/maxThrust);
-    println("Left: "+leftEnginePower);
-    println("Right: "+rightEnginePower);
-    println("Thrust BEFORE: "+thrustPower);
-    thrustPower = map(thrustPower, 0, 2, 0, maxForceMagnitude);
-    println("Thrust AFTER: "+thrustPower);
-    thrust.setMag(thrustPower);
-
-    return thrust;
+    //Create laser object
+    PVector laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
+        location.y + targetVector.y * size.y * 1.1);
+    LaserBeam beam = new LaserBeam(laserSpawn, targetVector, currentSector);
   }
 
 /*Click & mouseover UI*/
@@ -231,7 +244,7 @@ public class Ship extends Physical implements Clickable, Updatable
   
   void Click()
   {
-    println("INFO: No interaction defined for ship click");
+    println("[INFO] No interaction defined for ship click");
   }
   
   //When the object moves its UI elements must as well
@@ -245,8 +258,6 @@ public class Ship extends Physical implements Clickable, Updatable
     descriptor += name;
     descriptor += "\nHealth: ";
     descriptor += health.current;
-    descriptor += "\nShield: ";
-    descriptor += shield.health.current ;
     
     info.UpdateText(descriptor);
   }

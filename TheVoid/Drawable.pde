@@ -60,8 +60,8 @@ public class Drawable
     }
     else
     {
-      print("WARNING: Tried to draw base drawable object with no sprite! ID = ");
-      print(ID);
+      print("[WARNING] Tried to draw base drawable object with no sprite! ID = ");
+      print(name);
       print("\n");
     }
     popStyle();

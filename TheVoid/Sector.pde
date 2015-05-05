@@ -13,7 +13,9 @@ public class Sector extends Drawable implements Updatable
   public ArrayList<Asteroid> asteroids;
   public ArrayList<Planet> planets;
   public ArrayList<Ship> ships;           //May include enemies and the player ship
-  
+  public ArrayList<LaserBeam> laserFire;  
+
+
   //Link to neighboring sectors
   public HashMap<SectorDirection, Sector> neighbors;
 
@@ -53,6 +55,7 @@ public class Sector extends Drawable implements Updatable
     asteroids = new ArrayList<Asteroid>();
     planets = new ArrayList<Planet>();
     ships = new ArrayList<Ship>();
+    laserFire = new ArrayList<LaserBeam>();
 
     //Neighbors
     neighbors = new HashMap<SectorDirection, Sector>();
@@ -261,6 +264,22 @@ public class Sector extends Drawable implements Updatable
   }
 
   /**
+   * Return arraylist of this sector and all neighboring sectors
+   * @return arraylist of sectors
+   */
+  public ArrayList<Sector> GetSelfAndAllNeighbors()
+  {
+    ArrayList<Sector> allNeighbors = new ArrayList<Sector>();
+    for(Sector neighbor : neighbors.values())
+    {
+      allNeighbors.add(neighbor);
+    }
+    allNeighbors.add(this);
+
+    return allNeighbors;
+  }
+
+  /**
    * Get a neighbor at a given direction. Returns null if DNE
    * @param {SectorDirection} _direction Which way?
    * @return {Sector} Null / valid sector
@@ -292,6 +311,11 @@ public class Sector extends Drawable implements Updatable
       planets.add((Planet)obj);
       println("[INFO] That's interesting.... a planet moved sectors.");
     }
+    else if(obj instanceof LaserBeam)
+    {
+      laserFire.add((LaserBeam)obj);
+    }
+
   }
 
   //Print debug sector ID map

@@ -1,50 +1,61 @@
 public class Enemy extends Ship
 {
   //AI here
-  boolean inAvoid;
+  boolean fleeingPlayer;
   Player player;
-  
+
+  int firingRange = 1000;     //How far away enemy will fire
   
   public Enemy(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, color _outlineColor, Sector _sector) 
   {
     //Parent constructor
     super(_name, _loc, _size, _sprite, _mass, _outlineColor, _sector);
-    player = playerShip;
-    inAvoid = false;
     
-  }
+    //Convenience pointer to player
+    player = playerShip;
 
+    //Flee/attack
+    fleeingPlayer = false;
+    targets.add(player);      //All enemies are looking for the player
+
+    localSpeedLimit = 4;
+  }
 
   @Override public void Update()
   {
    super.Update();
+
    PVector avoidForce = Avoid(playerShip.location);
    PVector seekForce = Seek(playerShip.location);
-   if(CheckShapeOverlap(player.seekCircle, location))    //Sees if within the Seek radius
+
+   if(CheckDrawableOverlap(player.seekCircle, location))   //I see the player
    {
-     if(CheckShapeOverlap(player.avoidCircle, location))
+      if(CheckDrawableOverlap(player.avoidCircle, location))
+      {
+        fleeingPlayer = true;
+      }
+      else if(!CheckDrawableOverlap(player.avoidCircle, location) 
+        && !CheckDrawableOverlap(player.seekAgainCircle, location))    //I am in the seek circle but NOT either of the others
+      {
+        fleeingPlayer = false;
+      }
+
+     if(fleeingPlayer)
      {
-       inAvoid = true;
+        ApplyForce(avoidForce);
      }
-     if(inAvoid && CheckShapeOverlap(player.seekAgainCircle,location))    //Currently avoiding the player until outside seek again range
+     else
      {
-       ApplyForce(avoidForce);      //Run away from player
+        ApplyForce(seekForce);
      }
-     else      //We've made it outside seek again -- attack player
-     {
-       ApplyForce(seekForce);
-       inAvoid = false;
-     } 
    }
 
-
    //**** WEAPONS *****//
-   //TODO update me for new AI?
     if(millis() - lastFireTime > currentFireInterval)    //Time to fire?
     {
       if(!targets.isEmpty())
       {
-        Physical closestTarget = null;    //Default go after first target
+        Physical closestTarget = null;    //Default go after closest target
         float closestDistance = 99999;
         for(Physical phys : targets)    //Check each target to find if it is closest
         {
@@ -58,20 +69,13 @@ public class Enemy extends Ship
         
         if(closestTarget != null)    //Found a target
         {
-          //Calculate laser targeting vector
-          PVector targetVector = PVector.sub(closestTarget.location, location);
-          targetVector.normalize();        //Normalize to simple direction vector
-          targetVector.x += rand.nextFloat() * 0.5 - 0.25;
-          targetVector.y += rand.nextFloat() * 0.5 - 0.25;
-          
-          //Create laser object
-          LaserBeam beam = new LaserBeam(location, targetVector, currentSector);
-          
-          //TODO put the beam object somewhere
-
-          lastFireTime = millis();
+          float targetRange = PVector.dist(closestTarget.location, location);
+          if(targetRange < firingRange)   //Target close enough to fire!
+          {
+            BuildLaserToTarget(closestTarget);
+            lastFireTime = millis();
+          }
         }
-
       }
     }
   }
@@ -85,19 +89,14 @@ public class Enemy extends Ship
     desired.mult(localSpeedLimit);
     PVector steer= PVector.sub(desired, velocity);
     steer.limit(maxForceMagnitude);
-    
     return steer;
   }
   
   PVector Avoid(PVector target)
   {
     //if(avoidDiameter is true and seekAgainDiameter is false)
-    PVector desired = PVector.sub(target,location);
-    desired.normalize();
-    desired.mult(localSpeedLimit);
-    PVector steer= PVector.sub(desired,velocity);
-    steer.limit(maxForceMagnitude);
-    steer.mult(-1);                             // to flip the direction of the desired vector in the opposite direction of the target
+    PVector steer = Seek(target);
+    steer.mult(-1);      // to flip the direction of the desired vector in the opposite direction of the target
     
     return steer;
   }

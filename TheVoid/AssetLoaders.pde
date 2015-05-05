@@ -2,6 +2,7 @@
 PImage bg;             //Background
 
 //TODO move all PImage instances here
+PImage shieldSprite;
 PImage redLaser, greenLaser;
 ArrayList<PImage> enemyShipSprites; 
 ArrayList<PVector> enemyShipSizes;      //Size (by index) of above sprite
@@ -18,6 +19,9 @@ void LoadImageAssets()
   //enemy ships
   enemyShipSprites = new ArrayList<PImage>();
   enemyShipSizes = new ArrayList<PVector>();
+
+  //Shields
+  shieldSprite = loadImage("Assets/Effects/ShieldRotated.png");
 
   //Total of 10 enemy ship sprites
   enemyShipSprites.add(loadImage("Assets/Ships/7(1).png"));
@@ -215,7 +219,7 @@ void MergeSectorMaps(HashMap<Integer,Sector> toMerge)
     while (it.hasNext()) 
     {
       Map.Entry pair = (Map.Entry)it.next();
-      sectors.put((Integer)pair.getKey(), (Sector)pair.getValue());   //Hack unchecked cast
+      sectors.put((Integer)pair.getKey(), (Sector)pair.getValue());   //HACK unchecked cast
       
       if(debugMode.value)
       {

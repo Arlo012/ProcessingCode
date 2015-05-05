@@ -50,7 +50,7 @@ void mouseDragged() {
 void mouseClicked() 
 {
   PVector currentMouseLoc = new PVector(mouseX, mouseY);
-  
+
   //Click actions here, based on gamestate
 }
 
@@ -94,6 +94,7 @@ void keyPressed()
     wvd.orgY = 0.0f;
   }
   
+  //ENGINE DEBUG CONTROLS
   if(key == 'h' || key == 'H')
   {
     if(playerShip.leftEnginePower > playerShip.minThrust)
@@ -139,21 +140,14 @@ void keyPressed()
     }
   }
 
-  //DEBUG ONLY
-  if(key == 'w')
+  //WEAPON DEBUG CONTROLS
+  if(key == 'q' || key == 'Q')    //Cycle targets
   {
-    playerShip.ChangeVelocity(new PVector(0, -2));
+    playerShip.SelectNextTarget();
   }
-  else if(key == 's')
+    if(key == 'e' || key == 'E')    //Cycle targets
   {
-    playerShip.ChangeVelocity(new PVector(0, 2));
+    playerShip.FireAtTarget();
   }
-  else if(key == 'a')
-  {
-    playerShip.ChangeVelocity(new PVector(-5, 0));
-  }
-  else if(key == 'd')
-  {
-    playerShip.ChangeVelocity(new PVector(5, 0));
-  }
+
 }

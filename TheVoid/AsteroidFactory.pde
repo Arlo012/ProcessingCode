@@ -66,7 +66,7 @@ public class AsteroidFactory
    */
   Asteroid GenerateAsteroid()
   {
-    Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, int(100000*size/asteroidSizeRange.y), nextAsteroidSector);
+    Asteroid toBuild = new Asteroid(new PVector(xCoor, yCoor), size, int(1000*size/asteroidSizeRange.y), nextAsteroidSector);
     toBuild.SetVelocity(new PVector(xVelocity, yVelocity));
     toBuild.SetMaxSpeed(2.5);      //Local speed limit for asteroid
     toBuild.iconOverlay.SetIcon(color(#E8E238),ShapeType._CIRCLE_);
