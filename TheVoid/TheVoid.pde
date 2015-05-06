@@ -59,9 +59,6 @@ void setup()
   maxX = width;
   maxY = height;
 
-  //Camera setup
-  beginCamera();
-
   //Load all image/sound assets
   LoadImageAssets();      //See AssetLoader.pde
   LoadSoundAssets();
@@ -74,12 +71,17 @@ void setup()
   visibleSectors = new ArrayList<Sector>();
   explosions = new ArrayList<Explosion>();
 
-  playerShip = new Player(new PVector(width, height), new PVector(100, 50), 
-      shipSprite, 100, color(255,0,0), null);     //Place player in start sector
+  PVector spawnLocation = new PVector(width, height);
+  PVector playerSize = new PVector(100,50);
+  int playerMass = 100;
+  Shape playerCollider = new Shape("collider", spawnLocation, playerSize, color(0,255,0), 
+              ShapeType._RECTANGLE_);
+  playerShip = new Player(spawnLocation, playerSize, shipSprite, playerMass, 
+              color(255,0,0), null, playerCollider);     //null sector until created
   playerShip.health.current = 10000;
 
   //Setup civilizations and their game objects, along with controllers
-  GameObjectSetup();    //See AssetLoaders.pde
+  GameObjectSetup();    //See Helpers.pde
   playerShip.currentSector = sectors.get(0);      //Now that sector is created, feed to player obj
   sectors.get(0).ships.add(playerShip);
 
@@ -93,7 +95,7 @@ void setup()
   // trackStartTime = millis();
   // currentTrack = introMusic;
 
-  //HACK just render current sector
+  //TODO just render current sector
   visibleSectors.clear();
   visibleSectors.add(playerShip.currentSector);
 }

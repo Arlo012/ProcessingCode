@@ -5,10 +5,9 @@ public class LaserBeam extends Physical
   static final int timeToFly = 2000;        //Effective range, related to speed (ms)
   private long spawnTime;
   
-  LaserBeam(PVector _loc, PVector _direction, Sector _sector)
+  LaserBeam(PVector _loc, PVector _direction, PVector _size, Sector _sector, Shape _collider)
   {
-    super("Laser beam", _loc, new PVector(20,3), .0001, _sector);    //HACK Mass very low!! For handling physics easier 
-    
+    super("Laser beam", _loc, _size, .0001, _sector, _collider);    //HACK Mass very low!! For handling physics easier 
     //Set laser color
     sprite = greenLaser.get();
     sprite.resize((int)size.x, (int)size.y);

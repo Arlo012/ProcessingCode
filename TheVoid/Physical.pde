@@ -22,22 +22,27 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
   protected float maxForceMagnitude;       //How large an acceleration force may be applied
 
   //Collisions
+  public Shape collider;                //Shape to check for collision
   protected long lastCollisionTime = -9999;
   protected int damageOnHit = 0;           //Automatic damage incurred on hit
-  boolean collidable = true;               //Can this object be collided with by ANYTHING? see shields when down
+  boolean collidable;               //Can this object be collided with by ANYTHING? see shields when down
   
   //Location
   protected Sector currentSector;                //What physical sector this object is in
 
-
-  public Physical(String _name, PVector _loc, PVector _size, float _mass, Sector _sector)
+  public Physical(String _name, PVector _loc, PVector _size, float _mass, Sector _sector, Shape _collider)
   {
     super(_name, _loc, _size);
     
     health = new Health(100, 100);       //Default health
     mass = _mass;
     
+    //Convenience pointer to sector
     currentSector = _sector;
+
+    //Collider setup
+    collidable = true;
+    collider = _collider;
 
     //Movement
     velocity = new PVector(0, 0);
@@ -53,6 +58,20 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
   @Override public void DrawObject()
   {
     super.DrawObject();
+
+    //Debug collider
+    if(debugMode.value)
+    {
+      collider.DrawObject();
+      pushStyle();
+      stroke(255);
+      for(Line l : collider.lines)
+      {
+        line(l.start.x, l.start.y, l.end.x, l.end.y);
+      }
+      popStyle();
+    }
+    
 
     pushMatrix();
     translate(location.x, location.y);
@@ -83,6 +102,11 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
     velocity.limit(localSpeedLimit);      //Make sure we haven't accelerated over speed limit
 
     acceleration.setMag(0);
+
+    //Match collider to position and location
+    collider.location = location;       //Move collider to this position
+    collider.baseAngle = baseAngle;     //Rotate collider by this rotation
+    collider.Update();         //Update colliders to allow lines to rotate, move, etc
 
     //Update forward vector based on rotation
     forward.x = cos(baseAngle);

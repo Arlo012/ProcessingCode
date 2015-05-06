@@ -1,6 +1,3 @@
-//TODO implement all the other ship sprites....
-PImage shipSprite;      //Loaded in setup()
-
 /**
  * A ship gameobject, inheriting from Pilotable. Expensive purchase cost, but great at shooting 
  * down enemy missiles.
@@ -29,8 +26,7 @@ public class Ship extends Physical implements Clickable, Updatable
   ArrayList<Physical> targets;    //Firing targets selected after scan
   
   //Shields
-  Shield rightShield, leftShield, frontShield, backShield;
-  ArrayList<Shield> shields;
+  Shield shield;
 
   //Engines
   float minThrust, maxThrust;
@@ -42,10 +38,10 @@ public class Ship extends Physical implements Clickable, Updatable
   ArrayList<Station> enemyStations;
   
   public Ship(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, 
-    color _outlineColor, Sector _sector) 
+    color _outlineColor, Sector _sector, Shape _collider) 
   {
     //Parent constructor
-    super(_name, _loc, _size, _mass, _sector);
+    super(_name, _loc, _size, _mass, _sector, _collider);
     sprite = _sprite.get(); 
     sprite.resize(int(size.x), int(size.y));
 
@@ -66,22 +62,11 @@ public class Ship extends Physical implements Clickable, Updatable
     smoke2Visible = false;
     
     //Shield setup
-    rightShield = new Shield(this, 10000, ShieldDirection.RIGHT, this.currentSector);
-    leftShield = new Shield(this, 10000, ShieldDirection.LEFT, this.currentSector);
-    backShield = new Shield(this, 10000, ShieldDirection.BACK, this.currentSector);
-    frontShield = new Shield(this, 10000, ShieldDirection.FORWARD, this.currentSector);
+    int shieldSize = 72;      //TODO tune algorithmically... 
+    Shape shieldCollider = new Shape("collider", location, new PVector(shieldSize, shieldSize), color(0,255,0), 
+            ShapeType._CIRCLE_);
 
-    shields = new ArrayList<Shield>();
-    shields.add(rightShield);
-    shields.add(leftShield);
-    shields.add(frontShield);
-    shields.add(backShield);
-
-    //Only enable shields for player for now
-    // rightShield.online = true;
-    // backShield.online = true;
-    // leftShield.online = true;
-    // frontShield.online = true;
+    shield = new Shield(this, 500, currentSector, shieldCollider);
 
     //Prepare engines
     minThrust = 0.0;
@@ -91,6 +76,7 @@ public class Ship extends Physical implements Clickable, Updatable
     scanRadius = new Shape("Scan radius", location, new PVector(sensorRange,sensorRange), 
                 color(255,0,0), ShapeType._CIRCLE_);
     
+
     //Prepare laser
     targets = new ArrayList<Physical>();
     lastScanTime = 0;
@@ -108,21 +94,9 @@ public class Ship extends Physical implements Clickable, Updatable
   {
     super.DrawObject();
 
-    if(rightShield.online)
+    if(shield.online)
     {
-      rightShield.DrawObject();
-    }
-    if(leftShield.online)
-    {
-      leftShield.DrawObject();
-    }
-    if(frontShield.online)
-    {
-      frontShield.DrawObject();
-    }
-    if(backShield.online)
-    {
-      backShield.DrawObject();
+      shield.DrawObject();
     }
     
     //Draw smoke effects
@@ -151,11 +125,7 @@ public class Ship extends Physical implements Clickable, Updatable
     super.Update();    //Call Physical update (movement occurs here)
     
     //Shield info update
-    frontShield.Update();
-    backShield.Update();
-    leftShield.Update();
-    rightShield.Update();
-
+    shield.Update();
 
   //**** UI ****//
     //Check if UI is currently rendered, and if so update info
@@ -201,10 +171,7 @@ public class Ship extends Physical implements Clickable, Updatable
     //If the ship will die after this frame
     if(toBeKilled)
     {
-      frontShield.toBeKilled = true;
-      rightShield.toBeKilled = true;
-      backShield.toBeKilled = true;
-      frontShield.toBeKilled = true;
+      shield.toBeKilled = true;
       GenerateDeathExplosions(3, location, size);
     }
   }
@@ -219,13 +186,14 @@ public class Ship extends Physical implements Clickable, Updatable
   {
     PVector targetVector = PVector.sub(_target,location);
     targetVector.normalize();
-    // targetVector.x += rand.nextFloat() * 0.5 - 0.25;
-    // targetVector.y += rand.nextFloat() * 0.5 - 0.25;
     
     //Create laser object
+    PVector laserSize = new PVector(20,3);
     PVector laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
         location.y + targetVector.y * size.y * 1.1);
-    LaserBeam beam = new LaserBeam(laserSpawn, targetVector, currentSector);
+    Shape laserCollider = new Shape("collider", laserSpawn, laserSize, color(0,255,0), 
+          ShapeType._RECTANGLE_);
+    LaserBeam beam = new LaserBeam(laserSpawn, targetVector, laserSize, currentSector, laserCollider);
   }
     
   protected void BuildLaserToTarget(Physical _target)
@@ -237,9 +205,13 @@ public class Ship extends Physical implements Clickable, Updatable
     targetVector.y += rand.nextFloat() * 0.5 - 0.25;
     
     //Create laser object
+    PVector laserSize = new PVector(20,3);
     PVector laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
-        location.y + targetVector.y * size.y * 1.1);
-    LaserBeam beam = new LaserBeam(laserSpawn, targetVector, currentSector);
+        location.y + targetVector.y * size.y * 1.1);    //Where to spawn the laser outside ship
+    Shape laserCollider = new Shape("collider", laserSpawn, laserSize, color(0,255,0), 
+          ShapeType._RECTANGLE_);
+    LaserBeam beam = new LaserBeam(laserSpawn, targetVector, laserSize , currentSector, 
+          laserCollider);
   }
 
 /*Click & mouseover UI*/

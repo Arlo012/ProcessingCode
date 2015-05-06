@@ -128,6 +128,7 @@ public class Sector extends Drawable implements Updatable
     int maxEnemies = 4;
     int minEnemies = 1;
     int enemyCount = rand.nextInt((maxEnemies - minEnemies) + 1) + minEnemies;
+    // GenerateEnemies(this, 0);
     GenerateEnemies(this, enemyCount); // GenerateEnemies(this, enemyCount);
   }
 

@@ -12,10 +12,10 @@ public class Planet extends Physical implements Clickable, Updatable
   private int planetTypeIndex;
   private ArrayList<Station> stations;      //Stations around this planet
 
-  public Planet(String _name, PVector _loc, int _diameter, int _mass, Sector _sector) 
+  public Planet(String _name, PVector _loc, int _diameter, int _mass, Sector _sector, Shape _collider) 
   {
     //Parent constructor
-    super(_name, _loc, new PVector(_diameter, _diameter), _mass, _sector);
+    super(_name, _loc, new PVector(_diameter, _diameter), _mass, _sector, _collider);
     
     //Select my planet image from spritesheet (total of 10 options)
     planetTypeIndex = rand.nextInt(11) + 1;    //There is no p0, add 1
@@ -75,37 +75,45 @@ public class Planet extends Physical implements Clickable, Updatable
       Station station;
       int stationLevel = rand.nextInt(2) + 1;     //to set station size
       int stationColor = rand.nextInt(2) + 1;     //to set station color
+      Shape colliderGen = new Shape("collider", stationLoc, stationSize, color(0,255,0), 
+          ShapeType._CIRCLE_);
       if(stationLevel == 1)
       {
         if(stationColor == 1)
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation1, currentSector);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, 
+            blueStation1, currentSector, colliderGen);
         }
         else
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation1, currentSector);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, 
+            redStation1, currentSector, colliderGen);
         }
       }
       else if(stationLevel == 2)
       {
         if(stationColor == 1)
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2, currentSector);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, 
+            blueStation2, currentSector, colliderGen);
         }
         else
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2, currentSector);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, 
+            redStation2, currentSector, colliderGen);
         }
       }
       else
       {
         if(stationColor == 1)
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, blueStation2, currentSector);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, 
+            blueStation2, currentSector, colliderGen);
         }
         else
         {
-          station = new Station(StationType.MILITARY, stationLoc, stationSize, redStation2, currentSector);
+          station = new Station(StationType.MILITARY, stationLoc, stationSize, 
+            redStation2, currentSector, colliderGen);
         }
       }
 

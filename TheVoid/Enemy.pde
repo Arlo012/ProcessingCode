@@ -7,10 +7,10 @@ public class Enemy extends Ship
   int avoidAsteroidWeight, avoidPlayerWeight, seekPlayerWeight;  // Handles enemies priority of movement
   int firingRange = 1000;     //How far away enemy will fire
   
-  public Enemy(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, color _outlineColor, Sector _sector) 
+  public Enemy(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, color _outlineColor, Sector _sector, Shape _collider) 
   {
     //Parent constructor
-    super(_name, _loc, _size, _sprite, _mass, _outlineColor, _sector);
+    super(_name, _loc, _size, _sprite, _mass, _outlineColor, _sector, _collider);
     
     //Convenience pointer to player
     player = playerShip;

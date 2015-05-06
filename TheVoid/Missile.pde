@@ -7,10 +7,10 @@ public class Missile extends Physical implements Clickable, Updatable
 {
   TextWindow info;
 
-  Missile(PVector _loc, PVector _moveVector, color _outlineColor, Sector _sector) 
+  Missile(PVector _loc, PVector _moveVector, color _outlineColor, Sector _sector, Shape _collider) 
   {
     //Parent constructor
-    super("Missile", _loc, new PVector(20,10), 10, _sector);    //mass = 10
+    super("Missile", _loc, new PVector(20,10), 10, _sector, _collider);    //mass = 10
     
     //Health
     health.max = 60;

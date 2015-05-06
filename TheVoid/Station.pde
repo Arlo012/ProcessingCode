@@ -27,10 +27,10 @@ public class Station extends Physical implements Clickable, Updatable
   Smoke smokeEffect2;
   boolean smoke1Visible, smoke2Visible;
   
-  public Station(StationType _type, PVector _loc, PVector _size, PImage _sprite, Sector _sector) 
+  public Station(StationType _type, PVector _loc, PVector _size, PImage _sprite, Sector _sector, Shape _collider) 
   {
-    super("Military Station", _loc, _size, 1500, _sector);
-    //TODO implement something besides military station
+    super("Military Station", _loc, _size, 1500, _sector, _collider);
+    //TODO implement something besides military station?
 
     sprite = _sprite.get();      //Use get() for a copy
     sprite.resize((int)size.x, (int)size.y);

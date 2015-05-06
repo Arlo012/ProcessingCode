@@ -31,7 +31,7 @@ public class Drawable
     location = new PVector(_loc.x, _loc.y);
     size = new PVector(_size.x, _size.y);
     
-    //Movement
+    //Facing
     forward = new PVector(1, 0);      //Forward is by default in the positive x direction
   }
   

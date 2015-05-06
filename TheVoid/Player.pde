@@ -24,20 +24,17 @@ public class Player extends Ship
   public Shape seekCircle, seekAgainCircle, avoidCircle;    //For collision detections
   public int seekDiameter, seekAgainDiameter, avoidDiameter;
 
-  public Player(PVector _loc, PVector _size, PImage _sprite, int _mass, color _outlineColor, Sector _sector) 
+  public Player(PVector _loc, PVector _size, PImage _sprite, int _mass, color _outlineColor, Sector _sector, Shape _collider) 
   {
     //Parent constructor
-    super("Player", _loc, _size, _sprite, _mass, _outlineColor, _sector);
+    super("Player", _loc, _size, _sprite, _mass, _outlineColor, _sector, _collider);
 
     //Reactor setup
     reactor = new Reactor(100);
     maxPowerToNode = reactor.totalCapacity/3;
     
     //Shield setup 
-    rightShield.online = true;
-    backShield.online = true;
-    leftShield.online = true;
-    frontShield.online = true;
+    shield.online = true;
 
     //Engine setup
     leftEnginePower = 0;
@@ -65,12 +62,13 @@ public class Player extends Ship
   @Override public void Update()
   {
     super.Update();
-
+    
     //Update player radius circles for seek/flee    
     seekCircle.location = location;
     seekAgainCircle.location = location;
     avoidCircle.location = location;
 
+    //Movement input
     HandleMovement();
 
     //Targeting
@@ -92,7 +90,7 @@ public class Player extends Ship
 
     if(debugMode.value)
     {
-      seekCircle.DrawObject();
+      seekCircle.DrawObject();      //Circlers for where enemies seek/flee
       seekAgainCircle.DrawObject();
       avoidCircle.DrawObject();
     }
@@ -184,7 +182,6 @@ public class Player extends Ship
     if(currentTarget != null)
     {
      currentTargetDistance = PVector.dist(location, currentTarget.location);
-     println(currentTargetDistance);
     }
 
     for(Physical p : targets)
@@ -193,7 +190,7 @@ public class Player extends Ship
       if(targetDistance <= currentTargetDistance)
       {
         currentTargetDistance = targetDistance;
-        println("new target " + p);
+        println("[INFO] New target " + p);
         currentTarget = p;
       }
     }
