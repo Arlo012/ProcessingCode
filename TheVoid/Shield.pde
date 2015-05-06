@@ -13,6 +13,7 @@ public class Shield extends Physical implements Updatable
   int shieldRegenAmount = 1;    //Per second
   int failureTime = 5000;       //How long shields are offline in event they fail, ms
   
+  
   boolean online;               //Are shields up?
 
   //Location shifting

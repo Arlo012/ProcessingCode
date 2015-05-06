@@ -215,6 +215,19 @@ public class Ship extends Physical implements Clickable, Updatable
    * constructor, and does not need explicit appending.
    * @param {PVector} _target Target to shoot at
    */
+  protected void BuildLaserToTarget(PVector _target)     //Replaced 'Physical _target' to a 'PVector _target';
+  {
+    PVector targetVector = PVector.sub(_target,location);
+    targetVector.normalize();
+    // targetVector.x += rand.nextFloat() * 0.5 - 0.25;
+    // targetVector.y += rand.nextFloat() * 0.5 - 0.25;
+    
+    //Create laser object
+    PVector laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
+        location.y + targetVector.y * size.y * 1.1);
+    LaserBeam beam = new LaserBeam(laserSpawn, targetVector, currentSector);
+  }
+    
   protected void BuildLaserToTarget(Physical _target)
   {
     //Calculate laser targeting vector

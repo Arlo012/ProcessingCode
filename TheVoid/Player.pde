@@ -44,7 +44,7 @@ public class Player extends Ship
     rightEnginePower = 0;
 
     //Behavior Ranges for Enemies
-    seekDiameter = 3000;        //All ships inside the screen + 100 pixels will seek to destory
+    seekDiameter = 3000;        //All ships inside this circle will seek to destory
     seekAgainDiameter = 800;
     avoidDiameter = 600;
     

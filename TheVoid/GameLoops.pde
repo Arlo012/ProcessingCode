@@ -35,7 +35,9 @@ void DrawPlayLoop()
   BeginZoom();      //See visuals.pde
   cameraPan.x = width/2 -playerShip.location.x;
   cameraPan.y = height/2 - playerShip.location.y;
+  
   translate(cameraPan.x, cameraPan.y);    //Pan camera on ship
+  //rotate(playerShip.baseAngle);
 
   //Only render/update visible sectors (slightly faster)
   // DrawSectors(visibleSectors);

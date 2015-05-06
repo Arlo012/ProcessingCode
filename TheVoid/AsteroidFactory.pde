@@ -4,7 +4,7 @@
 public class AsteroidFactory
 {
   //Default values
-  private PVector maxVelocity = new PVector(0,0);                 //Max velocity in given x/y direction of asteroid
+  private PVector maxVelocity = new PVector(.8,0);                 //Max velocity in given x/y direction of asteroid
 
   //Generator values (keep these stored for next asteroid to create
   private int minX, minY, maxX, maxY, size, xCoor, yCoor;

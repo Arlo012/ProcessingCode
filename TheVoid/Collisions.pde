@@ -14,6 +14,7 @@ void HandleSectorCollisions(Map<Integer, Sector> _sectors)
     HandleCollisions(a.laserFire, playerShip);
     HandleCollisions(a.laserFire, a.asteroids);
     HandleCollisions(a.laserFire, a.ships);
+    HandleCollisions(a.asteroids);
 
     for(Planet p : a.planets)
     {

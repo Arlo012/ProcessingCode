@@ -3,7 +3,8 @@ public class Enemy extends Ship
   //AI here
   boolean fleeingPlayer;
   Player player;
-
+  
+  int avoidAsteroidWeight, avoidPlayerWeight, seekPlayerWeight;  // Handles enemies priority of movement
   int firingRange = 1000;     //How far away enemy will fire
   
   public Enemy(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, color _outlineColor, Sector _sector) 
@@ -17,6 +18,11 @@ public class Enemy extends Ship
     //Flee/attack
     fleeingPlayer = false;
     targets.add(player);      //All enemies are looking for the player
+    
+    //Weight Amounts
+    avoidAsteroidWeight = 2;
+    avoidPlayerWeight = 1;
+    seekPlayerWeight = 1;
 
     localSpeedLimit = 4;
   }
@@ -25,8 +31,25 @@ public class Enemy extends Ship
   {
    super.Update();
 
-   PVector avoidForce = Avoid(playerShip.location);
-   PVector seekForce = Seek(playerShip.location);
+   ArrayList<Sector> thisSectorAndNeighbors = currentSector.GetSelfAndAllNeighbors();
+   for(Sector s : thisSectorAndNeighbors)
+   {
+     for(Asteroid a : s.asteroids)
+     {
+       if (PVector.dist(a.location, location) < 100)
+       {
+         PVector avoidAsteroidForce = Avoid(a.location);
+         avoidAsteroidForce.mult(avoidAsteroidWeight);
+         ApplyForce(avoidAsteroidForce);
+       }
+        
+     }
+   }
+
+   PVector avoidPlayerForce = Avoid(playerShip.location);
+   avoidPlayerForce.mult(avoidPlayerWeight);
+   PVector seekPlayerForce = Seek(playerShip.location);
+   seekPlayerForce.mult(seekPlayerWeight);
 
    if(CheckDrawableOverlap(player.seekCircle, location))   //I see the player
    {
@@ -42,11 +65,11 @@ public class Enemy extends Ship
 
      if(fleeingPlayer)
      {
-        ApplyForce(avoidForce);
+        ApplyForce(avoidPlayerForce);
      }
      else
      {
-        ApplyForce(seekForce);
+        ApplyForce(seekPlayerForce);
      }
    }
 

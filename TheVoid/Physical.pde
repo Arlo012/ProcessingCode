@@ -153,7 +153,7 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
 
   
 //******* COLLIDE *********/
-float frictionFactor = 1.5;        //Slow down factor after collision
+float frictionFactor = 2.5;        //Slow down factor after collision
   
   /**
    * Cause collision effects on the OTHER object

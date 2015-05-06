@@ -5,8 +5,8 @@
 // Panning
 void mouseDragged() {
   //DEBUG ONLY
-    wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
-    wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
+    // wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
+    // wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
 
   //Make sure we haven't panned outside the screen view
   // if(!debugMode.value)
@@ -47,10 +47,12 @@ void mouseDragged() {
 }
 
 // Change zoom level
-void mouseClicked() 
+void mousePressed() 
 {
-  PVector currentMouseLoc = new PVector(mouseX*2, mouseY*2);    //HACK why is this coordinate system messed up like this?
-
+  //PVector currentMouseLoc = new PVector(mouseX*2, mouseY*2);    //HACK why is this coordinate system messed up like this?
+  PVector offset = new PVector(width,height);
+  offset.sub(playerShip.location);
+  playerShip.BuildLaserToTarget(new PVector(2*mouseX-offset.x,2*mouseY-offset.y));
 }
 
 void mouseWheel(MouseEvent e)
