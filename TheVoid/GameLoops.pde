@@ -38,6 +38,13 @@ void DrawPlayLoop()
   
   translate(cameraPan.x, cameraPan.y);    //Pan camera on ship
   //rotate(playerShip.baseAngle);
+  
+  if(mousePressed)
+  {
+    PVector offset = new PVector(width,height);
+    offset.sub(playerShip.location);
+    playerShip.BuildLaserToTarget(new PVector(2*mouseX-offset.x,2*mouseY-offset.y));
+  }
 
   //Only render/update visible sectors (slightly faster)
   // DrawSectors(visibleSectors);

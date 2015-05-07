@@ -34,7 +34,7 @@ long loopStartTime;      //Millis() time main loop started
 
 //Debugging & profiling
 static boolean debuggingAllowed = true;      //Display DEBUG button on GUI?
-TogglableBoolean debugMode = new TogglableBoolean(true);
+TogglableBoolean debugMode = new TogglableBoolean(false);
 boolean profilingMode = false;
 
 //Handle zooming http://forum.processing.org/one/topic/zoom-based-on-mouse-position.html

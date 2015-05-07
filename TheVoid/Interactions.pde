@@ -50,9 +50,9 @@ void mouseDragged() {
 void mousePressed() 
 {
   //PVector currentMouseLoc = new PVector(mouseX*2, mouseY*2);    //HACK why is this coordinate system messed up like this?
-  PVector offset = new PVector(width,height);
-  offset.sub(playerShip.location);
-  playerShip.BuildLaserToTarget(new PVector(2*mouseX-offset.x,2*mouseY-offset.y));
+  // PVector offset = new PVector(width,height);
+  // offset.sub(playerShip.location);
+  // playerShip.BuildLaserToTarget(new PVector(2*mouseX-offset.x,2*mouseY-offset.y));
 }
 
 void mouseWheel(MouseEvent e)

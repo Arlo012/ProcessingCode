@@ -141,16 +141,31 @@ public class Player extends Ship
   {
     PVector spinLeftEngine = new PVector(1,0);
     PVector spinRightEngine = new PVector(1,0);
-   
+    int engineThreshHold = 10;
+    float spinFactor = 0.25;
+    
     spinLeftEngine.rotate(velocity.heading() + HALF_PI);    //left engine vector set perdendicular to Velocity facing left.
     spinRightEngine.rotate(velocity.heading() - HALF_PI);   //right engine vector set perpendiuclar to Velocity facing right.
     spinLeftEngine.setMag(leftEnginePower);                 //Set magnitudes to Engines power ranging 0-10
-    spinRightEngine.setMag(rightEnginePower);
+    spinRightEngine.setMag(rightEnginePower); 
     PVector spinSum = PVector.add(spinRightEngine, spinLeftEngine);  //Sum the apposing facing spin vectors
+    PVector desired = new PVector(0,0);
+    if(leftEnginePower <= engineThreshHold && rightEnginePower <= engineThreshHold && velocity.mag() <= 1)
+    {
+      spinSum.setMag(map(spinSum.mag(), 0, engineThreshHold, 0, spinFactor));
+      desired = PVector.add(spinSum,forward);
+      if(desired.mag() == 1)
+      {
+        desired.setMag(0);
+      }
+      desired.setMag(map(desired.mag(), 0,sqrt(spinFactor*spinFactor+1), 0,0.5));
+      return desired;
+    }
     spinSum.x = map(spinSum.x, 0, 10, 0, 0.5);          //Limit to better turning speed 'feel'
     spinSum.y = map(spinSum.y, 0, 10, 0, 0.5);
-
+  
     return spinSum;
+    
   }
 
   /**
