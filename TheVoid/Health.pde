@@ -18,4 +18,12 @@ public class Health
   	current = max;
   }
   
+  public void Add(int _addition)
+  {
+    current += _addition;
+    if(current > max)
+    {
+      current = max;
+    }
+  } 
 }

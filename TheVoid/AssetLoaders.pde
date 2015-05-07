@@ -75,8 +75,8 @@ void LoadImageAssets()
   blueStation2 = loadImage("Assets/Stations/Spacestation2-2.png");
   blueStation3 = loadImage("Assets/Stations/Spacestation2-3.png");
   smokeTexture = loadImage("Assets/Effects/Smoke/0000.png");
-  redLaser = loadImage("Assets/Weapons/redLaser.png");
-  greenLaser = loadImage("Assets/Weapons/greenLaser.png");
+  redLaser = loadImage("Assets/Weapons/laserRed12.png");
+  greenLaser = loadImage("Assets/Weapons/laserGreen02.png");
   
   //Load explosions (see Explosion.pde for variables)
   for (int i = 1; i < explosionImgCount + 1; i++) 
@@ -128,7 +128,7 @@ void LoadSoundAssets()
 
 
 
-
+//Shield/health bars
 PVector blueButtonSize;
 PVector blueButtonLocation; 
 PVector redButtonSize;
@@ -136,8 +136,13 @@ PVector redButtonLocation;
 PVector barOffset;      //How far bars are offset from UI background
 PVector barSize;        
 int barSpacing;         //How far bars are apart
+//Engine power bars
+int fullThrottleSize;   //Y size
+PVector leftThrottleLocation, rightThrottleLocation;
+PVector leftThrottleSize, rightThrottleSize;
 void PrepareUIElements()
 {
+//Shield/health bars
   blueButtonSize = new PVector(width/2, height/16);
   blueButtonLocation = new PVector(0, height - 2 *blueButtonSize.y);
   blueButton.resize((int)blueButtonSize.x, (int)blueButtonSize.y);
@@ -149,4 +154,12 @@ void PrepareUIElements()
   barSize = new PVector(width/42, height/22);
   barOffset = new PVector(width/50,height/100);
   barSpacing = (int)barSize.x + 10;
+
+//Engine power bars
+  fullThrottleSize = height/4;
+  leftThrottleSize = new PVector(width/32, fullThrottleSize);    //Max
+  rightThrottleSize = leftThrottleSize.get();   //Same size
+
+  leftThrottleLocation = new PVector(width - 2* leftThrottleSize.x, height - leftThrottleSize.y);
+  rightThrottleLocation = new PVector(width - rightThrottleSize.x, height - rightThrottleSize.y);
 }

@@ -4,9 +4,13 @@ public class Enemy extends Ship
   boolean fleeingPlayer;
   Player player;
   
-  int avoidAsteroidWeight, avoidPlayerWeight, seekPlayerWeight;  // Handles enemies priority of movement
-  int firingRange = 1000;     //How far away enemy will fire
+  int avoidAsteroidWeight, avoidPlayerWeight, seekPlayerWeight, avoidShipWeight;  // Handles enemies priority of movement
   
+  int firingRange;     //How far away enemy will fire
+
+  int asteroidFleeDistance = 100;
+  int shipFleeDistance = 100;
+
   public Enemy(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, color _outlineColor, Sector _sector, Shape _collider) 
   {
     //Parent constructor
@@ -19,12 +23,16 @@ public class Enemy extends Ship
     fleeingPlayer = false;
     targets.add(player);      //All enemies are looking for the player
     
-    //Weight Amounts
+    firingRange = (width + height)/2;
+
+    //Weight Amounts for flee/seek
     avoidAsteroidWeight = 2;
-    avoidPlayerWeight = 1;
+    avoidShipWeight = 3;
+    avoidPlayerWeight = 3;
     seekPlayerWeight = 1;
 
-    localSpeedLimit = 4;
+    localSpeedLimit = 4.5;
+    maxForceMagnitude = 0.3;      //For smoother turning
   }
 
   @Override public void Update()
@@ -36,13 +44,25 @@ public class Enemy extends Ship
    {
      for(Asteroid a : s.asteroids)
      {
-       if (PVector.dist(a.location, location) < 100)
+       if(PVector.dist(a.location, location) < asteroidFleeDistance)
        {
          PVector avoidAsteroidForce = Avoid(a.location);
          avoidAsteroidForce.mult(avoidAsteroidWeight);
          ApplyForce(avoidAsteroidForce);
        }
-        
+     }
+
+     for(Ship ship : s.ships)
+     {
+      if(ship != this && ship != playerShip)
+      {
+        if(PVector.dist(ship.location, location) < shipFleeDistance)
+        {
+          PVector avoidShipForce = Avoid(ship.location);
+          avoidShipForce.mult(avoidShipWeight);
+          ApplyForce(avoidShipForce);
+        }
+      }
      }
    }
 
@@ -93,7 +113,7 @@ public class Enemy extends Ship
         if(closestTarget != null)    //Found a target
         {
           float targetRange = PVector.dist(closestTarget.location, location);
-          if(targetRange < firingRange)   //Target close enough to fire!
+          if(targetRange < firingRange)   //I am within fire range of player
           {
             BuildLaserToTarget(closestTarget, LaserColor.RED);
             lastFireTime = millis();

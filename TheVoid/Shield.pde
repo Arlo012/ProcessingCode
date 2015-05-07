@@ -12,8 +12,13 @@ public class Shield extends Physical implements Updatable
   boolean online;               //Are shields up?
 
   //Shield size scaling
-  float sizeScale = 1.25;
+  float sizeScale = 1.3;
 
+  /**
+   * Take in a parent object, build shield to default its x-size.
+   * Then look at its largest dimension and re-scale the shield based on the
+   * sizeScale factor around that.
+   */
   Shield(Physical _parent, int _dmgCapacity, Sector _sector, Shape _collider)
   {
     super("Shield", _parent.location, new PVector(_parent.size.x, _parent.size.x), 2000, _sector, _collider);

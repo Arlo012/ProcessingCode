@@ -82,10 +82,12 @@ void UpdateSectorMap(HashMap<Integer, Sector> _sectors)
 {
   for(Sector a : _sectors.values())
   {
+    a.Update();      //Update the sector object
     UpdatePhysicalObjects(a.ships);
     UpdatePhysicalObjects(a.asteroids);
     UpdatePhysicalObjects(a.planets);  //Station updates occur in planet update loop
-    UpdatePhysicalObjects(a.laserFire);
+    UpdatePhysicalObjects(a.friendlyLaserFire);
+    UpdatePhysicalObjects(a.enemyLaserFire);
   }
 }
 

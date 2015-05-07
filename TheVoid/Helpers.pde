@@ -45,6 +45,9 @@ HashMap<Integer,Sector> BuildSectors(Sector _origin)
   }
 
   //Attach adjacent sectors to each other
+  // [ 1 2 3 ]
+  // [ 4 5 6 ]      Sector layout for adjacency check
+  // [ 7 8 9 ]
   for(int i = 1; i < 10; i++)
   {
     if(i%3 != 0)    //If not far right side
@@ -59,7 +62,7 @@ HashMap<Integer,Sector> BuildSectors(Sector _origin)
         sectorGenArray[i-1].SetNeighbor(SectorDirection.LR, sectorGenArray[i+3]);
       }
     }
-    if(i != 1 && i%4 != 0)    //Not far left side
+    if(i != 1 && i != 4 && i != 7)    //Not far left side
     {
       sectorGenArray[i-1].SetNeighbor(SectorDirection.Left, sectorGenArray[i-2]);
       if(i > 3)   //Not top row
@@ -175,7 +178,7 @@ void GenerateAsteroids(Sector sector, int initialAsteroidCount)
     if(noOverlap)
     { 
       Asteroid toAdd = asteroidFactory.GenerateAsteroid();
-      toAdd.baseAngle = rand.nextInt((360) + 1);
+      toAdd.baseAngle = radians(rand.nextInt((360) + 1));
       sector.asteroids.add(toAdd);
       i++;
     }
@@ -250,7 +253,7 @@ void GeneratePlanets(Sector sector, int count)
       Planet toBuild = new Planet("Planet", new PVector(xCoor, yCoor), size, int(10000*size/planetSizeRange.y), 
             sector, colliderGenerated);
       toBuild.SetMaxSpeed(0);        //Local speed limit for planet (don't move)
-      toBuild.baseAngle = rand.nextInt((360) + 1);
+      toBuild.baseAngle = radians(rand.nextInt((360) + 1));
       sector.planets.add(toBuild);
       println("[INFO] Generated a new planet at " + toBuild.location + " in sector " + sector.name);
       i++;
@@ -271,7 +274,7 @@ void GeneratePlanets(Sector sector, int count)
 }
 
 
-float shipScaleFactor = 0.25;     //Scale down ship sizes by this factor
+float shipScaleFactor = 0.25;     //Scale down ship sprite sizes by this factor
 /**
  * Build a given number of enemies on the provided Sector. If there
  * are planets, generate around the planet. If asteroid, generate
@@ -348,7 +351,18 @@ void GenerateEnemies(Sector sector, int count)
     Shape colliderGenerated = new Shape("collider", position, enemyShipSize, color(0,255,0), ShapeType._RECTANGLE_);
     Enemy enemyGen = new Enemy("Bad guy", position, enemyShipSize, enemySprite, 
       1000, color(255,0,0), sector, colliderGenerated);
-    enemyGen.baseAngle = rand.nextInt((360) + 1);     //Random rotation 0-360
+    enemyGen.baseAngle = radians(rand.nextInt((360) + 1));     //Random rotation 0-360
+
+    //TODO: fix rendering of enemy shields when in another sector
+    // Small chance for enemy with shields....
+    // int shieldOdds = 95;     //percentage of enemies with shield
+    // int rolledNumber = rand.nextInt((100) + 1);
+    // if(rolledNumber <= shieldOdds)
+    // {
+    //   enemyGen.shield.enabled = true;
+    //   enemyGen.shield.online = true;
+    // }
+
     sector.ships.add(enemyGen);
   }
 

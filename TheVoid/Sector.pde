@@ -11,9 +11,10 @@ public class Sector extends Drawable implements Updatable
 {
   //Contents of this sector. Built by helper functions in helpers.pde
   public ArrayList<Asteroid> asteroids;
+  public ArrayList<Asteroid> debrisSpawned;       //Storage for debris spawned to be added in update
   public ArrayList<Planet> planets;
   public ArrayList<Ship> ships;           //May include enemies and the player ship
-  public ArrayList<LaserBeam> laserFire; 
+  public ArrayList<LaserBeam> enemyLaserFire, friendlyLaserFire; 
   public ArrayList<Explosion> explosions; 
 
   //Link to neighboring sectors
@@ -53,9 +54,11 @@ public class Sector extends Drawable implements Updatable
 
     //Object containers
     asteroids = new ArrayList<Asteroid>();
+    debrisSpawned = new ArrayList<Asteroid>();
     planets = new ArrayList<Planet>();
     ships = new ArrayList<Ship>();
-    laserFire = new ArrayList<LaserBeam>();
+    enemyLaserFire = new ArrayList<LaserBeam>();
+    friendlyLaserFire = new ArrayList<LaserBeam>();
     explosions = new ArrayList<Explosion>();
 
     //Neighbors
@@ -126,8 +129,8 @@ public class Sector extends Drawable implements Updatable
    */
   private void GenerateSectorEnemies()
   {
-    int maxEnemies = 4;
-    int minEnemies = 1;
+    int maxEnemies = 6;
+    int minEnemies = 0;
     int enemyCount = rand.nextInt((maxEnemies - minEnemies) + 1) + minEnemies;
     // GenerateEnemies(this, 0);
     GenerateEnemies(this, enemyCount); // GenerateEnemies(this, enemyCount);
@@ -162,8 +165,15 @@ public class Sector extends Drawable implements Updatable
 
   public void Update()
   {
-    //TODO handle ships moving between sectors
-      //TODO subset: generate more sectors if player moves between sectors
+    if(!debrisSpawned.isEmpty())      //Put debris into asteroid tracking list
+    {
+      for(Asteroid a : debrisSpawned)
+      {
+        asteroids.add(a);
+      }
+      debrisSpawned.clear();
+    }
+
   }
   
   /**
@@ -315,7 +325,21 @@ public class Sector extends Drawable implements Updatable
     }
     else if(obj instanceof LaserBeam)
     {
-      laserFire.add((LaserBeam)obj);
+      LaserBeam beam = (LaserBeam)obj;
+      if(beam.laserColor == LaserColor.GREEN)     //HACK team by color
+      {
+        friendlyLaserFire.add((LaserBeam)obj);
+      }
+      else
+      {
+        enemyLaserFire.add((LaserBeam)obj);
+      }
+      
+    }
+    else
+    {
+      println("[WARNING] Unknown object " + obj.name + " [" + obj.GetID() 
+              + "] has entered sector");
     }
 
   }

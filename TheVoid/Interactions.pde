@@ -2,62 +2,25 @@
  * Mouse & keyboard input here.
  */
 
-// Panning
-void mouseDragged() {
-  //DEBUG ONLY
-    // wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
-    // wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
-
-  //Make sure we haven't panned outside the screen view
-  // if(!debugMode.value)
-  // {
-  //   if (mouseX < width && mouseY < height 
-  //     && wvd.pixel2worldX(width) < width 
-  //     && wvd.pixel2worldY(height) < height) 
-  //   {
-  //     wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
-  //     wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
-  //   }
-    
-  //   //Code for preventing zoom to one screen width
-  //   if(wvd.orgX < 0)
-  //   {
-  //     wvd.orgX = 0;
-  //   }
-  //   if(wvd.orgY < 0)
-  //   {
-  //     wvd.orgY = 0;
-  //   }
-    
-  //   if(wvd.pixel2worldX(width) > width)
-  //   {
-  //     wvd.orgX--;
-  //   }
-  //   if(wvd.pixel2worldY(height) > height)
-  //   {
-  //     wvd.orgY--;
-  //   }
-  // }
-  // else
-  // {
-  //   wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
-  //   wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
-  // }
-
-}
-
 void mouseWheel(MouseEvent e)
 {
-  //TODO phase out mousewheel (centering camera messes up zoom... fix or remove this)
   float wmX = wvd.pixel2worldX(mouseX);
   float wmY = wvd.pixel2worldY(mouseY);
   
   wvd.viewRatio -= e.getAmount() / 20;
   wvd.viewRatio = constrain(wvd.viewRatio, 0.05, 200.0);
   
-  //DEBUG ONLY
   wvd.orgX = wmX - mouseX / wvd.viewRatio;
   wvd.orgY = wmY - mouseY / wvd.viewRatio;
+}
+
+// Panning
+void mouseDragged() {
+  if(gameState == GameState.PAUSED)
+  {
+    wvd.orgX -= (mouseX - pmouseX) / wvd.viewRatio;
+    wvd.orgY -= (mouseY - pmouseY) / wvd.viewRatio;
+  }
 }
 
 
@@ -66,10 +29,21 @@ void keyPressed()
 {  
   if(key == 'r')    //Reset zoom
   {
-    wvd.viewRatio = 1;
-    wvd.orgX = 0.0f;
-    wvd.orgY = 0.0f;
+    wvd.Reset();
   }
+
+  if(key == ' ')
+  {
+    if(gameState == GameState.PLAY)
+    {
+      gameState = GameState.PAUSED;
+    }
+    else if(gameState == GameState.PAUSED)
+    {
+      gameState = GameState.PLAY;
+    }
+  }
+
   
   //ENGINE DEBUG CONTROLS
   if(key == 'h' || key == 'H')

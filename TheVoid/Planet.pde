@@ -83,6 +83,7 @@ public class Planet extends Physical implements Clickable, Updatable
         {
           station = new Station(StationType.MILITARY, stationLoc, stationSize, 
             blueStation1, currentSector, colliderGen);
+          station.friendly = true;
         }
         else
         {
@@ -96,6 +97,7 @@ public class Planet extends Physical implements Clickable, Updatable
         {
           station = new Station(StationType.MILITARY, stationLoc, stationSize, 
             blueStation2, currentSector, colliderGen);
+          station.friendly = true;
         }
         else
         {
@@ -109,6 +111,7 @@ public class Planet extends Physical implements Clickable, Updatable
         {
           station = new Station(StationType.MILITARY, stationLoc, stationSize, 
             blueStation2, currentSector, colliderGen);
+          station.friendly = true;
         }
         else
         {

@@ -19,7 +19,6 @@ void DrawSectors(Map<Integer, Sector> _sectors)
   for(Sector a : _sectors.values())
   {
     a.DrawObject();
-
     a.collider.DrawObject();    //Draw sector outlines
   }
 
@@ -40,15 +39,15 @@ void DrawSectors(Map<Integer, Sector> _sectors)
 
   for(Sector a : _sectors.values())
   {
-    DrawObjects(a.laserFire);
+    DrawObjects(a.friendlyLaserFire);
+    DrawObjects(a.enemyLaserFire);
   }
+  
   for(Sector a : _sectors.values())
   {
     DrawObjects(a.explosions);
   }
 }
-
-//******* MOVE ********//
 
 /**
  * Move all objects in a sector
@@ -73,7 +72,8 @@ void MoveSectorObjects(Map<Integer, Sector> _sectors)
 
   for(Sector a : _sectors.values())
   {
-    MovePhysicalObject(a.laserFire);
+    MovePhysicalObject(a.friendlyLaserFire);
+    MovePhysicalObject(a.enemyLaserFire);
   }
 }
 

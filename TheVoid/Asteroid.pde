@@ -47,35 +47,22 @@ public class Asteroid extends Physical implements Updatable
         Asteroid debris = new Asteroid(location, (int)size.x/2, (int)(mass/2), currentSector, debrisCollider);
         
         //New velocity with some randomness based on old velocity
-        debris.SetVelocity(new PVector(velocity.x/2 + rand.nextFloat()*velocity.x/3-velocity.x/6,
-                               velocity.y/2 + rand.nextFloat()*velocity.y/3-velocity.y/6));
+        debris.SetVelocity(new PVector(velocity.x/4 + rand.nextFloat()*localSpeedLimit/6,
+                                        velocity.y/4 + rand.nextFloat()*localSpeedLimit/6));
         debris.isDebris = true;
         
         //See AsteroidFactory for details on this implementation
-        // debris.SetRotationRate(rotationRate);
-        // debris.SetRotationMode(RotationMode.SPIN);    //Spinning
         debris.SetMaxSpeed(2.5);      //Local speed limit for asteroid
-        debris.iconOverlay.SetIcon(color(255,0,0),ShapeType._CIRCLE_);
-        debris.drawOverlay = true;      //Dont draw overlay by default
         
         //Setup health, scaled by size relative to max size. 1/4 health of std asteroid
         //HACK this just overwrites the constructor
         debris.health.max = (int)(debris.size.x/maxDiameter * maxAsteroidHealth)/8;
         debris.health.current = health.max;
         
-        //TODO implement me
-        //debrisSpawned.add(debris);
+        currentSector.debrisSpawned.add(debris);
       }
     }
   }
-
-  @Override public void DrawObject()
-  {
-    super.DrawObject();
-    
-    //TODO any special actions here? Otherwise remove this override
-  }
-
 
   /*Click & mouseover UI*/
   ClickType GetClickType()

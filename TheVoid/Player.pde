@@ -16,6 +16,9 @@ public class Player extends Ship
   private Physical currentTarget;         //What ship is currently looking at
   private int currentTargetIndex;         //Index into targets arraylist 
 
+  //Power ups
+  boolean bulletHellEnabled;      //Fire FAST!
+
   //Scanners
   int sensorRange = 2000;          //Units of pixels
   Shape scanRadius;               //Circle outline, when hovered over, shows sensor/weapons range
@@ -51,7 +54,7 @@ public class Player extends Ship
     avoidCircle = new Shape("avoidCircle",location , new PVector(avoidDiameter,avoidDiameter), color(18,255,47), ShapeType._CIRCLE_);                  //Green
   
     //Targetting circle initially transparent target circle
-    targetCircle = new Shape("seekCircle", location, new PVector(200,200), color(255,0,0,125), ShapeType._CIRCLE_); 
+    targetCircle = new Shape("targetCircle", location, new PVector(200,200), color(255,0,0,125), ShapeType._CIRCLE_); 
   
     //Prepare sensors collider
     scanRadius = new Shape("Scan radius", location, new PVector(sensorRange,sensorRange), 

@@ -5,16 +5,19 @@ enum StationType {
   MILITARY, ENERGY
 }
 
-public class Station extends Physical implements Clickable, Updatable
+public class Station extends Physical implements Updatable, Friendly
 {
   static final int maxStationSize = 60;      //Maximum station size
   static final int maxStationHealth = 1000;  //Maximum health for a station
-  TextWindow info;
-  
-  //Station INFO
   
   //Station mass-energy generation per sec
   int massEnergyGen;
+
+  //Aid
+  boolean friendly;
+  int healAmount = 50;
+  int healPeriod = 200;        //How long between each heal tick
+  long lastHealTime = 0;
   
   //Placement parameters
   Shape placementCircle;      //Shows the area where a spawned ship/ missile may be placed around this station
@@ -46,11 +49,6 @@ public class Station extends Physical implements Clickable, Updatable
     smokeEffect2 = new Smoke(location, new PVector(10,10));  
     smoke1Visible = false;
     smoke2Visible = false;
-
-    //Set the description string
-    String descriptor = new String();
-    descriptor += name;
-    info = new TextWindow("Station Info", location, descriptor);
   }
   
   @Override public void DrawObject()
@@ -58,6 +56,7 @@ public class Station extends Physical implements Clickable, Updatable
     super.DrawObject();
     
     //Draw smoke effects
+    pushStyle();
     if(smoke1Visible)
     {
       smokeEffect1.DrawObject();
@@ -66,52 +65,13 @@ public class Station extends Physical implements Clickable, Updatable
     {
       smokeEffect2.DrawObject();
     }
+    popStyle();
   }
-  
-/*Click & mouseover UI*/
-  ClickType GetClickType()
-  {
-    return ClickType.INFO;
-  }
-  
-  public void Click()
-  {
-    println("INFO: No interaction defined for station click");
-  }
-  
-  public void MouseOver()
-  {
-    info.visibleNow = true;
-    info.DrawObject();
-  }
-  
-  public void UpdateUIInfo()
-  {
-    //Update textbox
-    info.UpdateLocation(location);
-    
-    //Set the description string
-    String descriptor = new String();
-    descriptor += name;    
-    info.UpdateText(descriptor);
-  }
-  
   
   public void Update()
   {
     super.Update();    //Call physical update
-    
-    //Check if UI is currently rendered, and if so update info
-    if(info.visibleNow)
-    {
-      UpdateUIInfo();
-    }
-    //Assume UI will not be rendered next frame
-    info.visibleNow = false;    //Another mouseover/ click will negate this
-    
-    //Update icon overlay
-    iconOverlay.UpdateLocation(location);
-    
+
     //Check health effect thresholds
     if(health.current <= health.max/2)
     {
@@ -138,6 +98,22 @@ public class Station extends Physical implements Clickable, Updatable
     if(toBeKilled)
     {
       GenerateDeathExplosions(5, location, size, currentSector);
+    }
+  }
+
+  /**
+   * Heal the player, if friendly
+   * @param _friend Friendly object
+   */
+  public void ProvideAid(Physical _friend)
+  {
+    if(friendly)
+    {
+      if(millis() > lastHealTime + healPeriod)
+      {
+        _friend.health.Add(healAmount); 
+        lastHealTime = millis();
+      }
     }
   }
 }

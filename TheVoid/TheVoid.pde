@@ -74,8 +74,8 @@ void setup()
   //Game area setup
   sectors = new HashMap<Integer, Sector>();
   generatedSectors = new HashMap<Integer, Sector>();
-  sectorSize = new PVector(width*2,height*2);
-  visibleSectors = new ArrayList<Sector>();
+  sectorSize = new PVector(2*width,2*height);
+  visibleSectors = new ArrayList<Sector>();   //TODO implement me
   explosions = new ArrayList<Explosion>();
 
   //Start Menu initialize
@@ -86,8 +86,6 @@ void setup()
   startVel= new PVector(0,0);
   startAccel = new PVector(.04,0);
   
-  
-  
   PVector spawnLocation = new PVector(width, height);
   playerSize = new PVector(100,50);
   int playerMass = 100;
@@ -97,7 +95,6 @@ void setup()
               color(255,0,0), null, playerCollider);     //null sector until created
   playerShip.health.SetMaxHealth(3000);
 
-  //Setup civilizations and their game objects, along with controllers
   GameObjectSetup();    //See Helpers.pde
   playerShip.currentSector = sectors.get(0);      //Now that sector is created, feed to player obj
   sectors.get(0).ships.add(playerShip);
@@ -111,10 +108,6 @@ void setup()
   // introMusic.play();
   // trackStartTime = millis();
   // currentTrack = introMusic;
-
-  //TODO just render current sector
-  visibleSectors.clear();
-  visibleSectors.add(playerShip.currentSector);
 }
 
 void draw()

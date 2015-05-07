@@ -62,7 +62,7 @@ public class Ship extends Physical implements Clickable, Updatable
     smoke2Visible = false;
     
     //Shield setup
-    int shieldSize = 72;      //TODO tune algorithmically... 
+    int shieldSize = (int)size.x;      //HACK this sort of doesn't matter because the shield class over-writes this size in its constructor...
     Shape shieldCollider = new Shape("collider", location, new PVector(shieldSize, shieldSize), color(0,255,0), 
             ShapeType._CIRCLE_);
 
@@ -94,9 +94,14 @@ public class Ship extends Physical implements Clickable, Updatable
   {
     super.DrawObject();
 
-    if(shield.online)
+    if(shield.online && shield.enabled)
     {
+      collidable = false;     //Make double sure no collisions happen on the ship inside the shield
       shield.DrawObject();
+    }
+    else
+    {
+      collidable = true;
     }
     
     //Draw smoke effects
@@ -139,9 +144,6 @@ public class Ship extends Physical implements Clickable, Updatable
     
     //Update icon overlay
     iconOverlay.UpdateLocation(location);
-
-
-   //**** MOVEMENT *****//
 
    //**** HEALTH *****//
     //Check health effect thresholds
@@ -191,11 +193,20 @@ public class Ship extends Physical implements Clickable, Updatable
     //Create laser object
     PVector laserSize = new PVector(20,3);
     PVector laserSpawn;
-    if(shield.enabled)      //Fire outside sheild to prevent self collision
+    if(shield.enabled)
     {
-      laserSpawn = new PVector(location.x + targetVector.x * shield.size.x * 1.1, 
-        location.y + targetVector.y * shield.size.y * 1.1);
+      if(shield.size.x > size.x || shield.size.y > size.y)    //Fire outside shield
+      { 
+        laserSpawn = new PVector(location.x + targetVector.x * shield.size.x/2 * 1.25, 
+          location.y + targetVector.y * shield.size.y/2 * 1.25);
+      }
+      else  //Weird case of a small shield -- just fire outside
+      {
+        laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
+            location.y + targetVector.y * size.y * 1.1);
+      }
     }
+    
     else
     {
       laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
@@ -221,8 +232,8 @@ public class Ship extends Physical implements Clickable, Updatable
     PVector laserSpawn;
     if(shield.enabled)    //Fire outside sheild to prevent self collision
     {
-      laserSpawn = new PVector(location.x + targetVector.x * shield.size.x * 1.1, 
-        location.y + targetVector.y * shield.size.y * 1.1);    //Where to spawn the laser outside ship
+      laserSpawn = new PVector(location.x + targetVector.x * shield.size.x/2 * 1.1, 
+        location.y + targetVector.y * shield.size.y/2 * 1.1);    //Where to spawn the laser outside ship
     }
     else
     {

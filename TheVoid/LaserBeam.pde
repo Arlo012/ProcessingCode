@@ -9,11 +9,15 @@ public class LaserBeam extends Physical
   static final int timeToFly = 2000;        //Effective range, related to speed (ms)
   private long spawnTime;
   
+  LaserColor laserColor;
+
   LaserBeam(PVector _loc, PVector _direction, PVector _size, Sector _sector, 
                 Shape _collider, LaserColor _color)
   {
     super("Laser beam", _loc, _size, .0001, _sector, _collider);    //HACK Mass very low!! For handling physics easier 
+    
     //Set laser color
+    laserColor = _color;
     if(_color == LaserColor.GREEN)
     {
       sprite = greenLaser.get();
@@ -39,9 +43,16 @@ public class LaserBeam extends Physical
     velocity = scaledVelocity;
     
     //Play laser fire sound
-    laserSound.play();
+    // laserSound.play();       //TODO too many of these play calls in one loop crashes the sound library....
 
-    currentSector.laserFire.add(this);
+    if(_color == LaserColor.GREEN)      //HACK determine team  by color
+    {
+      currentSector.friendlyLaserFire.add(this);
+    }
+    else
+    {
+      currentSector.enemyLaserFire.add(this);
+    }
   }
   
   //Standard update() + handle time of flight
@@ -69,7 +80,7 @@ public class LaserBeam extends Physical
       print(" damage.\n");
     }
     
-    laserHitSound.play();
+    // laserHitSound.play();
     toBeKilled = true;
   }
 

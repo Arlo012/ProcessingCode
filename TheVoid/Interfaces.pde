@@ -27,3 +27,12 @@ public interface Updatable
 {
   void Update();
 }
+
+/**
+ * A friendly object (e.g. station) that provides
+ * aid to physical objects
+ */
+public interface Friendly
+{
+  void ProvideAid(Physical _friend);
+}

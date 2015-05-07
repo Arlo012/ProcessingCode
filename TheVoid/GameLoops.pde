@@ -60,24 +60,19 @@ void DrawPlayLoop()
 
   loopCounter++;
 
-  //******* ALL ZOOMED AFTER THIS ********//
-  BeginZoom();      //See visuals.pde
+  wvd.Reset();      //No zoom, pan, nothing
+  pushMatrix();
   cameraPan.x = width/2 -playerShip.location.x;
   cameraPan.y = height/2 - playerShip.location.y;
   
   translate(cameraPan.x, cameraPan.y);    //Pan camera on ship
-  //rotate(playerShip.baseAngle);
   
   if(mousePressed)    //Bullet hell
   {
     PVector offset = new PVector(width,height);
     offset.sub(playerShip.location);
-    playerShip.BuildLaserToTarget(new PVector(2*mouseX-offset.x,2*mouseY-offset.y), LaserColor.GREEN);
+    playerShip.BuildLaserToTarget(new PVector(2*mouseX-offset.x, 2*mouseY-offset.y), LaserColor.GREEN);
   }
-
-  //Only render/update visible sectors (slightly faster)
-  // DrawSectors(visibleSectors);
-  // UpdateSectors(visibleSectors);
 
   //ALL sectors (slower)
   if(profilingMode)
@@ -106,8 +101,9 @@ void DrawPlayLoop()
     UpdateSectorMap(sectors); //Update sectors (and all updatable objects within them)
   }
   
-  // ******* ALL ZOOMED BEFORE THIS ********//
-  EndZoom();
+  translate(width/2, height/2);
+  rotate(playerShip.baseAngle);
+  popMatrix();
 
   //// ******* DrawMainUI ********//
   DrawMainUI();
@@ -132,13 +128,34 @@ void DrawPlayLoop()
 //Identical to main draw loop, but without updates
 void DrawPauseLoop()
 {
- 
-}
+  textFont(startupFont, 12);
+  background(0);
 
+  //******* ALL ZOOMED AFTER THIS ********//
+  BeginZoom();      //See visuals.pde
+  cameraPan.x = width/2 -playerShip.location.x;
+  cameraPan.y = height/2 - playerShip.location.y;
+  
+  translate(cameraPan.x, cameraPan.y);    //Pan camera on ship
+
+  DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
+  
+  // ******* ALL ZOOMED BEFORE THIS ********//
+  EndZoom();
+
+  //// ******* DrawMainUI ********//
+  DrawMainUI();
+
+  //// ******* UPDATES ********//
+  if(!generatedSectors.isEmpty())
+  {
+    MergeSectorMaps(generatedSectors);
+  }
+
+}
 
 void DrawGameOverLoop()
 {
- 
 }
 
 //--------- MISC -----------//
@@ -163,7 +180,6 @@ void MusicHandler()
       currentTrackIndex = 0;
       MusicHandler();
     }
-
   }
 }
 
@@ -172,6 +188,7 @@ void MusicHandler()
 void DrawMainUI()
 {
   pushStyle();
+//Shield/health bars
   imageMode(CORNER);
   redButton.resize((int)redButtonSize.x, (int)redButtonSize.y);     //HACK not sure why this needs to be here
   blueButton.resize((int)blueButtonSize.x, (int)blueButtonSize.y);
@@ -201,5 +218,16 @@ void DrawMainUI()
   textFont(standardFont, 30);    //Standard standardFont and size for drawing fonts
   text("HEALTH", 10 * barSpacing + redButtonLocation.x + 100, redButtonLocation.y + redButtonSize.y/2);
   text("SHIELDS", 10 * barSpacing + blueButtonLocation.x + 100, blueButtonLocation.y + blueButtonSize.y/2);
+  
+//Engine power bars
+  fill(0,255,0,250);
+  leftThrottleSize.y = playerShip.leftEnginePower/playerShip.maxThrust * fullThrottleSize;
+  leftThrottleLocation.y = height - leftThrottleSize.y;
+  rect(leftThrottleLocation.x, leftThrottleLocation.y, leftThrottleSize.x, leftThrottleSize.y, 12, 12, 0, 0);
+  
+  fill(0,0,255,250);
+  rightThrottleSize.y = playerShip.rightEnginePower/playerShip.maxThrust * fullThrottleSize;
+  rightThrottleLocation.y = height - rightThrottleSize.y;
+  rect(rightThrottleLocation.x, rightThrottleLocation.y, rightThrottleSize.x, rightThrottleSize.y, 12, 12, 0, 0);
   popStyle();
 }

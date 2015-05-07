@@ -11,21 +11,28 @@ void HandleSectorCollisions(Map<Integer, Sector> _sectors)
   for(Sector a : _sectors.values())
   {
     HandleCollisions(a.asteroids, a.ships);
-    HandleCollisions(a.laserFire, playerShip);
-    HandleCollisions(a.laserFire, a.asteroids);
-    HandleCollisions(a.laserFire, a.ships);
+    HandleCollisions(a.enemyLaserFire, playerShip);
+    HandleCollisions(a.enemyLaserFire, a.asteroids);
+    HandleCollisions(a.friendlyLaserFire, a.asteroids);
+    HandleCollisions(a.friendlyLaserFire, a.ships);   //HACK still allows player collision with his own shots
     HandleCollisions(a.asteroids);
 
     for(Planet p : a.planets)
     {
-      HandleCollisions(a.laserFire, p.stations);
+      HandleCollisions(a.enemyLaserFire, p.stations);
+      HandleCollisions(a.friendlyLaserFire, p.stations);
       HandleCollisions(a.asteroids, playerShip.shield);
+
+      HandleFriendlyCollision(p.stations, playerShip);    //Heal at stations
     }
 
-    if(playerShip.shield.online)
+    for(Ship s : a.ships)
     {
-      HandleCollisions(a.asteroids, playerShip.shield);
-      HandleCollisions(a.laserFire, playerShip.shield);
+      if(s.shield.online && s.shield.enabled)
+      {
+        HandleCollisions(a.asteroids, s.shield);
+        HandleCollisions(a.enemyLaserFire, s.shield);   //HACK doesn't allow for enemy shields
+      }
     }
     
   }
@@ -125,6 +132,37 @@ void HandleCollisions(ArrayList<? extends Physical> a)
         }
       }
     }
+  }
+}
+
+/**
+ * Handle a friendly object providing aid to the player (or enemy!)
+ * @param a   List of objects that MIGHT be friendly
+ * @param obj Physical object which will receive aid
+ */
+void HandleFriendlyCollision(ArrayList<? extends Physical> a, Physical obj2)
+{
+  Shape collider1, collider2;
+  collider2 = obj2.collider;      //Grab shape object for overlap checking
+  for(Physical obj1 : a)
+  {
+    // if(implementsInterface(a, Friendly))
+    // {
+      collider1 = obj1.collider;
+      if(CheckShapeToShapeOverlap(collider1, collider2)) 
+      {
+        if(debugMode.value)
+        {
+          print("[DEBUG] FRIENDLY AID BETWEEN: ");
+          print(obj1.name + "[" + obj1.GetID() + "]");
+          print(" & ");
+          print(obj2.name + "[" + obj2.GetID() + "]");
+          print("\n");
+        }
+        Friendly friend = (Friendly)obj1;
+        friend.ProvideAid(obj2);
+      }
+    // }
   }
 }
 
