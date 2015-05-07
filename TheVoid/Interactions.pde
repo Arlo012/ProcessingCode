@@ -126,5 +126,15 @@ void keyPressed()
   {
     playerShip.FireAtTarget();
   }
+  
+  //Start menu options
+  if(key == 's' || key == 'S')
+  {
+    sPressed=true;
+  }
+  if(key == 'm' || key == 'M')
+  {
+    mPressed=true;
+  }
 
 }

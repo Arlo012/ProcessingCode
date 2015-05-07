@@ -1,6 +1,8 @@
 //Image Assets
 PImage bg;             //Background
 PFont standardFont;    //Standard font for all text windows
+PFont introFont;       //Start screen font
+PFont instructFont;    //Intrustion font
 
 PImage blueButton, redButton;   //For background of health
 PImage blueBar, redBar;         //For percent health
@@ -20,6 +22,8 @@ void LoadImageAssets()
   bg.resize(width, height);
   
   standardFont = loadFont("SourceCodePro-Regular-48.vlw");    // font name and size
+  introFont = loadFont("Magneto-Bold-128.vlw");
+  instructFont = loadFont("OCRAExtended-128.vlw");
 
   //Load sprites
   asteroidSpriteSheet = loadImage("Assets/Environment/asteroids.png");

@@ -6,20 +6,49 @@
 PFont startupFont;
 void DrawStartupLoop()
 {
-  background(0);
+  image(bg, -10 + (10*sin(introAngle + HALF_PI)),(10*sin(introAngle)),displayWidth+20,displayHeight+20);
+  image(nebula3, displayWidth*.55 + (10*sin(introAngle + HALF_PI)), displayHeight*.25 +(10*sin(introAngle + HALF_PI)));
+  image(shipSprite,startLocation.x,startLocation.y, playerSize.x,playerSize.y);
   
-  pushStyle();
-  fill(color(255));
-  textFont(startupFont, 48);
+  fill(75,247,87);   //Green
+  textFont(introFont, 154);
   textAlign(CENTER, CENTER);
-  text("The Void", width/2, height/2);
+  text("The", displayWidth/2 - 72, displayHeight/8);
+  textAlign(CENTER, CENTER);
+  text("Void", displayWidth/2 + 72, displayHeight/8 + 154);
+  fill(255);
+  textFont(instructFont, 56);
+  text("Press 'S' to enter The Void!", displayWidth/2, displayHeight*.8);
+  text("Press 'M' for instructions", displayWidth/2, displayHeight*.8 + 72);
+  if(introAngle <= 6.28)
+  {
+    introAngle += .01;
+  }
+  else
+  {
+    introAngle = 0.0;
+  }
   
-  textFont(startupFont, 24);
-  text("Connecting to game controllers....", width/2, 3*height/4);
-  
-  //TODO actually connect to controllers
-  
-  popStyle();
+  if(mPressed || sPressed)
+  { 
+    startLocation.add(startVel);
+    startVel.add(startAccel);
+    if(startLocation.x > displayWidth + 2*playerSize.x && mPressed)
+    {
+      gameState = GameState.INSTRUCTIONS;
+    }
+    else if(startLocation.x > displayWidth + 2*playerSize.x && sPressed)
+    {
+      gameState = GameState.PLAY;
+    }
+  }
+}
+
+void DrawInstructionsLoop()
+{
+  image(bg,0,0,displayWidth,displayHeight);
+  image(shipSprite, displayWidth/2, displayHeight/2, playerSize.x,playerSize.y);
+  DrawMainUI();
 }
 
 

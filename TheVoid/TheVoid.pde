@@ -14,7 +14,7 @@ enum GameState {
 //Random number generator
 Random rand = new Random();
 
-GameState gameState = GameState.PLAY;
+GameState gameState = GameState.START;
 
 //Game Name
 String title = "The Void";
@@ -25,6 +25,14 @@ HashMap<Integer,Sector> generatedSectors;   //Storage of mid-loop generated sect
 ArrayList<Sector> visibleSectors;     //Sectors on-screen right now (only render/update these)
 ArrayList<Explosion> explosions;      //Explosions are global game object
 PVector sectorSize;                   //Set to width/height for now
+PVector playerSize;                   //Used to resize player image
+
+//Start Menu stuff
+float introAngle;                     //Angle used to shift background during Start menu
+boolean sPressed, mPressed;
+PVector startLocation;
+PVector startAccel;
+PVector startVel;
 
 //Counters
 long loopCounter;        //How many loop iterations have been completed
@@ -47,7 +55,7 @@ Player playerShip;
 
 void setup()
 {
-  size(1800, 1000, P3D);    //Need 3D acceleration to make this game run at decent FPS
+  size(displayWidth, displayHeight, P3D);    //Need 3D acceleration to make this game run at decent FPS
   frame.setTitle(title);
 
   //Zoom setup
@@ -70,8 +78,18 @@ void setup()
   visibleSectors = new ArrayList<Sector>();
   explosions = new ArrayList<Explosion>();
 
+  //Start Menu initialize
+  introAngle = 0.0;
+  mPressed = false;
+  sPressed = false;
+  startLocation = new PVector(displayWidth/2,displayHeight/2);
+  startVel= new PVector(0,0);
+  startAccel = new PVector(.04,0);
+  
+  
+  
   PVector spawnLocation = new PVector(width, height);
-  PVector playerSize = new PVector(100,50);
+  playerSize = new PVector(100,50);
   int playerMass = 100;
   Shape playerCollider = new Shape("collider", spawnLocation, playerSize, color(0,255,0), 
               ShapeType._RECTANGLE_);
@@ -106,6 +124,11 @@ void draw()
   if(gameState == GameState.START)
   {
     DrawStartupLoop();
+  }
+  
+  else if(gameState == GameState.INSTRUCTIONS)
+  {
+    DrawInstructionsLoop();
   }
   
   else if(gameState == GameState.PLAY)
