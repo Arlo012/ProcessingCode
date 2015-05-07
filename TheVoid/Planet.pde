@@ -42,7 +42,7 @@ public class Planet extends Physical implements Clickable, Updatable
     descriptor += planetDescriptions[planetTypeIndex-1];
     descriptor += "\nAll planets support";
     descriptor += "\nup to 4 orbital stations.";
-    info = new TextWindow("Planet info", location, descriptor, true);
+    info = new TextWindow("Planet info", location, descriptor);
   }
 
   //Create possible station locations around each planet

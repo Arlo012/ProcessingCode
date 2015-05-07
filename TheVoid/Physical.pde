@@ -177,7 +177,7 @@ public class Physical extends Drawable implements Movable, Collidable, Updatable
 
   
 //******* COLLIDE *********/
-float frictionFactor = 2.5;        //Slow down factor after collision
+float frictionFactor = 1.1;        //Slow down factor after collision
   
   /**
    * Cause collision effects on the OTHER object
@@ -207,7 +207,7 @@ float frictionFactor = 2.5;        //Slow down factor after collision
       print(_other.name);
       print("\n");
     }
-    
+
     //Create a velocity change based on this object and other object's position
     PVector deltaP = new PVector(0,0);    //Delta of position, dP(12) = P2 - P1
     deltaP.x = _other.location.x - location.x;
@@ -217,7 +217,7 @@ float frictionFactor = 2.5;        //Slow down factor after collision
     
     //Use this delta position to flip direction -- slow down by friction factor
     deltaP.setMag(velocity.mag()/frictionFactor);
-    
+
     _other.ApplyForce(deltaP);
   }
 

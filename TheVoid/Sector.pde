@@ -13,8 +13,8 @@ public class Sector extends Drawable implements Updatable
   public ArrayList<Asteroid> asteroids;
   public ArrayList<Planet> planets;
   public ArrayList<Ship> ships;           //May include enemies and the player ship
-  public ArrayList<LaserBeam> laserFire;  
-
+  public ArrayList<LaserBeam> laserFire; 
+  public ArrayList<Explosion> explosions; 
 
   //Link to neighboring sectors
   public HashMap<SectorDirection, Sector> neighbors;
@@ -56,6 +56,7 @@ public class Sector extends Drawable implements Updatable
     planets = new ArrayList<Planet>();
     ships = new ArrayList<Ship>();
     laserFire = new ArrayList<LaserBeam>();
+    explosions = new ArrayList<Explosion>();
 
     //Neighbors
     neighbors = new HashMap<SectorDirection, Sector>();

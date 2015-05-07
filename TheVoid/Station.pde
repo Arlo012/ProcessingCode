@@ -50,7 +50,7 @@ public class Station extends Physical implements Clickable, Updatable
     //Set the description string
     String descriptor = new String();
     descriptor += name;
-    info = new TextWindow("Station Info", location, descriptor, true);
+    info = new TextWindow("Station Info", location, descriptor);
   }
   
   @Override public void DrawObject()
@@ -137,7 +137,7 @@ public class Station extends Physical implements Clickable, Updatable
     //If the ship will die after this frame
     if(toBeKilled)
     {
-      GenerateDeathExplosions(5, location, size);
+      GenerateDeathExplosions(5, location, size, currentSector);
     }
   }
 }

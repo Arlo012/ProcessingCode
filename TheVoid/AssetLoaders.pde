@@ -1,5 +1,9 @@
-//Image Assetss
+//Image Assets
 PImage bg;             //Background
+PFont standardFont;    //Standard font for all text windows
+
+PImage blueButton, redButton;   //For background of health
+PImage blueBar, redBar;         //For percent health
 
 //TODO move all PImage instances here
 PImage nebula1, nebula2, nebula3;
@@ -15,6 +19,8 @@ void LoadImageAssets()
   bg = loadImage("Assets/Backgrounds/back_3.png");
   bg.resize(width, height);
   
+  standardFont = loadFont("SourceCodePro-Regular-48.vlw");    // font name and size
+
   //Load sprites
   asteroidSpriteSheet = loadImage("Assets/Environment/asteroids.png");
   shipSprite = loadImage("Assets/Ships/10(2).png");
@@ -75,11 +81,17 @@ void LoadImageAssets()
     String filename = "Assets/Effects/64x48/explosion1_" + nf(i, 4) + ".png";
     explosionImgs[i-1] = loadImage(filename);
   }
+
+  //Load UI Elements
+  blueButton = loadImage("Assets/UI/PNG/blue_button13.png");
+  redButton = loadImage("Assets/UI/PNG/red_button10.png");
+  blueBar = loadImage("Assets/UI/PNG/blue_sliderUp.png");
+  redBar = loadImage("Assets/UI/PNG/red_sliderUp.png");
 }
 
 SoundFile explosionSound, collisionSound, laserSound, 
     clickShipSpawnButtonSound, clickMissileSpawnButtonSound, clickNormalModeButtonSound, 
-    clickCancelOrderButtonSound, errorSound, shieldHitSound;
+    clickCancelOrderButtonSound, errorSound, shieldHitSound, laserHitSound;
     
 SoundFile introMusic;
 ArrayList<SoundFile> mainTracks;
@@ -95,6 +107,7 @@ void LoadSoundAssets()
   clickCancelOrderButtonSound = new SoundFile(this, sketchDir + "Assets/SoundEffects/UI/off.ogg");
   errorSound = new SoundFile(this, sketchDir + "Assets/SoundEffects/UI/error.wav");
   shieldHitSound = new SoundFile(this, sketchDir + "Assets/SoundEffects/Impact/138489__randomationpictures__shield-hit-2.wav");
+  laserHitSound = new SoundFile(this, sketchDir + "Assets/SoundEffects/Weapons/laser4_0.wav");
 
   //Music
   introMusic = new SoundFile(this, sketchDir + "Assets/Music/ZanderNoriega-Darker_Waves_0.mp3");
@@ -109,3 +122,27 @@ void LoadSoundAssets()
   mainTracks.add(track4);
 }
 
+
+
+
+PVector blueButtonSize;
+PVector blueButtonLocation; 
+PVector redButtonSize;
+PVector redButtonLocation; 
+PVector barOffset;      //How far bars are offset from UI background
+PVector barSize;        
+int barSpacing;         //How far bars are apart
+void PrepareUIElements()
+{
+  blueButtonSize = new PVector(width/2, height/16);
+  blueButtonLocation = new PVector(0, height - 2 *blueButtonSize.y);
+  blueButton.resize((int)blueButtonSize.x, (int)blueButtonSize.y);
+
+  redButtonSize = blueButtonSize;
+  redButtonLocation = new PVector(0, height - redButtonSize.y);
+  redButton.resize((int)redButtonSize.x, (int)redButtonSize.y);
+
+  barSize = new PVector(width/42, height/22);
+  barOffset = new PVector(width/50,height/100);
+  barSpacing = (int)barSize.x + 10;
+}

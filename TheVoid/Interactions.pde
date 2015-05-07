@@ -46,15 +46,6 @@ void mouseDragged() {
 
 }
 
-// Change zoom level
-void mousePressed() 
-{
-  //PVector currentMouseLoc = new PVector(mouseX*2, mouseY*2);    //HACK why is this coordinate system messed up like this?
-  // PVector offset = new PVector(width,height);
-  // offset.sub(playerShip.location);
-  // playerShip.BuildLaserToTarget(new PVector(2*mouseX-offset.x,2*mouseY-offset.y));
-}
-
 void mouseWheel(MouseEvent e)
 {
   //TODO phase out mousewheel (centering camera messes up zoom... fix or remove this)
@@ -67,28 +58,13 @@ void mouseWheel(MouseEvent e)
   //DEBUG ONLY
   wvd.orgX = wmX - mouseX / wvd.viewRatio;
   wvd.orgY = wmY - mouseY / wvd.viewRatio;
-
-  // //Prevent zooming out past standard zoom
-  // if(wvd.viewRatio < 1)
-  // {
-  //   wvd.viewRatio = 1.00f;
-  // }
-  // else if(wvd.viewRatio > 2)
-  // {
-  //   wvd.viewRatio = 2.00f;
-  // }
-  // else    //Only shift translation if we aren't zoomed out all the way
-  // {
-  //   wvd.orgX = wmX - mouseX / wvd.viewRatio;
-  //   wvd.orgY = wmY - mouseY / wvd.viewRatio;
-  // }
 }
 
 
 //Check for keypresses
 void keyPressed() 
 {  
-  if(key == 'r')
+  if(key == 'r')    //Reset zoom
   {
     wvd.viewRatio = 1;
     wvd.orgX = 0.0f;

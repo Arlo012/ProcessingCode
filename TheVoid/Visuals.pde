@@ -20,10 +20,7 @@ void DrawSectors(Map<Integer, Sector> _sectors)
   {
     a.DrawObject();
 
-    if(debugMode.value)
-    {
-      a.collider.DrawObject();
-    }
+    a.collider.DrawObject();    //Draw sector outlines
   }
 
   for(Sector a : _sectors.values())
@@ -44,6 +41,10 @@ void DrawSectors(Map<Integer, Sector> _sectors)
   for(Sector a : _sectors.values())
   {
     DrawObjects(a.laserFire);
+  }
+  for(Sector a : _sectors.values())
+  {
+    DrawObjects(a.explosions);
   }
 }
 
@@ -102,7 +103,7 @@ void EndZoom()
 //******* EXPLOSIONS ********//
 
 //Generate a number of explosions, generally upon the death of some ship, station, etc
-void GenerateDeathExplosions(int _count, PVector _center, PVector _deadObjSize)
+void GenerateDeathExplosions(int _count, PVector _center, PVector _deadObjSize, Sector _sector)
 {
   for(int i = 0; i < _count; i++)
   {
@@ -115,7 +116,6 @@ void GenerateDeathExplosions(int _count, PVector _center, PVector _deadObjSize)
     int frameDelay = rand.nextInt(60);                //Delay 0-60 frames
     explosion.SetRenderDelay(frameDelay);             //Setup delay on this explosion to render
     
-    //TODO add global explosion
-    explosions.add(explosion);                        //Add this explosion to an ArrayList<Explosion> for rendering
+    _sector.explosions.add(explosion);                        //Add this explosion to an ArrayList<Explosion> for rendering
   }
 }

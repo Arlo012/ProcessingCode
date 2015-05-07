@@ -94,10 +94,6 @@ void GameObjectSetup()
   
   Sector startSector = new Sector(0, new PVector(0,0), sectorSize, bg, SectorType.PLANETARY);
   sectors.put(0, startSector);
-  
-
-  // Shape testCollider = new Shape("testCollider", new PVector(playerShip.x - 10, playerShip.y - 20), 
-  //   new PVector(100, 50), color(0,255,0), ShapeType._RECTANGLE_);
 
   //Generate other sectors around this one
   println("[INFO] Generating sectors around the origin...");

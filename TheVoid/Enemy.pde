@@ -95,7 +95,7 @@ public class Enemy extends Ship
           float targetRange = PVector.dist(closestTarget.location, location);
           if(targetRange < firingRange)   //Target close enough to fire!
           {
-            BuildLaserToTarget(closestTarget);
+            BuildLaserToTarget(closestTarget, LaserColor.RED);
             lastFireTime = millis();
           }
         }

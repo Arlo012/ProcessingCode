@@ -4,10 +4,11 @@ public class Shield extends Physical implements Updatable
   Physical parent;  //What is generating the shield
 
   long lastUpdateTime;          //When were shield updates last checked
-  int shieldRegenAmount = 1;    //Per second
+  int shieldRegenAmount = 20;    //Per tick
   int failureTime = 5000;       //How long shields are offline in event they fail, ms
+  int regenPeriod = 500;        //How long between each regen tick
   
-  
+  boolean enabled;              //Are shields allowed to ever turn on?
   boolean online;               //Are shields up?
 
   //Shield size scaling
@@ -39,7 +40,8 @@ public class Shield extends Physical implements Updatable
     collider.size.x = size.x;
     collider.size.y = size.y;
 
-    //Initially offline
+    //Initially offline & disabled
+    enabled = false;
     online = false;
 
     health.current = _dmgCapacity;
@@ -52,30 +54,40 @@ public class Shield extends Physical implements Updatable
   //Do NOT use physical behavior -- handle separately
   @Override public void Update()
   {
-    location = parent.location.get();   //Update to ship location
-
-    collider.location = location;
-
-    collider.Update();
-
-    //Check for shields down during this past loop
-    if(collidable && health.current <= 0)
+    if(enabled)
     {
-      collidable = false;
-      lastUpdateTime += failureTime;        //Won't update (regen for another 5 seconds)
-      
-      health.current = 0;      //Reset to zero health (no negative shield health)
-    }
-    
-    //Regen
-    if(millis() > lastUpdateTime + 1000)    //Do one second tick updates
-    {
-      collidable = true;
-      if(health.current < health.max)
+      velocity = parent.velocity;         //HACK needs a velocity for collisions to register
+      location = parent.location.get();   //Update to ship location
+      collider.location = location;
+
+      collider.Update();
+
+      //Check for shields down during this past loop
+      if(collidable && health.current <= 0)
       {
-        health.current += shieldRegenAmount;
+        collidable = false;
+        online = false;
+        lastUpdateTime += failureTime;        //Won't update (regen for another 5 seconds)
+        
+        health.current = 0;      //Reset to zero health (no negative shield health)
       }
-      lastUpdateTime = millis();
+      
+      //Regen
+      if(millis() > lastUpdateTime + regenPeriod)    //Do one second tick updates
+      {
+        if(!online)
+        {
+          health.current = (int)(0.35 * health.max);  //Give a reasonable amount of shield on restore
+          online = true;
+        }
+        collidable = true;
+        
+        if(health.current < health.max)
+        {
+          health.current += shieldRegenAmount;
+        }
+        lastUpdateTime = millis();
+      }
     }
   }
 
@@ -87,7 +99,7 @@ public class Shield extends Physical implements Updatable
   {
     super.HandleCollision(_other);
 
-    //TODO Play sounds....
+    shieldHitSound.play();
 
   }
 

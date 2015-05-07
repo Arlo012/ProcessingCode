@@ -35,6 +35,7 @@ public class Player extends Ship
     
     //Shield setup 
     shield.online = true;
+    shield.enabled = true;
 
     //Engine setup
     leftEnginePower = 0;
@@ -43,7 +44,7 @@ public class Player extends Ship
     //Behavior Ranges for Enemies
     seekDiameter = 3000;        //All ships inside this circle will seek to destory
     seekAgainDiameter = 800;
-    avoidDiameter = 600;
+    avoidDiameter = 400;
     
     seekCircle = new Shape("seekCircle", location, new PVector(seekDiameter,seekDiameter), color(0,255,255), ShapeType._CIRCLE_);                    //Light Blue
     seekAgainCircle = new Shape("seekAgainCircle", location, new PVector(seekAgainDiameter,seekAgainDiameter), color(255,18,200), ShapeType._CIRCLE_); //Pink
@@ -62,7 +63,7 @@ public class Player extends Ship
   @Override public void Update()
   {
     super.Update();
-    
+
     //Update player radius circles for seek/flee    
     seekCircle.location = location;
     seekAgainCircle.location = location;
@@ -244,7 +245,7 @@ public class Player extends Ship
   {
     if(currentTarget != null)
     {
-      BuildLaserToTarget(currentTarget);
+      BuildLaserToTarget(currentTarget, LaserColor.GREEN);
     }
   }
 

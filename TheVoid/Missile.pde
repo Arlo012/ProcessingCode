@@ -39,7 +39,7 @@ public class Missile extends Physical implements Clickable, Updatable
     descriptor += "\nVelocity: ";
     descriptor += velocity.mag();
     descriptor += " m/s ";
-    info = new TextWindow("Missile Info", location, descriptor, true);
+    info = new TextWindow("Missile Info", location, descriptor);
   }
   
   //HACK this update() function is highly repeated through child classes

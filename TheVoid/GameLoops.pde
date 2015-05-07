@@ -39,11 +39,11 @@ void DrawPlayLoop()
   translate(cameraPan.x, cameraPan.y);    //Pan camera on ship
   //rotate(playerShip.baseAngle);
   
-  if(mousePressed)
+  if(mousePressed)    //Bullet hell
   {
     PVector offset = new PVector(width,height);
     offset.sub(playerShip.location);
-    playerShip.BuildLaserToTarget(new PVector(2*mouseX-offset.x,2*mouseY-offset.y));
+    playerShip.BuildLaserToTarget(new PVector(2*mouseX-offset.x,2*mouseY-offset.y), LaserColor.GREEN);
   }
 
   //Only render/update visible sectors (slightly faster)
@@ -77,11 +77,11 @@ void DrawPlayLoop()
     UpdateSectorMap(sectors); //Update sectors (and all updatable objects within them)
   }
   
-  //// ******* ALL ZOOMED BEFORE THIS ********//
+  // ******* ALL ZOOMED BEFORE THIS ********//
   EndZoom();
 
-  //// Draw main interface
-  // currentPlayer.DrawUI();
+  //// ******* DrawMainUI ********//
+  DrawMainUI();
 
   //// ******* UPDATES ********//
   if(!generatedSectors.isEmpty())
@@ -136,4 +136,41 @@ void MusicHandler()
     }
 
   }
+}
+
+//---------UI----------//
+
+void DrawMainUI()
+{
+  pushStyle();
+  imageMode(CORNER);
+  redButton.resize((int)redButtonSize.x, (int)redButtonSize.y);     //HACK not sure why this needs to be here
+  blueButton.resize((int)blueButtonSize.x, (int)blueButtonSize.y);
+  image(blueButton,blueButtonLocation.x,blueButtonLocation.y);    //Shield health background
+  image(redButton,redButtonLocation.x,redButtonLocation.y);
+
+  int maxHealth = playerShip.health.max;
+  int maxShields = playerShip.shield.health.max;
+  int healthBars = (int)Math.floor(((float)playerShip.health.current)/maxHealth*10);
+  int shieldBars = (int)Math.floor(((float)playerShip.shield.health.current)/maxShields*10);
+
+
+  redBar.resize((int)barSize.x, (int)barSize.y);
+  for(int i = 0; i < healthBars; i++)
+  {
+    image(redBar, i * barSpacing + barOffset.x + redButtonLocation.x, barOffset.y + redButtonLocation.y);
+  }
+
+  blueBar.resize((int)barSize.x, (int)barSize.y);
+  for(int i = 0; i < shieldBars; i++)
+  {
+    image(blueBar, i * barSpacing + barOffset.x + blueButtonLocation.x, barOffset.y + blueButtonLocation.y);
+  }
+
+  textAlign(CENTER,CENTER);
+  fill(0);
+  textFont(standardFont, 30);    //Standard standardFont and size for drawing fonts
+  text("HEALTH", 10 * barSpacing + redButtonLocation.x + 100, redButtonLocation.y + redButtonSize.y/2);
+  text("SHIELDS", 10 * barSpacing + blueButtonLocation.x + 100, blueButtonLocation.y + blueButtonSize.y/2);
+  popStyle();
 }

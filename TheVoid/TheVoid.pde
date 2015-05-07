@@ -19,8 +19,6 @@ GameState gameState = GameState.PLAY;
 //Game Name
 String title = "The Void";
 
-//TODO Controllers
-
 //Game objects and areas
 HashMap<Integer,Sector> sectors;      //Sector IDs mapped against sector objects
 HashMap<Integer,Sector> generatedSectors;   //Storage of mid-loop generated sectors for later merging
@@ -49,7 +47,7 @@ Player playerShip;
 
 void setup()
 {
-  size(displayWidth, displayHeight, P3D);    //Need 3D acceleration to make this game run at decent FPS
+  size(1800, 1000, P3D);    //Need 3D acceleration to make this game run at decent FPS
   frame.setTitle(title);
 
   //Zoom setup
@@ -62,6 +60,7 @@ void setup()
   //Load all image/sound assets
   LoadImageAssets();      //See AssetLoader.pde
   LoadSoundAssets();
+  PrepareUIElements();
   startupFont = loadFont("SourceCodePro-Regular-48.vlw");
 
   //Game area setup
@@ -78,7 +77,7 @@ void setup()
               ShapeType._RECTANGLE_);
   playerShip = new Player(spawnLocation, playerSize, shipSprite, playerMass, 
               color(255,0,0), null, playerCollider);     //null sector until created
-  playerShip.health.current = 10000;
+  playerShip.health.SetMaxHealth(3000);
 
   //Setup civilizations and their game objects, along with controllers
   GameObjectSetup();    //See Helpers.pde
