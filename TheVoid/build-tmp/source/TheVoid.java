@@ -79,7 +79,7 @@ Player playerShip;
 
 public void setup()
 {
-  size(displayWidth, displayHeight, P3D);    //Need 3D acceleration to make this game run at decent FPS
+  size(1800, 1000, P3D);    //Need 3D acceleration to make this game run at decent FPS
   frame.setTitle(title);
 
   //Zoom setup
@@ -182,6 +182,7 @@ PImage redLaser, greenLaser;
 ArrayList<PImage> enemyShipSprites; 
 ArrayList<PVector> enemyShipSizes;      //Size (by index) of above sprite
 int enemyShipTypeCount = 10;                //HACK this is rigid -- careful to update if add ships
+PImage redPowerupSprite, shieldPowerupSprite, enginePowerupSprite;
 public void LoadImageAssets()
 {
   bg = loadImage("Assets/Backgrounds/back_3.png");
@@ -241,8 +242,13 @@ public void LoadImageAssets()
   blueStation2 = loadImage("Assets/Stations/Spacestation2-2.png");
   blueStation3 = loadImage("Assets/Stations/Spacestation2-3.png");
   smokeTexture = loadImage("Assets/Effects/Smoke/0000.png");
+
   redLaser = loadImage("Assets/Weapons/laserRed12.png");
   greenLaser = loadImage("Assets/Weapons/laserGreen02.png");
+
+  redPowerupSprite = loadImage("Assets/Power-ups/powerupRed_bolt.png");
+  enginePowerupSprite = loadImage("Assets/Power-ups/things_gold.png");
+  shieldPowerupSprite = loadImage("Assets/Power-ups/powerupBlue_shield.png");
   
   //Load explosions (see Explosion.pde for variables)
   for (int i = 1; i < explosionImgCount + 1; i++) 
@@ -410,7 +416,7 @@ public class Asteroid extends Physical implements Updatable
 public class AsteroidFactory
 {
   //Default values
-  private PVector maxVelocity = new PVector(.8f,0);                 //Max velocity in given x/y direction of asteroid
+  private PVector maxVelocity = new PVector(.2f,.1f);                 //Max velocity in given x/y direction of asteroid
 
   //Generator values (keep these stored for next asteroid to create
   private int minX, minY, maxX, maxY, size, xCoor, yCoor;
@@ -549,6 +555,8 @@ public void HandleSectorCollisions(Map<Integer, Sector> _sectors)
         HandleCollisions(a.enemyLaserFire, s.shield);   //HACK doesn't allow for enemy shields
       }
     }
+
+    HandleFriendlyCollision(a.powerups, playerShip);
     
   }
 }
@@ -1314,11 +1322,60 @@ public void DrawStartupLoop()
   }
 }
 
+int instructionNumber = 0;
 public void DrawInstructionsLoop()
 {
+  textFont(instructFont, 32);
   image(bg,0,0,displayWidth,displayHeight);
   image(shipSprite, displayWidth/2, displayHeight/2, playerSize.x,playerSize.y);
+  playerShip.leftEnginePower = 5.0f;
+  playerShip.rightEnginePower = 7.0f;
   DrawMainUI();
+  DrawControls();
+        
+  if(instructionNumber == 0)
+  {
+    textFont(instructFont, 56);
+    textAlign(CENTER);
+    text("Press 'N' to see next instructions", displayWidth/2, displayHeight/3);
+  }
+  else if(instructionNumber == 1)
+  {
+    DrawArrow(width/2.5f,height*.8f,HALF_PI,50);
+    textFont(instructFont, 32);
+    textAlign(LEFT);
+    text("This is your Sheild Strength, you will not lose health\nwhile the sheild is up. Once your sheild is lost it will \nregenerate after 5 seconds.", 0, 
+    displayHeight*.75f);
+  }
+  else if(instructionNumber == 2)
+  {
+    DrawArrow(width*.96f,height*.76f,HALF_PI,50);
+    textFont(instructFont, 32);
+    textAlign(RIGHT);
+    text("These are you Engine Powers,\nyour left engine in green,\nyour right engine in blue",width,height*.65f);
+  }
+  else if(instructionNumber == 3)
+  {
+    PVector enemyShipSize = enemyShipSizes.get(0);
+    image(enemyShipSprites.get(0), width*.8f, height/2,enemyShipSize.x*.25f,enemyShipSize.y*.25f);
+    DrawArrow(width*.8f+enemyShipSize.x/8, height/2 - 60, HALF_PI, 50);
+    textAlign(LEFT);
+    textFont(instructFont, 32);
+    text("This is an Enemy Ship. They will attack \nyou relentlessly until you are destroyed!",width/2,height/2-120);
+  }
+  else if(instructionNumber == 4)
+  {
+    image(blueStation1,width*.8f, height/2, blueStation1.width*.15f, blueStation1.height*.15f);
+    DrawArrow(width*.8f+((blueStation1.width*.15f)/2), height/2 - 60,HALF_PI, 50);
+    textAlign(LEFT);
+    textFont(instructFont, 32);
+    text("This is a Healing Station. Hover you ship \nabove it to regain health.",width/2,height/2-120);
+  }
+    
+  
+  
+  playerShip.leftEnginePower = 0.0f;
+  playerShip.rightEnginePower = 0.0f;
 }
 
 
@@ -1370,9 +1427,12 @@ public void DrawPlayLoop()
     HandleSectorCollisions(sectors);
     UpdateSectorMap(sectors); //Update sectors (and all updatable objects within them)
   }
+
+  if(playerShip.toBeKilled)
+  {
+    gameState = GameState.GAMEOVER;
+  }
   
-  translate(width/2, height/2);
-  rotate(playerShip.baseAngle);
   popMatrix();
 
   //// ******* DrawMainUI ********//
@@ -1412,6 +1472,7 @@ public void DrawPauseLoop()
   
   // ******* ALL ZOOMED BEFORE THIS ********//
   EndZoom();
+  DrawControls();
 
   //// ******* DrawMainUI ********//
   DrawMainUI();
@@ -1426,6 +1487,24 @@ public void DrawPauseLoop()
 
 public void DrawGameOverLoop()
 {
+  textFont(startupFont, 12);
+  background(0);
+
+  loopCounter++;
+
+  pushMatrix();
+  cameraPan.x = width/2 -playerShip.location.x;
+  cameraPan.y = height/2 - playerShip.location.y;
+  
+  translate(cameraPan.x, cameraPan.y);    //Pan camera on ship
+  
+  DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
+  
+  popMatrix();
+
+  //// ******* DrawMainUI ********//
+  DrawMainUI();
+
 }
 
 //--------- MISC -----------//
@@ -1500,6 +1579,28 @@ public void DrawMainUI()
   rightThrottleLocation.y = height - rightThrottleSize.y;
   rect(rightThrottleLocation.x, rightThrottleLocation.y, rightThrottleSize.x, rightThrottleSize.y, 12, 12, 0, 0);
   popStyle();
+}
+
+public void DrawArrow(float arrowX, float arrowY, float angle,int arrowLen)
+{
+  pushMatrix();
+  translate(arrowX, arrowY);
+  rotate(angle);
+  fill(255);
+  stroke(255);
+  line(0,0, arrowLen,0);
+  line(arrowLen,0, arrowLen-5, 5);
+  line(arrowLen,0, arrowLen-5, -5);
+  //ellipse(0,0,5,5);
+  popMatrix();
+  noStroke();
+}
+
+public void DrawControls()
+{
+  textAlign(LEFT);
+  textFont(instructFont, 32);
+  text("Controls: \nFire Laser -> Left mouse click \nIncrease Left Engine -> Y \nDecrease Left Engine -> H \nIncrease Right Engine -> I \nDecrease Right Engine -> K \nPause - P",0,32);
 }
 /*
  * A health class for tracking health on a given object. 
@@ -1900,6 +2001,86 @@ public void GenerateEnemies(Sector sector, int count)
 
 }
 
+public void GeneratePowerups(Sector sector, int count)
+{
+  PVector position = sector.location.get();   //Default position at origin of sector
+
+  int minX, minY, maxX, maxY;                 //Max allowed positions
+
+  PImage sprite;      //What the powerup looks like
+  PVector powerupSize = new PVector(width/64, width/64);
+
+  for(int i = 0; i < count; i++)
+  {
+    int typeGenerator = rand.nextInt((2) + 1);    //0-2 to select type of powerup
+    PowerupType type;
+    if(typeGenerator == 0)
+    {
+      type = PowerupType.BULLETHELL;
+      sprite = redPowerupSprite.get();
+    }
+    else if(typeGenerator == 1)
+    {
+      type = PowerupType.SHIELDS;
+      sprite = shieldPowerupSprite.get();
+    }
+    else
+    {
+      type = PowerupType.ENGINES;
+      sprite = enginePowerupSprite.get();
+    }
+
+    if(sector.asteroids.size() > 0)   //This sector has asteroids -- check for overlap
+    {
+      boolean validLocation = false;
+      while(!validLocation)
+      {
+        //Generation parameters
+        minX = PApplet.parseInt(sector.GetLocation().x + powerupSize.x);
+        minY = PApplet.parseInt(sector.GetLocation().y + powerupSize.y);
+        maxX = PApplet.parseInt(sector.GetSize().x - powerupSize.x);
+        maxY = PApplet.parseInt(sector.GetSize().y - powerupSize.y);
+
+        //Generate position offsets from the sector location
+        position.x = rand.nextInt(maxX - PApplet.parseInt(powerupSize.x)) + minX + PApplet.parseInt(powerupSize.x/2);
+        position.y = rand.nextInt(maxY)+minY;
+
+        for(Asteroid roid : sector.asteroids)
+        {
+          //Check if this asteroid's center + diameter overlaps with ships center = size
+          if( Math.abs(roid.GetLocation().x-position.x) < roid.GetSize().x/2 + powerupSize.x 
+                && Math.abs(roid.GetLocation().y-position.y) < roid.GetSize().y/2 + powerupSize.y )
+          {
+            validLocation = false;
+            println("[INFO] Enemy placement location rejected!");
+            break;
+          }
+          validLocation = true;   //Went thru each asteroid -- no overlap
+        }
+      }
+
+    }
+    else
+    {      
+      //Generation parameters
+      minX = PApplet.parseInt(sector.GetLocation().x);
+      minY = PApplet.parseInt(sector.GetLocation().y);
+      maxX = PApplet.parseInt(sector.GetSize().x);
+      maxY = PApplet.parseInt(sector.GetSize().y);
+
+      //Generate position offsets from the sector location
+      position.x = rand.nextInt(maxX - PApplet.parseInt(powerupSize.x)) + minX + PApplet.parseInt(powerupSize.x/2);
+      position.y = rand.nextInt(maxY)+minY;
+    }
+
+    Shape colliderGenerated = new Shape("collider", position, powerupSize, color(0,255,0), ShapeType._RECTANGLE_);
+    Powerup powerupGen = new Powerup(position, powerupSize, sprite, type, sector, colliderGenerated);
+
+    sector.powerups.add(powerupGen);
+  }
+
+}
+
 /**
  * Checks if an object implements an interface, returns boo
  * @param  object Any object
@@ -1945,7 +2126,7 @@ public void keyPressed()
     wvd.Reset();
   }
 
-  if(key == ' ')
+  if(key == 'p' || key == 'P')
   {
     if(gameState == GameState.PLAY)
     {
@@ -2022,6 +2203,10 @@ public void keyPressed()
   if(key == 'm' || key == 'M')
   {
     mPressed=true;
+  }
+  if(key == 'n' || key == 'N')
+  {
+    instructionNumber++;
   }
 
 }
@@ -2145,7 +2330,7 @@ public class LaserBeam extends Physical
       print(" damage.\n");
     }
     
-    // laserHitSound.play();
+    laserHitSound.play();
     toBeKilled = true;
   }
 
@@ -2703,7 +2888,14 @@ public class Player extends Ship
   private int currentTargetIndex;         //Index into targets arraylist 
 
   //Power ups
-  boolean bulletHellEnabled;      //Fire FAST!
+  boolean bulletHellEnabled = false;      //Fire FAST!
+  private int bulletHellDuration = 7000;     //How long to make bullet hell enabled
+  private long bulletHellStartTime = 0;
+
+  boolean enginesBoosted = false;         //Faster regen!
+  float engineSpeedModifier = 2;          //Multiplier of how fast engine can go
+  private int engineBoostDuration = 7000;  
+  private long engineBoostStartTime = 0;
 
   //Scanners
   int sensorRange = 2000;          //Units of pixels
@@ -2768,9 +2960,25 @@ public class Player extends Ship
       targetCircle.location = currentTarget.location;
     }
 
-    //Modify weapon fire speed
-    int weaponCooldownModifier = reactor.GetReactorPower(NodeType.WEAPONS)/maxPowerToNode;
-    currentFireInterval = minFireInterval + weaponCooldownModifier * minFireInterval;
+    //Bullet hell updates
+    if(millis() > bulletHellStartTime + bulletHellDuration)
+    {
+      bulletHellEnabled = false;    //Disable after duration
+    }
+
+    if(bulletHellEnabled)
+    {
+      currentFireInterval = minFireInterval;
+    }
+    else
+    {
+      currentFireInterval = 150;
+    }
+
+    //Shield boost updates
+    
+
+    //Engine boost update
   }
   
 
@@ -2938,6 +3146,12 @@ public class Player extends Ship
     }
   }
 
+  public void EnableBulletHell()
+  {
+    bulletHellStartTime = millis();
+    bulletHellEnabled = true;
+  }
+
 
 }
 
@@ -2993,11 +3207,23 @@ public class Node
 	}
 
 }
+public enum PowerupType
+{
+  BULLETHELL, SHIELDS, ENGINES
+};
+
 public class Powerup extends Physical implements Friendly
 {
-	public Powerup(PVector _loc, PVector _size, PImage _Sprite, Sector _sector, Shape _collider)
+  PowerupType type;
+
+	public Powerup(PVector _loc, PVector _size, PImage _sprite, PowerupType _type, Sector _sector, Shape _collider)
 	{
 		super("Powerup", _loc, _size, 500, _sector, _collider);
+
+		sprite = _sprite;
+		sprite.resize((int)size.x, (int)size.y);
+
+    type = _type;
 	}
 
   /**
@@ -3008,9 +3234,28 @@ public class Powerup extends Physical implements Friendly
   {
   	if(_friend instanceof Player)		//HACK force check
   	{
-  		Player play = (Player)_friend;
-  		play.bulletHellEnabled = true;
+      Player play = (Player)_friend;
+      if(type == PowerupType.BULLETHELL)
+      {
+        play.EnableBulletHell();
+      }
+      else if(type == PowerupType.SHIELDS)
+      {
+        play.shield.RestoreShield();
+
+      }
+      else if(type == PowerupType.ENGINES)
+      {
+
+      }
+      else
+      {
+        println("[ERROR] Invalid powerup type!");
+      }
+  		
   	}
+
+    toBeKilled = true;
   }
 
 }
@@ -3032,6 +3277,7 @@ public class Sector extends Drawable implements Updatable
   public ArrayList<Ship> ships;           //May include enemies and the player ship
   public ArrayList<LaserBeam> enemyLaserFire, friendlyLaserFire; 
   public ArrayList<Explosion> explosions; 
+  public ArrayList<Powerup> powerups;
 
   //Link to neighboring sectors
   public HashMap<SectorDirection, Sector> neighbors;
@@ -3076,6 +3322,7 @@ public class Sector extends Drawable implements Updatable
     enemyLaserFire = new ArrayList<LaserBeam>();
     friendlyLaserFire = new ArrayList<LaserBeam>();
     explosions = new ArrayList<Explosion>();
+    powerups = new ArrayList<Powerup>();
 
     //Neighbors
     neighbors = new HashMap<SectorDirection, Sector>();
@@ -3095,6 +3342,7 @@ public class Sector extends Drawable implements Updatable
    */
   private void GenerateSectorObjects(SectorType _sectorType)
   {
+    int powerupLottery = 100;//rand.nextInt((100) + 1);   //Random gen parameter 0 - 100
     if(_sectorType == SectorType.RANDOM)
     {
       //Determine what type of sector we are
@@ -3130,12 +3378,33 @@ public class Sector extends Drawable implements Updatable
       //Generate planets
       int planetCount = rand.nextInt((maxPlanets - minPlanets) + 1) + minPlanets;
       GeneratePlanets(this, planetCount);         //See helpers.pde
+
+      if(powerupLottery > 90)
+      {
+        GeneratePowerups(this, 1);
+      }
     }
     else if(sectorType == SectorType.ASTEROIDFIELD)
     {
       //Generate asteroids in this sector
       int asteroidCount = rand.nextInt((maxAsteroids - minAsteroids) + 1) + minAsteroids;
       GenerateAsteroids(this, asteroidCount);     //See helpers.pde
+
+      if(powerupLottery > 95)
+      {
+        GeneratePowerups(this, 2);
+      }
+      else if(powerupLottery > 70)
+      {
+        GeneratePowerups(this, 1);
+      }
+    }
+    else
+    {
+      if(powerupLottery > 95)
+      {
+        GeneratePowerups(this, 1);
+      }
     }
   }
 
@@ -3754,21 +4023,21 @@ public class Shield extends Physical implements Updatable
       }
       
       //Regen
-      if(millis() > lastUpdateTime + regenPeriod)    //Do one second tick updates
-      {
-        if(!online)
-        {
-          health.current = (int)(0.35f * health.max);  //Give a reasonable amount of shield on restore
-          online = true;
-        }
-        collidable = true;
+      // if(millis() > lastUpdateTime + regenPeriod)    //Do one second tick updates
+      // {
+      //   if(!online)
+      //   {
+      //     health.current = (int)(0.35 * health.max);  //Give a reasonable amount of shield on restore
+      //     online = true;
+      //   }
+      //   collidable = true;
         
-        if(health.current < health.max)
-        {
-          health.current += shieldRegenAmount;
-        }
-        lastUpdateTime = millis();
-      }
+      //   if(health.current < health.max)
+      //   {
+      //     health.current += shieldRegenAmount;
+      //   }
+      //   lastUpdateTime = millis();
+      // }
     }
   }
 
@@ -3782,6 +4051,13 @@ public class Shield extends Physical implements Updatable
 
     shieldHitSound.play();
 
+  }
+  
+  public void RestoreShield()
+  {
+    health.current = health.max;
+    online = true;
+    enabled = true;
   }
 
 }
@@ -3807,8 +4083,9 @@ public class Ship extends Physical implements Clickable, Updatable
   
   //Weapons
   protected long lastFireTime;
-  protected float minFireInterval = 850;          //ms between shots
-  protected float currentFireInterval = minFireInterval;
+  protected float minFireInterval = 1;          //ms between shots
+  protected float currentFireInterval = 850;
+  protected boolean canFire = true;
 
   ArrayList<Physical> targets;    //Firing targets selected after scan
   
@@ -3817,12 +4094,6 @@ public class Ship extends Physical implements Clickable, Updatable
 
   //Engines
   float minThrust, maxThrust;
-  
-  //Enemy objects
-  ArrayList<Asteroid> allAsteroids;    //For tracking mobile asteroid toward this ship's base
-  ArrayList<Missile> enemyMissiles;
-  ArrayList<Ship> enemyShips;
-  ArrayList<Station> enemyStations;
   
   public Ship(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, 
     int _outlineColor, Sector _sector, Shape _collider) 
@@ -3926,6 +4197,15 @@ public class Ship extends Physical implements Clickable, Updatable
       UpdateUIInfo();
     }
     
+    if(millis() > lastFireTime + currentFireInterval)
+    {
+      canFire = true;
+    }
+    else
+    {
+      canFire = false;
+    }
+
     //Assume UI will not be rendered next frame
     info.visibleNow = false;    //Another mouseover/ click will negate this
     
@@ -3974,63 +4254,77 @@ public class Ship extends Physical implements Clickable, Updatable
    */
   protected void BuildLaserToTarget(PVector _target, LaserColor _color)     //Replaced 'Physical _target' to a 'PVector _target';
   {
-    PVector targetVector = PVector.sub(_target,location);
-    targetVector.normalize();
-    
-    //Create laser object
-    PVector laserSize = new PVector(20,3);
-    PVector laserSpawn;
-    if(shield.enabled)
+    if(canFire)
     {
-      if(shield.size.x > size.x || shield.size.y > size.y)    //Fire outside shield
-      { 
-        laserSpawn = new PVector(location.x + targetVector.x * shield.size.x/2 * 1.25f, 
-          location.y + targetVector.y * shield.size.y/2 * 1.25f);
+      PVector targetVector = PVector.sub(_target,location);
+      targetVector.normalize();
+      
+      //Create laser object
+      PVector laserSize = new PVector(20,3);
+      PVector laserSpawn;
+      if(shield.enabled)
+      {
+        if(shield.size.x > size.x || shield.size.y > size.y)    //Fire outside shield
+        { 
+          laserSpawn = new PVector(location.x + targetVector.x * shield.size.x/2 * 1.25f, 
+            location.y + targetVector.y * shield.size.y/2 * 1.25f);
+        }
+        else  //Weird case of a small shield -- just fire outside
+        {
+          laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1f, 
+              location.y + targetVector.y * size.y * 1.1f);
+        }
       }
-      else  //Weird case of a small shield -- just fire outside
+      
+      else
       {
         laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1f, 
-            location.y + targetVector.y * size.y * 1.1f);
+          location.y + targetVector.y * size.y * 1.1f);
       }
+      
+      Shape laserCollider = new Shape("collider", laserSpawn, laserSize, color(0,255,0), 
+            ShapeType._RECTANGLE_);
+      LaserBeam beam = new LaserBeam(laserSpawn, targetVector, laserSize, currentSector, 
+                  laserCollider, _color);
+      
+      lastFireTime = millis();
+      canFire = false;
     }
     
-    else
-    {
-      laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1f, 
-        location.y + targetVector.y * size.y * 1.1f);
-    }
-    
-    Shape laserCollider = new Shape("collider", laserSpawn, laserSize, color(0,255,0), 
-          ShapeType._RECTANGLE_);
-    LaserBeam beam = new LaserBeam(laserSpawn, targetVector, laserSize, currentSector, 
-                laserCollider, _color);
   }
     
   protected void BuildLaserToTarget(Physical _target, LaserColor _color)
   {
-    //Calculate laser targeting vector
-    PVector targetVector = PVector.sub(_target.location, location);
-    targetVector.normalize();        //Normalize to simple direction vector
-    targetVector.x += rand.nextFloat() * 0.5f - 0.25f;
-    targetVector.y += rand.nextFloat() * 0.5f - 0.25f;
+    if(canFire)
+    {
+      //Calculate laser targeting vector
+      PVector targetVector = PVector.sub(_target.location, location);
+      targetVector.normalize();        //Normalize to simple direction vector
+      targetVector.x += rand.nextFloat() * 0.5f - 0.25f;
+      targetVector.y += rand.nextFloat() * 0.5f - 0.25f;
+      
+      //Create laser object
+      PVector laserSize = new PVector(20,3);
+      PVector laserSpawn;
+      if(shield.enabled)    //Fire outside sheild to prevent self collision
+      {
+        laserSpawn = new PVector(location.x + targetVector.x * shield.size.x/2 * 1.1f, 
+          location.y + targetVector.y * shield.size.y/2 * 1.1f);    //Where to spawn the laser outside ship
+      }
+      else
+      {
+        laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1f, 
+          location.y + targetVector.y * size.y * 1.1f);    //Where to spawn the laser outside ship
+      }
+      Shape laserCollider = new Shape("collider", laserSpawn, laserSize, color(0,255,0), 
+            ShapeType._RECTANGLE_);
+      LaserBeam beam = new LaserBeam(laserSpawn, targetVector, laserSize , currentSector, 
+            laserCollider, _color);
+
+      lastFireTime = millis();
+      canFire = false;
+    }
     
-    //Create laser object
-    PVector laserSize = new PVector(20,3);
-    PVector laserSpawn;
-    if(shield.enabled)    //Fire outside sheild to prevent self collision
-    {
-      laserSpawn = new PVector(location.x + targetVector.x * shield.size.x/2 * 1.1f, 
-        location.y + targetVector.y * shield.size.y/2 * 1.1f);    //Where to spawn the laser outside ship
-    }
-    else
-    {
-      laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1f, 
-        location.y + targetVector.y * size.y * 1.1f);    //Where to spawn the laser outside ship
-    }
-    Shape laserCollider = new Shape("collider", laserSpawn, laserSize, color(0,255,0), 
-          ShapeType._RECTANGLE_);
-    LaserBeam beam = new LaserBeam(laserSpawn, targetVector, laserSize , currentSector, 
-          laserCollider, _color);
   }
 
 /*Click & mouseover UI*/
@@ -4731,6 +5025,8 @@ public void UpdateSectorMap(HashMap<Integer, Sector> _sectors)
     UpdatePhysicalObjects(a.planets);  //Station updates occur in planet update loop
     UpdatePhysicalObjects(a.friendlyLaserFire);
     UpdatePhysicalObjects(a.enemyLaserFire);
+    UpdatePhysicalObjects(a.enemyLaserFire);
+    UpdatePhysicalObjects(a.powerups);
   }
 }
 
@@ -4779,6 +5075,11 @@ public void DrawSectors(Map<Integer, Sector> _sectors)
     DrawObjects(a.enemyLaserFire);
   }
   
+  for(Sector a : _sectors.values())
+  {
+    DrawObjects(a.powerups);
+  }
+
   for(Sector a : _sectors.values())
   {
     DrawObjects(a.explosions);
