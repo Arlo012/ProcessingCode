@@ -8,10 +8,12 @@
  * Check if objects should be killed (remove them from their arraylist)
  * Check if object has left its parent sector, removing them from that sector's list
  * and adding them to another sector's.
- * @param _object [description]
+ * @param _object List of objects to update/delete
+ * @return {Integer} Number of items destroyed in this loop
  */
-void UpdatePhysicalObjects(ArrayList<? extends Physical> _object)
+int UpdatePhysicalObjects(ArrayList<? extends Physical> _object)
 {
+  int objectsDestroyed = 0;
   for (Iterator<? extends Physical> iterator = _object.iterator(); iterator.hasNext();) 
   {
     Physical obj = iterator.next();
@@ -19,6 +21,7 @@ void UpdatePhysicalObjects(ArrayList<? extends Physical> _object)
     if (obj.toBeKilled) 
     {
       // Remove the current element from the iterator and the list.
+      objectsDestroyed++;
       iterator.remove();
     }
 
@@ -76,6 +79,7 @@ void UpdatePhysicalObjects(ArrayList<? extends Physical> _object)
       }
     }
   }
+  return objectsDestroyed;
 }
 
 void UpdateSectorMap(HashMap<Integer, Sector> _sectors)
@@ -83,13 +87,27 @@ void UpdateSectorMap(HashMap<Integer, Sector> _sectors)
   for(Sector a : _sectors.values())
   {
     a.Update();      //Update the sector object
-    UpdatePhysicalObjects(a.ships);
+    int enemiesKilled = UpdatePhysicalObjects(a.ships);
     UpdatePhysicalObjects(a.asteroids);
     UpdatePhysicalObjects(a.planets);  //Station updates occur in planet update loop
     UpdatePhysicalObjects(a.friendlyLaserFire);
     UpdatePhysicalObjects(a.enemyLaserFire);
     UpdatePhysicalObjects(a.enemyLaserFire);
     UpdatePhysicalObjects(a.powerups);
+
+    if(!a.shipsToAdd.isEmpty())       //Add in ships generated during update loop (currently only charred hull)
+    {
+      for(Ship s : a.shipsToAdd)
+      {
+        a.ships.add(s);
+      }
+      a.shipsToAdd.clear();
+    }
+    if(gameState != GameState.GAMEOVER)
+    {
+      playerShip.score += enemiesKilled * 50;     //Update score 50 points per enemy killed
+    }
+    
   }
 }
 

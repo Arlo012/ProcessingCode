@@ -38,7 +38,8 @@ enum GameState {
 //Random number generator
 Random rand = new Random();
 
-GameState gameState = GameState.START;
+GameState gameState;
+boolean restartFlag;    //Restart game?
 
 //Game Name
 String title = "The Void";
@@ -74,13 +75,16 @@ WorldViewData wvd = new WorldViewData();
 //UI Info
 LinkedList<Clickable> toDisplay;        //List of clickable UI objects to display //<>//
 
-//TEST AREA
 Player playerShip;
 
 public void setup()
 {
   size(1800, 1000, P3D);    //Need 3D acceleration to make this game run at decent FPS
   frame.setTitle(title);
+
+  gameState = GameState.START;
+  restartFlag = false;
+  background(0);        //For new game, reset  background
 
   //Zoom setup
   cursor(CROSS);
@@ -110,6 +114,7 @@ public void setup()
   startVel= new PVector(0,0);
   startAccel = new PVector(.04f,0);
   
+  //Player and sector setup
   PVector spawnLocation = new PVector(width, height);
   playerSize = new PVector(100,50);
   int playerMass = 100;
@@ -117,7 +122,7 @@ public void setup()
               ShapeType._RECTANGLE_);
   playerShip = new Player(spawnLocation, playerSize, shipSprite, playerMass, 
               color(255,0,0), null, playerCollider);     //null sector until created
-  playerShip.health.SetMaxHealth(3000);
+  playerShip.health.SetMaxHealth(1500);
 
   GameObjectSetup();    //See Helpers.pde
   playerShip.currentSector = sectors.get(0);      //Now that sector is created, feed to player obj
@@ -170,6 +175,7 @@ PFont standardFont;    //Standard font for all text windows
 PFont introFont;       //Start screen font
 PFont instructFont;    //Intrustion font
 
+PImage charredPlayerShip;       //For gameover, charred ship
 PImage blueButton, redButton;   //For background of health
 PImage blueBar, redBar;         //For percent health
 
@@ -249,6 +255,8 @@ public void LoadImageAssets()
   redPowerupSprite = loadImage("Assets/Power-ups/powerupRed_bolt.png");
   enginePowerupSprite = loadImage("Assets/Power-ups/things_gold.png");
   shieldPowerupSprite = loadImage("Assets/Power-ups/powerupBlue_shield.png");
+
+  charredPlayerShip = loadImage("Assets/Ships/ship_charred.png");
   
   //Load explosions (see Explosion.pde for variables)
   for (int i = 1; i < explosionImgCount + 1; i++) 
@@ -315,7 +323,7 @@ PVector leftThrottleSize, rightThrottleSize;
 public void PrepareUIElements()
 {
 //Shield/health bars
-  blueButtonSize = new PVector(width/2, height/16);
+  blueButtonSize = new PVector(width/2.5f, height/16);
   blueButtonLocation = new PVector(0, height - 2 *blueButtonSize.y);
   blueButton.resize((int)blueButtonSize.x, (int)blueButtonSize.y);
 
@@ -1284,6 +1292,8 @@ public class Explosion extends Drawable
 PFont startupFont;
 public void DrawStartupLoop()
 {
+  background(0);
+  imageMode(CORNER);
   image(bg, -10 + (10*sin(introAngle + HALF_PI)),(10*sin(introAngle)),displayWidth+20,displayHeight+20);
   image(nebula3, displayWidth*.55f + (10*sin(introAngle + HALF_PI)), displayHeight*.25f +(10*sin(introAngle + HALF_PI)));
   image(shipSprite,startLocation.x,startLocation.y, playerSize.x,playerSize.y);
@@ -1431,6 +1441,21 @@ public void DrawPlayLoop()
   if(playerShip.toBeKilled)
   {
     gameState = GameState.GAMEOVER;
+
+    //Update all enemy ships to not shoot
+    ArrayList<Sector> nearbySectors = playerShip.currentSector.GetSelfAndAllNeighbors();
+    for(Sector a : nearbySectors)
+    {
+      for(Ship s : a.ships)
+      {
+        if(s instanceof Enemy)
+        {
+          Enemy e = (Enemy)s;
+          e.firingRange = 0;      //Prevent enemy from firing
+        }
+      }
+    }
+    
   }
   
   popMatrix();
@@ -1487,24 +1512,42 @@ public void DrawPauseLoop()
 
 public void DrawGameOverLoop()
 {
-  textFont(startupFont, 12);
   background(0);
 
   loopCounter++;
 
-  pushMatrix();
+  BeginZoom();      //See visuals.pde
   cameraPan.x = width/2 -playerShip.location.x;
   cameraPan.y = height/2 - playerShip.location.y;
   
   translate(cameraPan.x, cameraPan.y);    //Pan camera on ship
   
   DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
-  
-  popMatrix();
+  MoveSectorObjects(sectors);   //Move all objects in the sectors
+  HandleSectorCollisions(sectors);
+  UpdateSectorMap(sectors); //Update sectors (and all updatable objects within them)
+
+  EndZoom();
 
   //// ******* DrawMainUI ********//
-  DrawMainUI();
 
+  fill(255,0,0); 
+  textFont(introFont, 154);
+  textAlign(CENTER, CENTER);
+  text("Game", displayWidth/2 - 72, displayHeight/8);
+  textAlign(CENTER, CENTER);
+  text("Over", displayWidth/2 + 72, displayHeight/8 + 154);
+
+  //ENTER TO RESTART
+  textFont(instructFont, 40);
+  fill(255);
+  textMode(CENTER);
+  text("Press ENTER to try again...", width/2, height * 0.6f);
+
+  if(restartFlag)
+  {
+    setup();
+  }
 }
 
 //--------- MISC -----------//
@@ -1569,7 +1612,7 @@ public void DrawMainUI()
   text("SHIELDS", 10 * barSpacing + blueButtonLocation.x + 100, blueButtonLocation.y + blueButtonSize.y/2);
   
 //Engine power bars
-  fill(0,255,0,250);
+  fill(16,208,35,250);
   leftThrottleSize.y = playerShip.leftEnginePower/playerShip.maxThrust * fullThrottleSize;
   leftThrottleLocation.y = height - leftThrottleSize.y;
   rect(leftThrottleLocation.x, leftThrottleLocation.y, leftThrottleSize.x, leftThrottleSize.y, 12, 12, 0, 0);
@@ -1578,6 +1621,12 @@ public void DrawMainUI()
   rightThrottleSize.y = playerShip.rightEnginePower/playerShip.maxThrust * fullThrottleSize;
   rightThrottleLocation.y = height - rightThrottleSize.y;
   rect(rightThrottleLocation.x, rightThrottleLocation.y, rightThrottleSize.x, rightThrottleSize.y, 12, 12, 0, 0);
+  
+  textFont(instructFont, 32);
+  fill(255);
+  text("L", leftThrottleLocation.x + leftThrottleSize.x/2, leftThrottleLocation.y + 32);
+  text("R", rightThrottleLocation.x + rightThrottleSize.x/2, rightThrottleLocation.y + 32);
+
   popStyle();
 }
 
@@ -2120,8 +2169,8 @@ public void mouseDragged() {
 
 //Check for keypresses
 public void keyPressed() 
-{  
-  if(key == 'r')    //Reset zoom
+{
+  if(key == 'r')    //Reset zoom DEBUG ONLY
   {
     wvd.Reset();
   }
@@ -2208,6 +2257,16 @@ public void keyPressed()
   {
     instructionNumber++;
   }
+
+  //Game over restart
+  if(gameState == GameState.GAMEOVER)
+  {
+    if(keyCode == ENTER)
+    {
+      restartFlag = true;
+    }
+  }
+
 
 }
 public interface Movable
@@ -2888,12 +2947,14 @@ public class Player extends Ship
   private int currentTargetIndex;         //Index into targets arraylist 
 
   //Power ups
-  boolean bulletHellEnabled = false;      //Fire FAST!
+  boolean bulletHellEnabled = false;        //Fire FAST!
   private int bulletHellDuration = 7000;     //How long to make bullet hell enabled
   private long bulletHellStartTime = 0;
 
-  boolean enginesBoosted = false;         //Faster regen!
+  boolean enginesBoosted = false;         //Fly fast
   float engineSpeedModifier = 2;          //Multiplier of how fast engine can go
+  private float standardSpeed;            //Store standard power to restore at the end
+
   private int engineBoostDuration = 7000;  
   private long engineBoostStartTime = 0;
 
@@ -2939,6 +3000,7 @@ public class Player extends Ship
                 color(255,0,0), ShapeType._CIRCLE_);
 
     localSpeedLimit = 5;
+    standardSpeed = localSpeedLimit;    //To restore after engine boost 
   }	
 
   @Override public void Update()
@@ -2975,10 +3037,33 @@ public class Player extends Ship
       currentFireInterval = 150;
     }
 
-    //Shield boost updates
-    
-
     //Engine boost update
+    if(millis() > engineBoostStartTime + engineBoostDuration)
+    {
+      enginesBoosted = false;    //Disable after duration
+    }
+
+    if(enginesBoosted)
+    {
+      localSpeedLimit = standardSpeed * engineSpeedModifier;
+    }
+    else
+    {
+      localSpeedLimit = standardSpeed;
+    }
+
+    if(toBeKilled)
+    {
+      Ship charredHull = new Ship("Charred", location, size, charredPlayerShip, (int)mass, 
+              color(255), currentSector, collider);
+      charredHull.smoke1Visible = true;
+      charredHull.smoke2Visible = true;
+      charredHull.health.SetMaxHealth(1000000);      //Don't die....
+      charredHull.localSpeedLimit = 1;
+      charredHull.velocity = velocity;
+
+      currentSector.shipsToAdd.add(charredHull);     //To add at end of update loop
+    }
   }
   
 
@@ -3152,6 +3237,12 @@ public class Player extends Ship
     bulletHellEnabled = true;
   }
 
+  public void EnableEngineBoost()
+  {
+    engineBoostStartTime = millis();
+    enginesBoosted = true;
+  }
+
 
 }
 
@@ -3246,7 +3337,7 @@ public class Powerup extends Physical implements Friendly
       }
       else if(type == PowerupType.ENGINES)
       {
-
+        play.EnableEngineBoost();
       }
       else
       {
@@ -3274,7 +3365,7 @@ public class Sector extends Drawable implements Updatable
   public ArrayList<Asteroid> asteroids;
   public ArrayList<Asteroid> debrisSpawned;       //Storage for debris spawned to be added in update
   public ArrayList<Planet> planets;
-  public ArrayList<Ship> ships;           //May include enemies and the player ship
+  public ArrayList<Ship> ships, shipsToAdd; //May include enemies and the player ship, to add for player charred hull
   public ArrayList<LaserBeam> enemyLaserFire, friendlyLaserFire; 
   public ArrayList<Explosion> explosions; 
   public ArrayList<Powerup> powerups;
@@ -3319,6 +3410,7 @@ public class Sector extends Drawable implements Updatable
     debrisSpawned = new ArrayList<Asteroid>();
     planets = new ArrayList<Planet>();
     ships = new ArrayList<Ship>();
+    shipsToAdd = new ArrayList<Ship>();
     enemyLaserFire = new ArrayList<LaserBeam>();
     friendlyLaserFire = new ArrayList<LaserBeam>();
     explosions = new ArrayList<Explosion>();
@@ -4056,6 +4148,7 @@ public class Shield extends Physical implements Updatable
   public void RestoreShield()
   {
     health.current = health.max;
+    collidable = true;
     online = true;
     enabled = true;
   }
@@ -5027,6 +5120,15 @@ public void UpdateSectorMap(HashMap<Integer, Sector> _sectors)
     UpdatePhysicalObjects(a.enemyLaserFire);
     UpdatePhysicalObjects(a.enemyLaserFire);
     UpdatePhysicalObjects(a.powerups);
+
+    if(!a.shipsToAdd.isEmpty())       //Add in ships generated during update loop (currently only charred hull)
+    {
+      for(Ship s : a.shipsToAdd)
+      {
+        a.ships.add(s);
+      }
+      a.shipsToAdd.clear();
+    }
   }
 }
 

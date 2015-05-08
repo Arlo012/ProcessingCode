@@ -4,6 +4,9 @@
  */
 public class Player extends Ship
 {
+  //Scoring
+  int score;      //for killing bad guys
+
   //Ship components
   private Reactor reactor;
   private int maxPowerToNode;			//Maximum power any one node may have
@@ -17,12 +20,14 @@ public class Player extends Ship
   private int currentTargetIndex;         //Index into targets arraylist 
 
   //Power ups
-  boolean bulletHellEnabled = false;      //Fire FAST!
+  boolean bulletHellEnabled = false;        //Fire FAST!
   private int bulletHellDuration = 7000;     //How long to make bullet hell enabled
   private long bulletHellStartTime = 0;
 
-  boolean enginesBoosted = false;         //Faster regen!
+  boolean enginesBoosted = false;         //Fly fast
   float engineSpeedModifier = 2;          //Multiplier of how fast engine can go
+  private float standardSpeed;            //Store standard power to restore at the end
+
   private int engineBoostDuration = 7000;  
   private long engineBoostStartTime = 0;
 
@@ -38,6 +43,8 @@ public class Player extends Ship
   {
     //Parent constructor
     super("Player", _loc, _size, _sprite, _mass, _outlineColor, _sector, _collider);
+
+    score = 0;      //Modified when enemies die
 
     //Reactor setup
     reactor = new Reactor(100);
@@ -68,6 +75,7 @@ public class Player extends Ship
                 color(255,0,0), ShapeType._CIRCLE_);
 
     localSpeedLimit = 5;
+    standardSpeed = localSpeedLimit;    //To restore after engine boost 
   }	
 
   @Override public void Update()
@@ -104,10 +112,33 @@ public class Player extends Ship
       currentFireInterval = 150;
     }
 
-    //Shield boost updates
-    
-
     //Engine boost update
+    if(millis() > engineBoostStartTime + engineBoostDuration)
+    {
+      enginesBoosted = false;    //Disable after duration
+    }
+
+    if(enginesBoosted)
+    {
+      localSpeedLimit = standardSpeed * engineSpeedModifier;
+    }
+    else
+    {
+      localSpeedLimit = standardSpeed;
+    }
+
+    if(toBeKilled)
+    {
+      Ship charredHull = new Ship("Charred", location, size, charredPlayerShip, (int)mass, 
+              color(255), currentSector, collider);
+      charredHull.smoke1Visible = true;
+      charredHull.smoke2Visible = true;
+      charredHull.health.SetMaxHealth(1000000);      //Don't die....
+      charredHull.localSpeedLimit = 1;
+      charredHull.velocity = velocity;
+
+      currentSector.shipsToAdd.add(charredHull);     //To add at end of update loop
+    }
   }
   
 
@@ -279,6 +310,12 @@ public class Player extends Ship
   {
     bulletHellStartTime = millis();
     bulletHellEnabled = true;
+  }
+
+  public void EnableEngineBoost()
+  {
+    engineBoostStartTime = millis();
+    enginesBoosted = true;
   }
 
 

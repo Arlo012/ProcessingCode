@@ -6,8 +6,10 @@
 PFont startupFont;
 void DrawStartupLoop()
 {
-  image(bg, -10 + (10*sin(introAngle + HALF_PI)),(10*sin(introAngle)),width+20,height+20);
-  image(nebula3, width*.55 + (10*sin(introAngle + HALF_PI)), height*.25 +(10*sin(introAngle + HALF_PI)));
+  background(0);
+  imageMode(CORNER);
+  image(bg, -10 + (10*sin(introAngle + HALF_PI)),(10*sin(introAngle)),displayWidth+20,displayHeight+20);
+  image(nebula3, displayWidth*.55 + (10*sin(introAngle + HALF_PI)), displayHeight*.25 +(10*sin(introAngle + HALF_PI)));
   image(shipSprite,startLocation.x,startLocation.y, playerSize.x,playerSize.y);
   
   fill(75,247,87);   //Green
@@ -191,6 +193,21 @@ void DrawPlayLoop()
   if(playerShip.toBeKilled)
   {
     gameState = GameState.GAMEOVER;
+
+    //Update all enemy ships to not shoot
+    ArrayList<Sector> nearbySectors = playerShip.currentSector.GetSelfAndAllNeighbors();
+    for(Sector a : nearbySectors)
+    {
+      for(Ship s : a.ships)
+      {
+        if(s instanceof Enemy)
+        {
+          Enemy e = (Enemy)s;
+          e.firingRange = 0;      //Prevent enemy from firing
+        }
+      }
+    }
+    
   }
   
   popMatrix();
@@ -247,24 +264,47 @@ void DrawPauseLoop()
 
 void DrawGameOverLoop()
 {
-  textFont(startupFont, 12);
   background(0);
 
   loopCounter++;
 
-  pushMatrix();
+  BeginZoom();      //See visuals.pde
   cameraPan.x = width/2 -playerShip.location.x;
   cameraPan.y = height/2 - playerShip.location.y;
   
   translate(cameraPan.x, cameraPan.y);    //Pan camera on ship
   
   DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
-  
-  popMatrix();
+  MoveSectorObjects(sectors);   //Move all objects in the sectors
+  HandleSectorCollisions(sectors);
+  UpdateSectorMap(sectors); //Update sectors (and all updatable objects within them)
+
+  EndZoom();
 
   //// ******* DrawMainUI ********//
-  DrawMainUI();
 
+  fill(255,0,0); 
+  textFont(introFont, 154);
+  textAlign(CENTER, CENTER);
+  text("Game", displayWidth/2 - 72, displayHeight/8);
+  textAlign(CENTER, CENTER);
+  text("Over", displayWidth/2 + 72, displayHeight/8 + 154);
+
+  //ENTER TO RESTART
+  textFont(instructFont, 40);
+  fill(255);
+  textMode(CENTER);
+  text("Press ENTER to try again...", width/2, height * 0.6);
+
+  textFont(instructFont, 60);
+  textMode(CENTER);
+  text("Score: " + playerShip.score, width/2, height * 0.8);
+
+  if(restartFlag)
+  {
+    currentTrack.stop();
+    setup();
+  }
 }
 
 //--------- MISC -----------//
@@ -329,7 +369,7 @@ void DrawMainUI()
   text("SHIELDS", 10 * barSpacing + blueButtonLocation.x + 100, blueButtonLocation.y + blueButtonSize.y/2);
   
 //Engine power bars
-  fill(0,255,0,250);
+  fill(16,208,35,250);
   leftThrottleSize.y = playerShip.leftEnginePower/playerShip.maxThrust * fullThrottleSize;
   leftThrottleLocation.y = height - leftThrottleSize.y;
   rect(leftThrottleLocation.x, leftThrottleLocation.y, leftThrottleSize.x, leftThrottleSize.y, 12, 12, 0, 0);
@@ -338,6 +378,18 @@ void DrawMainUI()
   rightThrottleSize.y = playerShip.rightEnginePower/playerShip.maxThrust * fullThrottleSize;
   rightThrottleLocation.y = height - rightThrottleSize.y;
   rect(rightThrottleLocation.x, rightThrottleLocation.y, rightThrottleSize.x, rightThrottleSize.y, 12, 12, 0, 0);
+  
+  textFont(instructFont, 32);
+  fill(255);
+  text("L", leftThrottleLocation.x + leftThrottleSize.x/2, leftThrottleLocation.y + 32);
+  text("R", rightThrottleLocation.x + rightThrottleSize.x/2, rightThrottleLocation.y + 32);
+
+//Score
+  fill(255);
+  textFont(instructFont, 32);
+  textAlign(RIGHT);
+  text("SCORE: " + playerShip.score, width - width/16, 32);
+
   popStyle();
 }
 

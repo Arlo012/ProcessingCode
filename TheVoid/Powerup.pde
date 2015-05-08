@@ -37,7 +37,7 @@ public class Powerup extends Physical implements Friendly
       }
       else if(type == PowerupType.ENGINES)
       {
-
+        play.EnableEngineBoost();
       }
       else
       {

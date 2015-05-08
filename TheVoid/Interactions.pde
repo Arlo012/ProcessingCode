@@ -26,8 +26,8 @@ void mouseDragged() {
 
 //Check for keypresses
 void keyPressed() 
-{  
-  if(key == 'r')    //Reset zoom
+{
+  if(key == 'r')    //Reset zoom DEBUG ONLY
   {
     wvd.Reset();
   }
@@ -114,5 +114,15 @@ void keyPressed()
   {
     instructionNumber++;
   }
+
+  //Game over restart
+  if(gameState == GameState.GAMEOVER)
+  {
+    if(keyCode == ENTER)
+    {
+      restartFlag = true;
+    }
+  }
+
 
 }

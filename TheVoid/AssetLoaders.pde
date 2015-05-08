@@ -4,6 +4,7 @@ PFont standardFont;    //Standard font for all text windows
 PFont introFont;       //Start screen font
 PFont instructFont;    //Intrustion font
 
+PImage charredPlayerShip;       //For gameover, charred ship
 PImage blueButton, redButton;   //For background of health
 PImage blueBar, redBar;         //For percent health
 
@@ -83,6 +84,8 @@ void LoadImageAssets()
   redPowerupSprite = loadImage("Assets/Power-ups/powerupRed_bolt.png");
   enginePowerupSprite = loadImage("Assets/Power-ups/things_gold.png");
   shieldPowerupSprite = loadImage("Assets/Power-ups/powerupBlue_shield.png");
+
+  charredPlayerShip = loadImage("Assets/Ships/ship_charred.png");
   
   //Load explosions (see Explosion.pde for variables)
   for (int i = 1; i < explosionImgCount + 1; i++) 
@@ -149,7 +152,7 @@ PVector leftThrottleSize, rightThrottleSize;
 void PrepareUIElements()
 {
 //Shield/health bars
-  blueButtonSize = new PVector(width/2, height/16);
+  blueButtonSize = new PVector(width/2.5, height/16);
   blueButtonLocation = new PVector(0, height - 2 *blueButtonSize.y);
   blueButton.resize((int)blueButtonSize.x, (int)blueButtonSize.y);
 

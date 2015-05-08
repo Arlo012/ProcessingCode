@@ -111,6 +111,7 @@ public class Shield extends Physical implements Updatable
   public void RestoreShield()
   {
     health.current = health.max;
+    collidable = true;
     online = true;
     enabled = true;
   }

@@ -13,7 +13,7 @@ public class Sector extends Drawable implements Updatable
   public ArrayList<Asteroid> asteroids;
   public ArrayList<Asteroid> debrisSpawned;       //Storage for debris spawned to be added in update
   public ArrayList<Planet> planets;
-  public ArrayList<Ship> ships;           //May include enemies and the player ship
+  public ArrayList<Ship> ships, shipsToAdd; //May include enemies and the player ship, to add for player charred hull
   public ArrayList<LaserBeam> enemyLaserFire, friendlyLaserFire; 
   public ArrayList<Explosion> explosions; 
   public ArrayList<Powerup> powerups;
@@ -58,6 +58,7 @@ public class Sector extends Drawable implements Updatable
     debrisSpawned = new ArrayList<Asteroid>();
     planets = new ArrayList<Planet>();
     ships = new ArrayList<Ship>();
+    shipsToAdd = new ArrayList<Ship>();
     enemyLaserFire = new ArrayList<LaserBeam>();
     friendlyLaserFire = new ArrayList<LaserBeam>();
     explosions = new ArrayList<Explosion>();
