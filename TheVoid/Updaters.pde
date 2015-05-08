@@ -88,6 +88,8 @@ void UpdateSectorMap(HashMap<Integer, Sector> _sectors)
     UpdatePhysicalObjects(a.planets);  //Station updates occur in planet update loop
     UpdatePhysicalObjects(a.friendlyLaserFire);
     UpdatePhysicalObjects(a.enemyLaserFire);
+    UpdatePhysicalObjects(a.enemyLaserFire);
+    UpdatePhysicalObjects(a.powerups);
   }
 }
 

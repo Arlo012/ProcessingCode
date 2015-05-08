@@ -149,9 +149,12 @@ void DrawPlayLoop()
     HandleSectorCollisions(sectors);
     UpdateSectorMap(sectors); //Update sectors (and all updatable objects within them)
   }
+
+  if(playerShip.toBeKilled)
+  {
+    gameState = GameState.GAMEOVER;
+  }
   
-  translate(width/2, height/2);
-  rotate(playerShip.baseAngle);
   popMatrix();
 
   //// ******* DrawMainUI ********//
@@ -206,6 +209,24 @@ void DrawPauseLoop()
 
 void DrawGameOverLoop()
 {
+  textFont(startupFont, 12);
+  background(0);
+
+  loopCounter++;
+
+  pushMatrix();
+  cameraPan.x = width/2 -playerShip.location.x;
+  cameraPan.y = height/2 - playerShip.location.y;
+  
+  translate(cameraPan.x, cameraPan.y);    //Pan camera on ship
+  
+  DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
+  
+  popMatrix();
+
+  //// ******* DrawMainUI ********//
+  DrawMainUI();
+
 }
 
 //--------- MISC -----------//

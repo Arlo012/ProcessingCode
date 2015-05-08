@@ -34,6 +34,8 @@ void HandleSectorCollisions(Map<Integer, Sector> _sectors)
         HandleCollisions(a.enemyLaserFire, s.shield);   //HACK doesn't allow for enemy shields
       }
     }
+
+    HandleFriendlyCollision(a.powerups, playerShip);
     
   }
 }

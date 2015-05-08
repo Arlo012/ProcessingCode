@@ -16,6 +16,7 @@ PImage redLaser, greenLaser;
 ArrayList<PImage> enemyShipSprites; 
 ArrayList<PVector> enemyShipSizes;      //Size (by index) of above sprite
 int enemyShipTypeCount = 10;                //HACK this is rigid -- careful to update if add ships
+PImage redPowerupSprite, shieldPowerupSprite, enginePowerupSprite;
 void LoadImageAssets()
 {
   bg = loadImage("Assets/Backgrounds/back_3.png");
@@ -75,8 +76,13 @@ void LoadImageAssets()
   blueStation2 = loadImage("Assets/Stations/Spacestation2-2.png");
   blueStation3 = loadImage("Assets/Stations/Spacestation2-3.png");
   smokeTexture = loadImage("Assets/Effects/Smoke/0000.png");
+
   redLaser = loadImage("Assets/Weapons/laserRed12.png");
   greenLaser = loadImage("Assets/Weapons/laserGreen02.png");
+
+  redPowerupSprite = loadImage("Assets/Power-ups/powerupRed_bolt.png");
+  enginePowerupSprite = loadImage("Assets/Power-ups/things_gold.png");
+  shieldPowerupSprite = loadImage("Assets/Power-ups/powerupBlue_shield.png");
   
   //Load explosions (see Explosion.pde for variables)
   for (int i = 1; i < explosionImgCount + 1; i++) 

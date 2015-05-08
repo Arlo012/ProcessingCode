@@ -45,6 +45,11 @@ void DrawSectors(Map<Integer, Sector> _sectors)
   
   for(Sector a : _sectors.values())
   {
+    DrawObjects(a.powerups);
+  }
+
+  for(Sector a : _sectors.values())
+  {
     DrawObjects(a.explosions);
   }
 }

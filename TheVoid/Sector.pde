@@ -16,6 +16,7 @@ public class Sector extends Drawable implements Updatable
   public ArrayList<Ship> ships;           //May include enemies and the player ship
   public ArrayList<LaserBeam> enemyLaserFire, friendlyLaserFire; 
   public ArrayList<Explosion> explosions; 
+  public ArrayList<Powerup> powerups;
 
   //Link to neighboring sectors
   public HashMap<SectorDirection, Sector> neighbors;
@@ -60,6 +61,7 @@ public class Sector extends Drawable implements Updatable
     enemyLaserFire = new ArrayList<LaserBeam>();
     friendlyLaserFire = new ArrayList<LaserBeam>();
     explosions = new ArrayList<Explosion>();
+    powerups = new ArrayList<Powerup>();
 
     //Neighbors
     neighbors = new HashMap<SectorDirection, Sector>();
@@ -79,6 +81,7 @@ public class Sector extends Drawable implements Updatable
    */
   private void GenerateSectorObjects(SectorType _sectorType)
   {
+    int powerupLottery = 100;//rand.nextInt((100) + 1);   //Random gen parameter 0 - 100
     if(_sectorType == SectorType.RANDOM)
     {
       //Determine what type of sector we are
@@ -114,12 +117,33 @@ public class Sector extends Drawable implements Updatable
       //Generate planets
       int planetCount = rand.nextInt((maxPlanets - minPlanets) + 1) + minPlanets;
       GeneratePlanets(this, planetCount);         //See helpers.pde
+
+      if(powerupLottery > 90)
+      {
+        GeneratePowerups(this, 1);
+      }
     }
     else if(sectorType == SectorType.ASTEROIDFIELD)
     {
       //Generate asteroids in this sector
       int asteroidCount = rand.nextInt((maxAsteroids - minAsteroids) + 1) + minAsteroids;
       GenerateAsteroids(this, asteroidCount);     //See helpers.pde
+
+      if(powerupLottery > 95)
+      {
+        GeneratePowerups(this, 2);
+      }
+      else if(powerupLottery > 70)
+      {
+        GeneratePowerups(this, 1);
+      }
+    }
+    else
+    {
+      if(powerupLottery > 95)
+      {
+        GeneratePowerups(this, 1);
+      }
     }
   }
 

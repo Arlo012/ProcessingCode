@@ -368,6 +368,86 @@ void GenerateEnemies(Sector sector, int count)
 
 }
 
+void GeneratePowerups(Sector sector, int count)
+{
+  PVector position = sector.location.get();   //Default position at origin of sector
+
+  int minX, minY, maxX, maxY;                 //Max allowed positions
+
+  PImage sprite;      //What the powerup looks like
+  PVector powerupSize = new PVector(width/64, width/64);
+
+  for(int i = 0; i < count; i++)
+  {
+    int typeGenerator = rand.nextInt((2) + 1);    //0-2 to select type of powerup
+    PowerupType type;
+    if(typeGenerator == 0)
+    {
+      type = PowerupType.BULLETHELL;
+      sprite = redPowerupSprite.get();
+    }
+    else if(typeGenerator == 1)
+    {
+      type = PowerupType.SHIELDS;
+      sprite = shieldPowerupSprite.get();
+    }
+    else
+    {
+      type = PowerupType.ENGINES;
+      sprite = enginePowerupSprite.get();
+    }
+
+    if(sector.asteroids.size() > 0)   //This sector has asteroids -- check for overlap
+    {
+      boolean validLocation = false;
+      while(!validLocation)
+      {
+        //Generation parameters
+        minX = int(sector.GetLocation().x + powerupSize.x);
+        minY = int(sector.GetLocation().y + powerupSize.y);
+        maxX = int(sector.GetSize().x - powerupSize.x);
+        maxY = int(sector.GetSize().y - powerupSize.y);
+
+        //Generate position offsets from the sector location
+        position.x = rand.nextInt(maxX - int(powerupSize.x)) + minX + int(powerupSize.x/2);
+        position.y = rand.nextInt(maxY)+minY;
+
+        for(Asteroid roid : sector.asteroids)
+        {
+          //Check if this asteroid's center + diameter overlaps with ships center = size
+          if( Math.abs(roid.GetLocation().x-position.x) < roid.GetSize().x/2 + powerupSize.x 
+                && Math.abs(roid.GetLocation().y-position.y) < roid.GetSize().y/2 + powerupSize.y )
+          {
+            validLocation = false;
+            println("[INFO] Enemy placement location rejected!");
+            break;
+          }
+          validLocation = true;   //Went thru each asteroid -- no overlap
+        }
+      }
+
+    }
+    else
+    {      
+      //Generation parameters
+      minX = int(sector.GetLocation().x);
+      minY = int(sector.GetLocation().y);
+      maxX = int(sector.GetSize().x);
+      maxY = int(sector.GetSize().y);
+
+      //Generate position offsets from the sector location
+      position.x = rand.nextInt(maxX - int(powerupSize.x)) + minX + int(powerupSize.x/2);
+      position.y = rand.nextInt(maxY)+minY;
+    }
+
+    Shape colliderGenerated = new Shape("collider", position, powerupSize, color(0,255,0), ShapeType._RECTANGLE_);
+    Powerup powerupGen = new Powerup(position, powerupSize, sprite, type, sector, colliderGenerated);
+
+    sector.powerups.add(powerupGen);
+  }
+
+}
+
 /**
  * Checks if an object implements an interface, returns boo
  * @param  object Any object

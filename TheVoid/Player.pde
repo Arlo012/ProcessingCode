@@ -17,7 +17,14 @@ public class Player extends Ship
   private int currentTargetIndex;         //Index into targets arraylist 
 
   //Power ups
-  boolean bulletHellEnabled;      //Fire FAST!
+  boolean bulletHellEnabled = false;      //Fire FAST!
+  private int bulletHellDuration = 7000;     //How long to make bullet hell enabled
+  private long bulletHellStartTime = 0;
+
+  boolean enginesBoosted = false;         //Faster regen!
+  float engineSpeedModifier = 2;          //Multiplier of how fast engine can go
+  private int engineBoostDuration = 7000;  
+  private long engineBoostStartTime = 0;
 
   //Scanners
   int sensorRange = 2000;          //Units of pixels
@@ -82,9 +89,25 @@ public class Player extends Ship
       targetCircle.location = currentTarget.location;
     }
 
-    //Modify weapon fire speed
-    int weaponCooldownModifier = reactor.GetReactorPower(NodeType.WEAPONS)/maxPowerToNode;
-    currentFireInterval = minFireInterval + weaponCooldownModifier * minFireInterval;
+    //Bullet hell updates
+    if(millis() > bulletHellStartTime + bulletHellDuration)
+    {
+      bulletHellEnabled = false;    //Disable after duration
+    }
+
+    if(bulletHellEnabled)
+    {
+      currentFireInterval = minFireInterval;
+    }
+    else
+    {
+      currentFireInterval = 150;
+    }
+
+    //Shield boost updates
+    
+
+    //Engine boost update
   }
   
 
@@ -250,6 +273,12 @@ public class Player extends Ship
     {
       BuildLaserToTarget(currentTarget, LaserColor.GREEN);
     }
+  }
+
+  public void EnableBulletHell()
+  {
+    bulletHellStartTime = millis();
+    bulletHellEnabled = true;
   }
 
 

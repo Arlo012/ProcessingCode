@@ -78,21 +78,21 @@ public class Shield extends Physical implements Updatable
       }
       
       //Regen
-      if(millis() > lastUpdateTime + regenPeriod)    //Do one second tick updates
-      {
-        if(!online)
-        {
-          health.current = (int)(0.35 * health.max);  //Give a reasonable amount of shield on restore
-          online = true;
-        }
-        collidable = true;
+      // if(millis() > lastUpdateTime + regenPeriod)    //Do one second tick updates
+      // {
+      //   if(!online)
+      //   {
+      //     health.current = (int)(0.35 * health.max);  //Give a reasonable amount of shield on restore
+      //     online = true;
+      //   }
+      //   collidable = true;
         
-        if(health.current < health.max)
-        {
-          health.current += shieldRegenAmount;
-        }
-        lastUpdateTime = millis();
-      }
+      //   if(health.current < health.max)
+      //   {
+      //     health.current += shieldRegenAmount;
+      //   }
+      //   lastUpdateTime = millis();
+      // }
     }
   }
 
@@ -106,6 +106,13 @@ public class Shield extends Physical implements Updatable
 
     shieldHitSound.play();
 
+  }
+  
+  public void RestoreShield()
+  {
+    health.current = health.max;
+    online = true;
+    enabled = true;
   }
 
 }

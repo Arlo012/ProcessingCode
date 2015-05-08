@@ -20,8 +20,9 @@ public class Ship extends Physical implements Clickable, Updatable
   
   //Weapons
   protected long lastFireTime;
-  protected float minFireInterval = 850;          //ms between shots
-  protected float currentFireInterval = minFireInterval;
+  protected float minFireInterval = 1;          //ms between shots
+  protected float currentFireInterval = 850;
+  protected boolean canFire = true;
 
   ArrayList<Physical> targets;    //Firing targets selected after scan
   
@@ -30,12 +31,6 @@ public class Ship extends Physical implements Clickable, Updatable
 
   //Engines
   float minThrust, maxThrust;
-  
-  //Enemy objects
-  ArrayList<Asteroid> allAsteroids;    //For tracking mobile asteroid toward this ship's base
-  ArrayList<Missile> enemyMissiles;
-  ArrayList<Ship> enemyShips;
-  ArrayList<Station> enemyStations;
   
   public Ship(String _name, PVector _loc, PVector _size, PImage _sprite, int _mass, 
     color _outlineColor, Sector _sector, Shape _collider) 
@@ -139,6 +134,15 @@ public class Ship extends Physical implements Clickable, Updatable
       UpdateUIInfo();
     }
     
+    if(millis() > lastFireTime + currentFireInterval)
+    {
+      canFire = true;
+    }
+    else
+    {
+      canFire = false;
+    }
+
     //Assume UI will not be rendered next frame
     info.visibleNow = false;    //Another mouseover/ click will negate this
     
@@ -187,63 +191,77 @@ public class Ship extends Physical implements Clickable, Updatable
    */
   protected void BuildLaserToTarget(PVector _target, LaserColor _color)     //Replaced 'Physical _target' to a 'PVector _target';
   {
-    PVector targetVector = PVector.sub(_target,location);
-    targetVector.normalize();
-    
-    //Create laser object
-    PVector laserSize = new PVector(20,3);
-    PVector laserSpawn;
-    if(shield.enabled)
+    if(canFire)
     {
-      if(shield.size.x > size.x || shield.size.y > size.y)    //Fire outside shield
-      { 
-        laserSpawn = new PVector(location.x + targetVector.x * shield.size.x/2 * 1.25, 
-          location.y + targetVector.y * shield.size.y/2 * 1.25);
+      PVector targetVector = PVector.sub(_target,location);
+      targetVector.normalize();
+      
+      //Create laser object
+      PVector laserSize = new PVector(20,3);
+      PVector laserSpawn;
+      if(shield.enabled)
+      {
+        if(shield.size.x > size.x || shield.size.y > size.y)    //Fire outside shield
+        { 
+          laserSpawn = new PVector(location.x + targetVector.x * shield.size.x/2 * 1.25, 
+            location.y + targetVector.y * shield.size.y/2 * 1.25);
+        }
+        else  //Weird case of a small shield -- just fire outside
+        {
+          laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
+              location.y + targetVector.y * size.y * 1.1);
+        }
       }
-      else  //Weird case of a small shield -- just fire outside
+      
+      else
       {
         laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
-            location.y + targetVector.y * size.y * 1.1);
+          location.y + targetVector.y * size.y * 1.1);
       }
+      
+      Shape laserCollider = new Shape("collider", laserSpawn, laserSize, color(0,255,0), 
+            ShapeType._RECTANGLE_);
+      LaserBeam beam = new LaserBeam(laserSpawn, targetVector, laserSize, currentSector, 
+                  laserCollider, _color);
+      
+      lastFireTime = millis();
+      canFire = false;
     }
     
-    else
-    {
-      laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
-        location.y + targetVector.y * size.y * 1.1);
-    }
-    
-    Shape laserCollider = new Shape("collider", laserSpawn, laserSize, color(0,255,0), 
-          ShapeType._RECTANGLE_);
-    LaserBeam beam = new LaserBeam(laserSpawn, targetVector, laserSize, currentSector, 
-                laserCollider, _color);
   }
     
   protected void BuildLaserToTarget(Physical _target, LaserColor _color)
   {
-    //Calculate laser targeting vector
-    PVector targetVector = PVector.sub(_target.location, location);
-    targetVector.normalize();        //Normalize to simple direction vector
-    targetVector.x += rand.nextFloat() * 0.5 - 0.25;
-    targetVector.y += rand.nextFloat() * 0.5 - 0.25;
+    if(canFire)
+    {
+      //Calculate laser targeting vector
+      PVector targetVector = PVector.sub(_target.location, location);
+      targetVector.normalize();        //Normalize to simple direction vector
+      targetVector.x += rand.nextFloat() * 0.5 - 0.25;
+      targetVector.y += rand.nextFloat() * 0.5 - 0.25;
+      
+      //Create laser object
+      PVector laserSize = new PVector(20,3);
+      PVector laserSpawn;
+      if(shield.enabled)    //Fire outside sheild to prevent self collision
+      {
+        laserSpawn = new PVector(location.x + targetVector.x * shield.size.x/2 * 1.1, 
+          location.y + targetVector.y * shield.size.y/2 * 1.1);    //Where to spawn the laser outside ship
+      }
+      else
+      {
+        laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
+          location.y + targetVector.y * size.y * 1.1);    //Where to spawn the laser outside ship
+      }
+      Shape laserCollider = new Shape("collider", laserSpawn, laserSize, color(0,255,0), 
+            ShapeType._RECTANGLE_);
+      LaserBeam beam = new LaserBeam(laserSpawn, targetVector, laserSize , currentSector, 
+            laserCollider, _color);
+
+      lastFireTime = millis();
+      canFire = false;
+    }
     
-    //Create laser object
-    PVector laserSize = new PVector(20,3);
-    PVector laserSpawn;
-    if(shield.enabled)    //Fire outside sheild to prevent self collision
-    {
-      laserSpawn = new PVector(location.x + targetVector.x * shield.size.x/2 * 1.1, 
-        location.y + targetVector.y * shield.size.y/2 * 1.1);    //Where to spawn the laser outside ship
-    }
-    else
-    {
-      laserSpawn = new PVector(location.x + targetVector.x * size.x * 1.1, 
-        location.y + targetVector.y * size.y * 1.1);    //Where to spawn the laser outside ship
-    }
-    Shape laserCollider = new Shape("collider", laserSpawn, laserSize, color(0,255,0), 
-          ShapeType._RECTANGLE_);
-    LaserBeam beam = new LaserBeam(laserSpawn, targetVector, laserSize , currentSector, 
-          laserCollider, _color);
   }
 
 /*Click & mouseover UI*/

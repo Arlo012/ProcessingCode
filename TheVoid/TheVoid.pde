@@ -55,7 +55,7 @@ Player playerShip;
 
 void setup()
 {
-  size(displayWidth, displayHeight, P3D);    //Need 3D acceleration to make this game run at decent FPS
+  size(1800, 1000, P3D);    //Need 3D acceleration to make this game run at decent FPS
   frame.setTitle(title);
 
   //Zoom setup
