@@ -6,20 +6,20 @@
 PFont startupFont;
 void DrawStartupLoop()
 {
-  image(bg, -10 + (10*sin(introAngle + HALF_PI)),(10*sin(introAngle)),displayWidth+20,displayHeight+20);
-  image(nebula3, displayWidth*.55 + (10*sin(introAngle + HALF_PI)), displayHeight*.25 +(10*sin(introAngle + HALF_PI)));
+  image(bg, -10 + (10*sin(introAngle + HALF_PI)),(10*sin(introAngle)),width+20,height+20);
+  image(nebula3, width*.55 + (10*sin(introAngle + HALF_PI)), height*.25 +(10*sin(introAngle + HALF_PI)));
   image(shipSprite,startLocation.x,startLocation.y, playerSize.x,playerSize.y);
   
   fill(75,247,87);   //Green
   textFont(introFont, 154);
   textAlign(CENTER, CENTER);
-  text("The", displayWidth/2 - 72, displayHeight/8);
+  text("The", width/2 - 72, height/8);
   textAlign(CENTER, CENTER);
-  text("Void", displayWidth/2 + 72, displayHeight/8 + 154);
+  text("Void", width/2 + 72, height/8 + 154);
   fill(255);
   textFont(instructFont, 56);
-  text("Press 'S' to enter The Void!", displayWidth/2, displayHeight*.8);
-  text("Press 'M' for instructions", displayWidth/2, displayHeight*.8 + 72);
+  text("Press 'S' to enter The Void!", width/2, height*.8);
+  text("Press 'M' for instructions", width/2, height*.8 + 72);
   if(introAngle <= 6.28)
   {
     introAngle += .01;
@@ -33,11 +33,13 @@ void DrawStartupLoop()
   { 
     startLocation.add(startVel);
     startVel.add(startAccel);
-    if(startLocation.x > displayWidth + 2*playerSize.x && mPressed)
+    if(startLocation.x > width + 2*playerSize.x && mPressed)
     {
       gameState = GameState.INSTRUCTIONS;
+      startLocation.set(width/2,height/2);
+      startVel.set(0,0);
     }
-    else if(startLocation.x > displayWidth + 2*playerSize.x && sPressed)
+    else if(startLocation.x > width + 2*playerSize.x && sPressed)
     {
       gameState = GameState.PLAY;
     }
@@ -48,8 +50,8 @@ int instructionNumber = 0;
 void DrawInstructionsLoop()
 {
   textFont(instructFont, 32);
-  image(bg,0,0,displayWidth,displayHeight);
-  image(shipSprite, displayWidth/2, displayHeight/2, playerSize.x,playerSize.y);
+  image(bg,0,0,width,height);
+  image(shipSprite, startLocation.x,startLocation.y, playerSize.x,playerSize.y);
   playerShip.leftEnginePower = 5.0;
   playerShip.rightEnginePower = 7.0;
   DrawMainUI();
@@ -59,22 +61,22 @@ void DrawInstructionsLoop()
   {
     textFont(instructFont, 56);
     textAlign(CENTER);
-    text("Press 'N' to see next instructions", displayWidth/2, displayHeight/3);
+    text("Press 'N' to see next instructions", width/2, height/3);
   }
   else if(instructionNumber == 1)
   {
     DrawArrow(width/2.5,height*.8,HALF_PI,50);
     textFont(instructFont, 32);
     textAlign(LEFT);
-    text("This is your Sheild Strength, you will not lose health\nwhile the sheild is up. Once your sheild is lost it will \nregenerate after 5 seconds.", 0, 
-    displayHeight*.75);
+    text("This is your Sheild Strength, you will not lose health\nwhile the sheild is up. The sheild can only be replenished \nby obtaining a Sheild Powerup.", 0, 
+    height*.75);
   }
   else if(instructionNumber == 2)
   {
     DrawArrow(width*.96,height*.76,HALF_PI,50);
     textFont(instructFont, 32);
     textAlign(RIGHT);
-    text("These are you Engine Powers,\nyour left engine in green,\nyour right engine in blue",width,height*.65);
+    text("These are your Engine Powers,\nyour left engine in green,\nyour right engine in blue",width,height*.65);
   }
   else if(instructionNumber == 3)
   {
@@ -91,13 +93,49 @@ void DrawInstructionsLoop()
     DrawArrow(width*.8+((blueStation1.width*.15)/2), height/2 - 60,HALF_PI, 50);
     textAlign(LEFT);
     textFont(instructFont, 32);
-    text("This is a Healing Station. Hover you ship \nabove it to regain health.",width/2,height/2-120);
+    text("This is a Healing Station. Hover your \nship above it to regain health.",width/2,height/2-120);
   }
-    
-  
-  
-  playerShip.leftEnginePower = 0.0;
-  playerShip.rightEnginePower = 0.0;
+  else if(instructionNumber == 5)
+  {
+    image(redPowerupSprite, width*.8, height/2, redPowerupSprite.width, redPowerupSprite.height);
+    DrawArrow(width*.8+redPowerupSprite.width/2, height/2 - 60,HALF_PI, 50);
+    textAlign(LEFT);
+    textFont(instructFont, 32);
+    text("This is a Bullet Powerup. Drive your ship \ninto it and unlock the ability to rain \nbullets upon your enemies",width/2,height/2-120);
+  }
+  else if(instructionNumber == 6)
+  {
+    image(enginePowerupSprite, width*.8, height/2, enginePowerupSprite.width, enginePowerupSprite.height);
+    DrawArrow(width*.8+enginePowerupSprite.width/2, height/2 - 60,HALF_PI, 50);
+    textAlign(LEFT);
+    textFont(instructFont, 32);
+    text("This is an Engine Powerup. Drive your ship \ninto it and unlock the ability to double \nyour Engine Power",width/2,height/2-120);
+  }
+  else if(instructionNumber == 7)
+  {
+    image(shieldPowerupSprite, width*.8, height/2, shieldPowerupSprite.width, shieldPowerupSprite.height);
+    DrawArrow(width*.8+shieldPowerupSprite.width/2, height/2 - 60,HALF_PI, 50);
+    textAlign(LEFT);
+    textFont(instructFont, 32);
+    text("This is a Sheild Powerup. Drive your ship \ninto it to replenish your sheilds",width/2,height/2-120);
+  }
+  else if(instructionNumber == 8)
+  {
+    textAlign(CENTER);
+    textFont(instructFont, 32);
+    text("Your objective is to find the end of The Void \nwhile eliminating as many enemy ships as possible \nalong the way. Do you think you are ready?",width/2,height/2-120);
+  }
+  else if(instructionNumber == 9)
+  {
+    startLocation.add(startVel);
+    startVel.add(startAccel);
+    if(startLocation.x > width + 2*playerSize.x)
+    {
+      playerShip.leftEnginePower = 0.0;
+      playerShip.rightEnginePower = 0.0;
+      gameState = GameState.PLAY;
+    }
+  }
 }
 
 
@@ -144,7 +182,7 @@ void DrawPlayLoop()
   }
   else
   {
-    DrawSectors(sectors);   //Draw sectors (actually just push sector objects onto render lists)
+    DrawSectors(sectors);
     MoveSectorObjects(sectors);   //Move all objects in the sectors
     HandleSectorCollisions(sectors);
     UpdateSectorMap(sectors); //Update sectors (and all updatable objects within them)

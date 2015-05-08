@@ -16,6 +16,7 @@ Random rand = new Random();
 
 GameState gameState = GameState.START;
 
+
 //Game Name
 String title = "The Void";
 
@@ -55,7 +56,7 @@ Player playerShip;
 
 void setup()
 {
-  size(1800, 1000, P3D);    //Need 3D acceleration to make this game run at decent FPS
+  size(displayWidth, displayHeight, P3D);    //Need 3D acceleration to make this game run at decent FPS
   frame.setTitle(title);
 
   //Zoom setup
