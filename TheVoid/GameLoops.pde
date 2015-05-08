@@ -44,11 +44,60 @@ void DrawStartupLoop()
   }
 }
 
+int instructionNumber = 0;
 void DrawInstructionsLoop()
 {
+  textFont(instructFont, 32);
   image(bg,0,0,displayWidth,displayHeight);
   image(shipSprite, displayWidth/2, displayHeight/2, playerSize.x,playerSize.y);
+  playerShip.leftEnginePower = 5.0;
+  playerShip.rightEnginePower = 7.0;
   DrawMainUI();
+  DrawControls();
+        
+  if(instructionNumber == 0)
+  {
+    textFont(instructFont, 56);
+    textAlign(CENTER);
+    text("Press 'N' to see next instructions", displayWidth/2, displayHeight/3);
+  }
+  else if(instructionNumber == 1)
+  {
+    DrawArrow(width/2.5,height*.8,HALF_PI,50);
+    textFont(instructFont, 32);
+    textAlign(LEFT);
+    text("This is your Sheild Strength, you will not lose health\nwhile the sheild is up. Once your sheild is lost it will \nregenerate after 5 seconds.", 0, 
+    displayHeight*.75);
+  }
+  else if(instructionNumber == 2)
+  {
+    DrawArrow(width*.96,height*.76,HALF_PI,50);
+    textFont(instructFont, 32);
+    textAlign(RIGHT);
+    text("These are you Engine Powers,\nyour left engine in green,\nyour right engine in blue",width,height*.65);
+  }
+  else if(instructionNumber == 3)
+  {
+    PVector enemyShipSize = enemyShipSizes.get(0);
+    image(enemyShipSprites.get(0), width*.8, height/2,enemyShipSize.x*.25,enemyShipSize.y*.25);
+    DrawArrow(width*.8+enemyShipSize.x/8, height/2 - 60, HALF_PI, 50);
+    textAlign(LEFT);
+    textFont(instructFont, 32);
+    text("This is an Enemy Ship. They will attack \nyou relentlessly until you are destroyed!",width/2,height/2-120);
+  }
+  else if(instructionNumber == 4)
+  {
+    image(blueStation1,width*.8, height/2, blueStation1.width*.15, blueStation1.height*.15);
+    DrawArrow(width*.8+((blueStation1.width*.15)/2), height/2 - 60,HALF_PI, 50);
+    textAlign(LEFT);
+    textFont(instructFont, 32);
+    text("This is a Healing Station. Hover you ship \nabove it to regain health.",width/2,height/2-120);
+  }
+    
+  
+  
+  playerShip.leftEnginePower = 0.0;
+  playerShip.rightEnginePower = 0.0;
 }
 
 
@@ -142,6 +191,7 @@ void DrawPauseLoop()
   
   // ******* ALL ZOOMED BEFORE THIS ********//
   EndZoom();
+  DrawControls();
 
   //// ******* DrawMainUI ********//
   DrawMainUI();
@@ -230,4 +280,26 @@ void DrawMainUI()
   rightThrottleLocation.y = height - rightThrottleSize.y;
   rect(rightThrottleLocation.x, rightThrottleLocation.y, rightThrottleSize.x, rightThrottleSize.y, 12, 12, 0, 0);
   popStyle();
+}
+
+void DrawArrow(float arrowX, float arrowY, float angle,int arrowLen)
+{
+  pushMatrix();
+  translate(arrowX, arrowY);
+  rotate(angle);
+  fill(255);
+  stroke(255);
+  line(0,0, arrowLen,0);
+  line(arrowLen,0, arrowLen-5, 5);
+  line(arrowLen,0, arrowLen-5, -5);
+  //ellipse(0,0,5,5);
+  popMatrix();
+  noStroke();
+}
+
+void DrawControls()
+{
+  textAlign(LEFT);
+  textFont(instructFont, 32);
+  text("Controls: \nFire Laser -> Left mouse click \nIncrease Left Engine -> Y \nDecrease Left Engine -> H \nIncrease Right Engine -> I \nDecrease Right Engine -> K \nPause - P",0,32);
 }

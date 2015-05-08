@@ -32,7 +32,7 @@ void keyPressed()
     wvd.Reset();
   }
 
-  if(key == ' ')
+  if(key == 'p' || key == 'P')
   {
     if(gameState == GameState.PLAY)
     {
@@ -109,6 +109,10 @@ void keyPressed()
   if(key == 'm' || key == 'M')
   {
     mPressed=true;
+  }
+  if(key == 'n' || key == 'N')
+  {
+    instructionNumber++;
   }
 
 }
