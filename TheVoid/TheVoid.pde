@@ -56,7 +56,7 @@ Player playerShip;
 
 void setup()
 {
-  size(1800, 1000, P3D);    //Need 3D acceleration to make this game run at decent FPS
+  size(displayWidth, displayHeight, P3D);    //Need 3D acceleration to make this game run at decent FPS
   frame.setTitle(title);
 
   gameState = GameState.START;
@@ -99,7 +99,7 @@ void setup()
               ShapeType._RECTANGLE_);
   playerShip = new Player(spawnLocation, playerSize, shipSprite, playerMass, 
               color(255,0,0), null, playerCollider);     //null sector until created
-  playerShip.health.SetMaxHealth(1500);
+  playerShip.health.SetMaxHealth(1500);    //1500
 
   GameObjectSetup();    //See Helpers.pde
   playerShip.currentSector = sectors.get(0);      //Now that sector is created, feed to player obj
@@ -111,14 +111,14 @@ void setup()
   loopStartTime = millis();
   
   //Intro music
-  introMusic.play();
-  trackStartTime = millis();
-  currentTrack = introMusic;
+  // introMusic.play();
+  // trackStartTime = millis();
+  // currentTrack = introMusic;
 }
 
 void draw()
 {
-  MusicHandler();      //Handle background music
+  // MusicHandler();      //Handle background music
   
   if(gameState == GameState.START)
   {
