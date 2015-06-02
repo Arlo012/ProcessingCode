@@ -80,7 +80,7 @@ public class LaserBeam extends Physical
       print(" damage.\n");
     }
     
-    laserHitSound.play();
+    // laserHitSound.play();
     toBeKilled = true;
   }
 

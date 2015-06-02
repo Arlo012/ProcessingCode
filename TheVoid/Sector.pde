@@ -121,7 +121,7 @@ public class Sector extends Drawable implements Updatable
 
       if(powerupLottery > 90)
       {
-        GeneratePowerups(this, 1);
+        GeneratePowerups(this, 2);
       }
     }
     else if(sectorType == SectorType.ASTEROIDFIELD)
@@ -132,11 +132,15 @@ public class Sector extends Drawable implements Updatable
 
       if(powerupLottery > 95)
       {
-        GeneratePowerups(this, 2);
+        GeneratePowerups(this, 3);
       }
       else if(powerupLottery > 70)
       {
-        GeneratePowerups(this, 1);
+        GeneratePowerups(this, 2);
+      }
+      else
+      {
+        GeneratePowerups(this,1);
       }
     }
     else

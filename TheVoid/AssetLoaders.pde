@@ -152,7 +152,7 @@ PVector leftThrottleSize, rightThrottleSize;
 void PrepareUIElements()
 {
 //Shield/health bars
-  blueButtonSize = new PVector(width/2.5, height/16);
+  blueButtonSize = new PVector(width/2.2, height/16);
   blueButtonLocation = new PVector(0, height - 2 *blueButtonSize.y);
   blueButton.resize((int)blueButtonSize.x, (int)blueButtonSize.y);
 

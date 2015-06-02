@@ -302,7 +302,7 @@ void DrawGameOverLoop()
 
   if(restartFlag)
   {
-    currentTrack.stop();
+    // currentTrack.stop();
     setup();
   }
 }
