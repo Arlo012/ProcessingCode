@@ -76,4 +76,11 @@ class WorldViewData {
     else
       return false;
   }
+
+  public void Reset()
+  {
+    viewRatio = 1;
+    orgX = 0.0f;
+    orgY = 0.0f;
+  }
 }

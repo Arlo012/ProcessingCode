@@ -7,10 +7,10 @@ public class Missile extends Physical implements Clickable, Updatable
 {
   TextWindow info;
 
-  Missile(PVector _loc, PVector _moveVector, color _outlineColor) 
+  Missile(PVector _loc, PVector _moveVector, color _outlineColor, Sector _sector, Shape _collider) 
   {
     //Parent constructor
-    super("Missile", _loc, new PVector(20,10), 10);    //mass = 10
+    super("Missile", _loc, new PVector(20,10), 10, _sector, _collider);    //mass = 10
     
     //Health
     health.max = 60;
@@ -21,7 +21,7 @@ public class Missile extends Physical implements Clickable, Updatable
     
     //Physics
     velocity = _moveVector;
-    rotationRate = 0.1;          //Rotation rate on a missile is ~10x better than a ship
+    // rotationRate = 0.1;          //Rotation rate on a missile is ~10x better than a ship
     
     //Override local speed limit
     //TODO test me
@@ -39,7 +39,7 @@ public class Missile extends Physical implements Clickable, Updatable
     descriptor += "\nVelocity: ";
     descriptor += velocity.mag();
     descriptor += " m/s ";
-    info = new TextWindow("Missile Info", location, descriptor, true);
+    info = new TextWindow("Missile Info", location, descriptor);
   }
   
   //HACK this update() function is highly repeated through child classes

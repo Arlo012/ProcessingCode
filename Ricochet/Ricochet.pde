@@ -1,15 +1,5 @@
 /*
 Tile Pong - Jeff Eitel
-TODO
-- [X] Fix annoying ball spawning
-- [X] Prevent paddle from going below/above page
-- [X] Add game stages/modes (?)
-- [X] Add things (powerups?) in the tiles
-    []- Explosion
-    [X]- GHOST BALL
-    []- More balls 
-- [X] Make ball return to point winner's side
-- [X] Make the colors less shitty - Karriane said this
 */
 import java.util.Iterator;
 import java.util.List;
@@ -229,7 +219,7 @@ void draw()
       }
     }
   }
-   
+   println(frameRate);
 }
 
 void GameOver()

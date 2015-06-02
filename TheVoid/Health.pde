@@ -11,5 +11,19 @@ public class Health
     current = _current;
     max = _max;
   }
+
+  public void SetMaxHealth(int _newMax)
+  {
+  	max = _newMax;
+  	current = max;
+  }
   
+  public void Add(int _addition)
+  {
+    current += _addition;
+    if(current > max)
+    {
+      current = max;
+    }
+  } 
 }

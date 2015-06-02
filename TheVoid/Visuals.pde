@@ -1,114 +1,86 @@
 //******* DRAW ********//
 
-//Draw asteroid game object
-void DrawAsteroids(ArrayList<Asteroid> _asteroids, boolean _displayIcons)
+void DrawObjects(ArrayList<? extends Drawable> _objects)
 {
-  for(Asteroid a : _asteroids)
-  {
-    a.DrawObject();
-    if(_displayIcons && a.drawOverlay)
-    {
-      a.iconOverlay.DrawObject();
-    }
-  }
-}
-
-//Draw structure game object
-void DrawStations(ArrayList<Station> _stations)
-{
-  for(Station a : _stations)
+  for(Drawable a : _objects)
   {
     a.DrawObject();
   }
 }
 
-
+/**
+ * Draw sectors and all child objects
+ * @param {Hashmap<Int,Sector> _sectors Draw sector background
+ * then all objects on top of it
+ */
 void DrawSectors(Map<Integer, Sector> _sectors)
 {
+  //Draw sector backgrounds themselves
   for(Sector a : _sectors.values())
   {
     a.DrawObject();
+    a.collider.DrawObject();    //Draw sector outlines
   }
-}
 
-void DrawShips(ArrayList<Ship> _ships, boolean _displayIcons)
-{
-  for(Ship a : _ships)
+  for(Sector a : _sectors.values())
   {
-    a.DrawObject();
-    if(_displayIcons)
-    {
-      a.iconOverlay.DrawObject();
-    }
+    DrawObjects(a.planets);     //Stations drawn here too
   }
-}
 
-void DrawMissiles(ArrayList<Missile> _missiles, boolean _displayIcons)
-{
-  for(Missile a : _missiles)
+  for(Sector a : _sectors.values())
   {
-    a.DrawObject();
-    if(_displayIcons)
-    {
-      a.iconOverlay.DrawObject();
-    }
+    DrawObjects(a.asteroids);
   }
-}
 
-void DrawLasers(ArrayList<LaserBeam> _projectiles)
-{
-  for(LaserBeam lb : _projectiles)
+  for(Sector a : _sectors.values())
   {
-    lb.DrawObject();
+    DrawObjects(a.ships);
   }
-}
 
-void DrawPlanets(ArrayList<Planet> _planets)
-{
-  for(Planet a : _planets)
+  for(Sector a : _sectors.values())
   {
-    a.DrawObject();
+    DrawObjects(a.friendlyLaserFire);
+    DrawObjects(a.enemyLaserFire);
   }
-}
-
-void DrawEffects(ArrayList<Explosion> _effect)
-{
-  for(Explosion a : _effect)
+  
+  for(Sector a : _sectors.values())
   {
-    a.DrawObject();
+    DrawObjects(a.powerups);
   }
-}
 
-void DrawButtons(ArrayList<ToggleButton> _buttons)
-{
-  for(ToggleButton a : _buttons)
+  for(Sector a : _sectors.values())
   {
-    a.DrawObject();
+    DrawObjects(a.explosions);
   }
 }
 
-void DrawShapes(ArrayList<Shape> _shapes)
+/**
+ * Move all objects in a sector
+ * @param _sectors map of sectors by ID
+ */
+void MoveSectorObjects(Map<Integer, Sector> _sectors)
 {
-  for(Shape a : _shapes)
+  for(Sector a : _sectors.values())
   {
-    a.DrawObject();
+    MovePhysicalObject(a.planets);     //Stations drawn here too
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    MovePhysicalObject(a.asteroids);
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    MovePhysicalObject(a.ships);
+  }
+
+  for(Sector a : _sectors.values())
+  {
+    MovePhysicalObject(a.friendlyLaserFire);
+    MovePhysicalObject(a.enemyLaserFire);
   }
 }
-
-void DrawShields(ArrayList<Shield> _shields)
-{
-  for(Shield shield : _shields)
-  {
-    //Draw shield
-    if(shield.collidable)
-    {
-      //TODO allow for shield rotation (need a physical object with rotation, shape wont cut it)
-      shield.overlay.DrawObject();
-    }
-  }
-}
-
-//******* MOVE ********//
 
 //Move an array of movable objects
 void MovePhysicalObject(ArrayList<? extends Physical> physical)
@@ -136,7 +108,7 @@ void EndZoom()
 //******* EXPLOSIONS ********//
 
 //Generate a number of explosions, generally upon the death of some ship, station, etc
-void GenerateDeathExplosions(int _count, PVector _center, PVector _deadObjSize)
+void GenerateDeathExplosions(int _count, PVector _center, PVector _deadObjSize, Sector _sector)
 {
   for(int i = 0; i < _count; i++)
   {
@@ -149,7 +121,6 @@ void GenerateDeathExplosions(int _count, PVector _center, PVector _deadObjSize)
     int frameDelay = rand.nextInt(60);                //Delay 0-60 frames
     explosion.SetRenderDelay(frameDelay);             //Setup delay on this explosion to render
     
-    //TODO add global explosion
-    explosions.add(explosion);                        //Add this explosion to an ArrayList<Explosion> for rendering
+    _sector.explosions.add(explosion);                        //Add this explosion to an ArrayList<Explosion> for rendering
   }
 }

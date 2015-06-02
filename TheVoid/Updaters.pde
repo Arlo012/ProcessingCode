@@ -1,111 +1,113 @@
 /*
- *  This is a bunch of updater methods that iterate through arraylist of objects.
- *  It is pretty clunky to do it this way, but there are problems with child objects 
- *  having different update methods than their parents. 
- *     TODO: Investigate a way around this
+ *  Updater methods on physical objects that run update loop and check for
+ *  death condition.
  */
 
-void UpdateAsteroids(ArrayList<Asteroid> _asteroids)
+/**
+ * Update all physical objects using their Update() function
+ * Check if objects should be killed (remove them from their arraylist)
+ * Check if object has left its parent sector, removing them from that sector's list
+ * and adding them to another sector's.
+ * @param _object List of objects to update/delete
+ * @return {Integer} Number of items destroyed in this loop
+ */
+int UpdatePhysicalObjects(ArrayList<? extends Physical> _object)
 {
-  for (Iterator<Asteroid> iterator = _asteroids.iterator(); iterator.hasNext();) 
+  int objectsDestroyed = 0;
+  for (Iterator<? extends Physical> iterator = _object.iterator(); iterator.hasNext();) 
   {
-    Asteroid roid = iterator.next();
-    roid.Update();
-    if (roid.toBeKilled) 
-    {
-        // Remove the current element from the iterator and the list.
-        iterator.remove();
-    }
-  }
-}
-
-void UpdateShips(ArrayList<Ship> _ships)
-{
-  for (Iterator<Ship> iterator = _ships.iterator(); iterator.hasNext();) 
-  {
-    Ship ship = iterator.next();
-    ship.Update();
-    if (ship.toBeKilled) 
-    {
-        // Remove the current element from the iterator and the list.
-        iterator.remove();
-    }
-  }
-}
-
-void UpdateShields(ArrayList<Shield> _shields)
-{
-  for (Iterator<Shield> iterator = _shields.iterator(); iterator.hasNext();) 
-  {
-    Shield shield = iterator.next();
-    shield.Update();
-    if (shield.toBeKilled) 
+    Physical obj = iterator.next();
+    obj.Update();
+    if (obj.toBeKilled) 
     {
       // Remove the current element from the iterator and the list.
+      objectsDestroyed++;
       iterator.remove();
     }
-  }
-}
 
-void UpdatePlanets(ArrayList<Planet> _planets)
-{
-  for(Planet a : _planets)
-  {
-    a.Update();
-  }
-}
-
-void UpdateStations(ArrayList<Station> _stations)
-{
-  for (Iterator<Station> iterator = _stations.iterator(); iterator.hasNext();) 
-  {
-    Station station = iterator.next();
-    station.Update();
-    if (station.toBeKilled) 
-    { 
-      //Remove the current element from the iterator and the list (safely).
-      iterator.remove();
-    }
-  }
-}
-
-void UpdateLasers(ArrayList<LaserBeam> _lasers)
-{
-  for (Iterator<LaserBeam> iterator = _lasers.iterator(); iterator.hasNext();) 
-  {
-    LaserBeam beam = iterator.next();
-    beam.Update();
-    if (beam.toBeKilled) 
-    { 
-      // Remove the current element from the iterator and the list.
-      iterator.remove();
-    }
-  }
-}
-
-void UpdateExplosions(ArrayList<Explosion> _explosion)
-{
-  for (Iterator<Explosion> iterator = _explosion.iterator(); iterator.hasNext();) 
-  {
-    Explosion explosion = iterator.next();
-    if (explosion.toBeKilled) 
-    { 
-      // Remove the current element from the iterator and the list.
-      iterator.remove();
-    }
-  }
-}
-
-void UpdateMissiles(ArrayList<Missile> _missiles)
-{
-  for (Iterator<Missile> iterator = _missiles.iterator(); iterator.hasNext();) 
-  {
-    Missile missile = iterator.next();
-    missile.Update();
-    if (missile.toBeKilled) 
+    else if(obj.velocity.mag() > 0)      //If moving, check if it has left the sector
     {
-        // Remove the current element from the iterator and the list.
-        iterator.remove();
+      if(!CheckDrawableOverlap(obj.currentSector.collider, obj.location))   //Is object inside the sector still?
+      {
+        boolean newSectorFound = false;
+        if(debugMode.value)
+        {
+          println("[DEBUG] " + obj.name + " has left its parent sector...");
+        }
+        
+        //TODO should be doing rectangle-rectangle collision, not point-point. This should do for now
+        //Object left sector -- find new sector it is in
+        for(Sector sector : sectors.values())
+        {
+          if(CheckDrawableOverlap(sector.collider, obj.location))
+          {
+            obj.currentSector = sector;
+            if(debugMode.value)
+            {
+              println("[DEBUG] " + obj.name + " moved to sector " + sector.name);
+            }
+            //HACK check if this is the playership to generate more sectors
+            if(obj instanceof Player)
+            {
+              //Add to temp hashmap, merge at end (see GameLoops & AssetLoader's MergeSectorMaps)
+              generatedSectors = BuildSectors(obj.currentSector);
+            }
+
+            //Remove from current sector's objects, add to next sector's objects
+            sector.ReceiveNewObject(obj);
+
+            try
+            {
+              iterator.remove();      //Remove from current list inside sector
+              newSectorFound = true;
+            }
+              
+            catch(Exception e)
+            {
+              println("[ERROR] deleting object " + obj.name);
+              println("[ERROR] " + e);
+            }
+            break;
+          }
+        }
+        if(!newSectorFound)
+        {
+          println("[WARNING] " + obj.name + " moved into empty sector");
+          obj.toBeKilled = true;
+        }
+        
+      }
     }
   }
+  return objectsDestroyed;
 }
+
+void UpdateSectorMap(HashMap<Integer, Sector> _sectors)
+{
+  for(Sector a : _sectors.values())
+  {
+    a.Update();      //Update the sector object
+    int enemiesKilled = UpdatePhysicalObjects(a.ships);
+    UpdatePhysicalObjects(a.asteroids);
+    UpdatePhysicalObjects(a.planets);  //Station updates occur in planet update loop
+    UpdatePhysicalObjects(a.friendlyLaserFire);
+    UpdatePhysicalObjects(a.enemyLaserFire);
+    UpdatePhysicalObjects(a.enemyLaserFire);
+    UpdatePhysicalObjects(a.powerups);
+
+    if(!a.shipsToAdd.isEmpty())       //Add in ships generated during update loop (currently only charred hull)
+    {
+      for(Ship s : a.shipsToAdd)
+      {
+        a.ships.add(s);
+      }
+      a.shipsToAdd.clear();
+    }
+    if(gameState != GameState.GAMEOVER)
+    {
+      playerShip.score += enemiesKilled * 50;     //Update score 50 points per enemy killed
+    }
+    
+  }
+}
+

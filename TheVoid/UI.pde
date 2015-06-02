@@ -1,4 +1,3 @@
-PFont standardFont =  createFont("Helvetica", 14);    // font name and size
 
 public class UI extends Drawable
 {
@@ -14,18 +13,12 @@ public class UI extends Drawable
     super(_name, _loc, _size);
     scalesWithZoom = _scalesWithZoom;
     
-    font = standardFont;      //Use pre-generated font from above
+    font = standardFont;      //Use pre-generated font
+    if(font == null)
+    {
+      println("[ERROR] PFont null!");
+    }
     fontSize = 14;
-    visibleNow = false;
-  }
-  
-  public UI(String _name, PVector _loc, PVector _size, int _fontSize, boolean _scalesWithZoom)
-  {
-    super(_name, _loc, _size);
-    scalesWithZoom = _scalesWithZoom;
-    
-    fontSize = _fontSize;
-    font = createFont("Helvetica", fontSize);
     visibleNow = false;
   }
   

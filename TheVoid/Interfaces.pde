@@ -5,14 +5,6 @@ public interface Movable
   void SetVelocity(PVector _velocity);
 }
 
-public interface Turnable
-{
-  void SetDestinationAngle(float _destinationAngle);
-  void SetRotationMode(RotationMode _rotateMode);      // 0 = instant, 1 = standard
-  void SetRotationRate(float _degreePerSec);
-  void SetRotationTarget(PVector _target);
-}
-
 public interface Collidable
 {
   void HandleCollision(Physical _collider);
@@ -34,4 +26,13 @@ public interface Clickable
 public interface Updatable
 {
   void Update();
+}
+
+/**
+ * A friendly object (e.g. station) that provides
+ * aid to physical objects
+ */
+public interface Friendly
+{
+  void ProvideAid(Physical _friend);
 }
